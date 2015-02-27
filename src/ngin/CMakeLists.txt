@@ -1,0 +1,62 @@
+add_library( ngin STATIC
+    core/linker-config-dummy.s
+    core/reset.s
+    core/vectors.s
+    core/ines-header.s
+)
+
+# \note Debug info is added to the release build also, because might as well.
+set( __ngin_compileFlags
+    "-t none -g --feature underline_in_numbers --feature c_comments \
+--asm-include-dir ${CMAKE_SOURCE_DIR}/include"
+)
+set( __ngin_linkerConfig "linker/nrom.cfg" )
+set( __ngin_sourceDir ${CMAKE_CURRENT_SOURCE_DIR} )
+
+set_target_properties( ngin
+    PROPERTIES
+        COMPILE_FLAGS "${__ngin_compileFlags}"
+)
+
+# Export to parent scope.
+set( __ngin_compileFlags ${__ngin_compileFlags} PARENT_SCOPE )
+set( __ngin_linkerConfig ${__ngin_linkerConfig} PARENT_SCOPE )
+set( __ngin_sourceDir ${__ngin_sourceDir} PARENT_SCOPE )
+
+set_source_files_properties( core/linker-config-dummy.s
+    PROPERTIES
+        OBJECT_DEPENDS ${__ngin_sourceDir}/${__ngin_linkerConfig}
+)
+
+function( ngin_addSample name )
+    add_executable( ${name} ${ARGN} )
+
+    set_target_properties( ${name}
+        PROPERTIES
+            OUTPUT_NAME ${name}.nes
+            COMPILE_FLAGS "${__ngin_compileFlags}"
+            # \note --force-import is needed to bring in object files from the
+            #       static library which would be otherwise stripped.
+            LINK_FLAGS "-t none -C ${__ngin_sourceDir}/${__ngin_linkerConfig} \
+--force-import __ngin_vectors --force-import __ngin_inesHeader \
+-Wl --dbgfile,${CMAKE_CURRENT_BINARY_DIR}/${name}.nes.dbg"
+    )
+
+    target_link_libraries( ${name}
+        ngin
+    )
+
+    # Add a custom target to start an emulator.
+    add_custom_target(
+        "start-${name}"
+        COMMAND
+            ${__ngin_emulatorExecutable} ${CMAKE_CURRENT_BINARY_DIR}/${name}.nes
+        DEPENDS ${name}
+        # \note NintendulatorDX v36 or later is required for this to work,
+        #       older versions will not find the source files relative to the
+        #       current working directory.
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Running ${name}"
+        VERBATIM
+    )
+endfunction()
