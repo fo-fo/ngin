@@ -2,7 +2,7 @@
     kMapperNumber   = 0
     kMirroring      = 0
     kNum16kPrgBanks = 2
-    kNum8kChrBanks  = 0
+    kNum8kChrBanks  = 1
 .endscope
 
 .segment "INES_HEADER"

@@ -8,10 +8,16 @@
 
 ngin_entryPoint start
 .proc start
-    lda #0
+    lda #ppu::mask::kEmphasizeBlue
 
-    inf:
-        eor #ppu::mask::kGrayscaleOn
+    loop:
+        ldx #15
+        wait:
+            ngin_pollVBlank
+            dex
+        ngin_branchIfNotZero wait
+
+        eor #ppu::mask::kGrayscale
         sta ppu::mask
-    jmp inf
+    jmp loop
 .endproc
