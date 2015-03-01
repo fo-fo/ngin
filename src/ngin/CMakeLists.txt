@@ -7,6 +7,12 @@ add_library( ngin STATIC
     shadow-oam.s
     sprite-renderer.s
     memory.s
+    memory/copy-memory.s
+    memory/copy-port.s
+    memory/copy-memory-to-port.s
+    memory/copy-port-to-memory.s
+    memory/fill-memory.s
+    memory/fill-port.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
