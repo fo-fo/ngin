@@ -8,6 +8,8 @@ kShadowOamSize = 256
 .segment "SHADOW_OAM"
 
 ngin_shadowOam:         .res kShadowOamSize
+.assert .lobyte( ngin_shadowOam ) = 0, error, \
+        "ngin_shadowOam must be page aligned"
 
 .segment "BSS"
 
