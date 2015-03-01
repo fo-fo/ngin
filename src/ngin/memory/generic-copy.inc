@@ -59,8 +59,10 @@ NGIN_MEMORY_GENERIC_COPY_INC_INCLUDED = 1
         ; Set X to 0 for (foo, x) addressing.
         ldx #0
         ; Copy all 256 byte pages.
+        .local allPagesLoop
         allPagesLoop:
             ; Copy one 256 byte page.
+            .local fullPageLoop
             fullPageLoop:
                 genericCopyIteration {destinationType}, {sourceType}, \
                                      {destination}, {source}
@@ -77,11 +79,13 @@ NGIN_MEMORY_GENERIC_COPY_INC_INCLUDED = 1
 
             dec size + 1
         ngin_branchIfNotZero allPagesLoop
+    .local sizeLessThan256
     sizeLessThan256:
     ; X = 0 here.
 
     ; Copy the remaining bytes (size modulo 256).
     ; Y = 0 here.
+    .local restLoop
     restLoop:
         ; If Y reached size%256, we're done.
         cpy size + 0
@@ -93,6 +97,7 @@ NGIN_MEMORY_GENERIC_COPY_INC_INCLUDED = 1
     ; \todo Add a macro for unconditional branch, including runtime assert.
     ngin_branchIfNotZero restLoop
 
+.local done
 done:
     rts
 .endmacro
