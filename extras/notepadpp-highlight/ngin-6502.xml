@@ -15,9 +15,9 @@
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">- &amp; ( ) * , / : ^ | ~ + &lt; = &gt;</Keywords>
             <Keywords name="Operators2"></Keywords>
-            <Keywords name="Folders in code1, open">.enum .if .ifblank .ifconst .ifdef .ifnblank .ifndef .ifnref .ifp02 .ifp816 .ifpc02 .ifpsc02 .ifref .macro .mac .proc .repeat .scope .struct</Keywords>
+            <Keywords name="Folders in code1, open">.enum .ifblank .ifconst .ifdef .ifnblank .ifndef .ifnref .ifp02 .ifp816 .ifpc02 .ifpsc02 .ifref .if .macro .mac .proc .repeat .scope .struct</Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
-            <Keywords name="Folders in code1, close">.endenum .endif .endmacro .endmac .endproc .endrep .endrepeat .endscope .endstruct .repend</Keywords>
+            <Keywords name="Folders in code1, close">.endenum .endif .endmacro .endmac .endproc .endrepeat .endrep .endscope .endstruct .repend</Keywords>
             <Keywords name="Folders in code2, open"></Keywords>
             <Keywords name="Folders in code2, middle"></Keywords>
             <Keywords name="Folders in code2, close"></Keywords>
