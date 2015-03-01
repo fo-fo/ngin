@@ -12,7 +12,8 @@ ngin_kSpriteRendererAdjustX = 128+4
 ngin_kSpriteRendererAdjustY = 128+4
 
 ; This bitmask must be ORed in to the attributes of each sprite defined in a
-; sprite definition.
+; sprite definition. Its purpose is to force all used attribute bytes to be
+; non-zero (since 0 is used as a terminator).
 ngin_kSpriteRendererAttribute = %000_001_00
 
 .global   __ngin_SpriteRenderer_render

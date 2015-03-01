@@ -7,5 +7,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/ppu.inc"
 .include "ngin/shadow-oam.inc"
 .include "ngin/sprite-renderer.inc"
+.include "ngin/memory.inc"
 
 .endif

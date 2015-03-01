@@ -6,6 +6,7 @@ add_library( ngin STATIC
     ppu.s
     shadow-oam.s
     sprite-renderer.s
+    memory.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
