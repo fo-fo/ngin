@@ -15,11 +15,17 @@ NGIN_CORE_INC_INCLUDED = 1
 .endmacro
 
 .macro ngin_mov8 to, from
+    __ngin_requireParameter {to}, "to"
+    __ngin_requireParameter {from}, "from"
+
     lda from
     sta to
 .endmacro
 
 .macro ngin_mov16 to, from
+    __ngin_requireParameter {to}, "to"
+    __ngin_requireParameter {from}, "from"
+
     ; \todo Optional hibyte offset? Might be sufficient to have a
     ;       template macro, and use that to generate a couple of specialized
     ;       macros (e.g. for objects). Although source and destination
@@ -38,6 +44,9 @@ NGIN_CORE_INC_INCLUDED = 1
 .endmacro
 
 .macro ngin_mov32 to, from
+    __ngin_requireParameter {to}, "to"
+    __ngin_requireParameter {from}, "from"
+
     ; \todo Optional hibyte offset (would need 3 though, so nonsensical)
 
     .if .match( .left( 1, {from} ), # )
@@ -58,5 +67,8 @@ NGIN_CORE_INC_INCLUDED = 1
 
 .define ngin_immediateVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
                                               .loword( x_ ) )
+
+.struct __ngin_emptyStruct
+.endstruct
 
 .endif

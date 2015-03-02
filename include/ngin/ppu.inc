@@ -31,7 +31,20 @@ NGIN_PPU_INC_INCLUDED = 1
     .endscope
 
     .scope ctrl
-        ; \todo Bitmasks
+        kBaseNametable0                 =        %00
+        kBaseNametable1                 =        %01
+        kBaseNametable2                 =        %10
+        kBaseNametable3                 =        %11
+        kAddressIncrement1              =       %000
+        kAddressIncrement32             =       %100
+        kSpritePatternTableLeft         =      %0000
+        kSpritePatternTableRight        =      %1000
+        kBackgroundPatternTableLeft     =    %0_0000
+        kBackgroundPatternTableRight    =    %1_0000
+        kSpriteSize8x8                  =   %00_0000
+        kSpriteSize8x16                 =   %10_0000
+        ; PPU master/slave select not exposed.
+        kGenerateVblankNmi              = %1000_0000
     .endscope
 
     .scope mask

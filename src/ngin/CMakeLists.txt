@@ -13,6 +13,7 @@ add_library( ngin STATIC
     memory/copy-port-to-memory.s
     memory/fill-memory.s
     memory/fill-port.s
+    ppu-buffer.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

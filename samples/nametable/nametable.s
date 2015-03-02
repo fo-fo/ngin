@@ -12,6 +12,8 @@
 
 ; -----------------------------------------------------------------------------
 
+.segment "CODE"
+
 ngin_entryPoint start
 .proc start
     jsr uploadPalette
