@@ -10,5 +10,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/memory.inc"
 .include "ngin/ppu-buffer.inc"
 .include "ngin/build-log.inc"
+.include "ngin/controller.inc"
 
 .endif

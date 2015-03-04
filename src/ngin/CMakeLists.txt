@@ -16,6 +16,9 @@ add_library( ngin STATIC
     ppu-buffer.s
     build-log.s
     force-import.s
+    controller/controller-common.s
+    controller/controller1.s
+    controller/controller2.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

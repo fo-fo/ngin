@@ -11,6 +11,13 @@ ngin_kSpriteDefinitionTerminator = 0
 ngin_kSpriteRendererAdjustX = 128+4
 ngin_kSpriteRendererAdjustY = 128+4
 
+; These are coordinates that place the sprites origin at the top left corner of
+; the screen (compared to the background), when used as the position parameter
+; of SpriteRenderer_render.
+; Note that sprites cannot be rendered on the topmost scanline.
+ngin_kSpriteRendererTopLeftX = -ngin_kSpriteRendererAdjustX
+ngin_kSpriteRendererTopLeftY = -ngin_kSpriteRendererAdjustY - 1
+
 ; This bitmask must be ORed in to the attributes of each sprite defined in a
 ; sprite definition. Its purpose is to force all used attribute bytes to be
 ; non-zero (since 0 is used as a terminator).
