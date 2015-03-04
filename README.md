@@ -4,6 +4,8 @@ Ngin is an NES game engine. There is no game here, at least yet; the engine is s
 
 ## How to Build
 
+Dependencies: cc65, CMake, Ninja, Python 2
+
 TBD
 
 ## Random Notes

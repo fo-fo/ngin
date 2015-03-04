@@ -18,5 +18,7 @@ if ( ${CMAKE_BINARY_DIR} MATCHES " " )
     message( FATAL_ERROR "[ngin] sorry, can't handle spaces in CMAKE_BINARY_DIR" )
 endif()
 
+set( __ngin_rootDir ${CMAKE_CURRENT_SOURCE_DIR} )
+
 add_subdirectory( src/ngin )
 add_subdirectory( samples )
