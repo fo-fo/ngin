@@ -9,5 +9,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/sprite-renderer.inc"
 .include "ngin/memory.inc"
 .include "ngin/ppu-buffer.inc"
+.include "ngin/build-log.inc"
 
 .endif

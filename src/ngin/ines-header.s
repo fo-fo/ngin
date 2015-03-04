@@ -1,3 +1,5 @@
+.export __ngin_inesHeaderForceImport : absolute = 1
+
 .scope ines
     kMapperNumber   = 0
     kMirroring      = 0
@@ -6,7 +8,6 @@
 .endscope
 
 .segment "INES_HEADER"
-.export __ngin_inesHeader := *
     .byte "NES", $1A
     .byte ines::kNum16kPrgBanks
     .byte ines::kNum8kChrBanks

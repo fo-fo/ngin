@@ -14,6 +14,8 @@ add_library( ngin STATIC
     memory/fill-memory.s
     memory/fill-port.s
     ppu-buffer.s
+    build-log.s
+    force-import.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
@@ -59,7 +61,7 @@ function( ngin_addSample name )
             # \note --force-import is needed to bring in object files from the
             #       static library which would be otherwise stripped.
             LINK_FLAGS "-t none -C ${__ngin_sourceDir}/${__ngin_linkerConfig} \
---force-import __ngin_vectors --force-import __ngin_inesHeader \
+--force-import __ngin_forceImport \
 -Wl --dbgfile,${currentBinaryDirRelative}/${name}.nes.dbg \
 -m ${name}-map.txt"
     )
