@@ -47,13 +47,9 @@ ngin_ppuBufferPointer: .byte 0
     ; Clear the ppu::addr even/odd write flag, and acknowledge the NMI.
     bit ppu::status
 
-    loop:
-        ; Get the hibyte of PPU address from buffer.
-        pla
-        ; If top bit is set, exit loop.
-        .assert ngin_kPpuBufferTerminatorMask = %1000_0000, error
-        bmi loopDone
+    jmp startLoop
 
+    loop:
         ; Save the hibyte in X.
         tax
 
@@ -87,7 +83,14 @@ ngin_ppuBufferPointer: .byte 0
             sta ppu::data
             dex
         ngin_branchIfNotZero copyData
-    jmp loop
+
+        startLoop:
+        ; Get the hibyte of PPU address from buffer.
+        pla
+    ; If top bit is set, exit loop.
+    .assert ngin_kPpuBufferTerminatorMask = %1000_0000, error
+    bpl loop
+
 loopDone:
 
     ; \todo Mark the buffer as processed (terminator in the beginning)?
