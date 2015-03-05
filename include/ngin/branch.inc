@@ -1,6 +1,8 @@
 .if .not .defined( NGIN_BRANCH_INC_INCLUDED )
 NGIN_BRANCH_INC_INCLUDED = 1
 
+.include "ngin/core.inc"
+
 .macro ngin_branchIfZero to
     beq to
 .endmacro
@@ -24,37 +26,47 @@ NGIN_BRANCH_INC_INCLUDED = 1
 over:
 .endmacro
 
-.macro ngin_longBranch branch
-    ; \todo Give a warning if the branch could have been done without this
-    ;       macro.
+; Helper for ngin_longBranch
+.define __ngin_longBranchMatch( op ) .xmatch( .left( 1, {branch} ), op )
 
+.macro ngin_longBranch branch
     .local target
     target = .right( .tcount( {branch} ) - 1, {branch} )
 
     ; Invert the branch.
-    .if .xmatch( .left( 1, {branch} ), beq )
+    .if __ngin_longBranchMatch beq
         __ngin_longBranch bne, target
-    .elseif .xmatch( .left( 1, {branch} ), bne )
+    .elseif __ngin_longBranchMatch bne
         __ngin_longBranch beq, target
-    .elseif .xmatch( .left( 1, {branch} ), bmi )
+    .elseif __ngin_longBranchMatch bmi
         __ngin_longBranch bpl, target
-    .elseif .xmatch( .left( 1, {branch} ), bpl )
+    .elseif __ngin_longBranchMatch bpl
         __ngin_longBranch bmi, target
-    .elseif .xmatch( .left( 1, {branch} ), bcc )
+    .elseif __ngin_longBranchMatch bcc
         __ngin_longBranch bcs, target
-    .elseif .xmatch( .left( 1, {branch} ), bcs )
+    .elseif __ngin_longBranchMatch bcs
         __ngin_longBranch bcc, target
-    .elseif .xmatch( .left( 1, {branch} ), ngin_branchIfZero )
+    .elseif __ngin_longBranchMatch ngin_branchIfZero
         __ngin_longBranch ngin_branchIfNotZero, target
-    .elseif .xmatch( .left( 1, {branch} ), ngin_branchIfNotZero )
+    .elseif __ngin_longBranchMatch ngin_branchIfNotZero
         __ngin_longBranch ngin_branchIfZero, target
-    .elseif .xmatch( .left( 1, {branch} ), ngin_branchIfLess )
+    .elseif __ngin_longBranchMatch ngin_branchIfLess
         __ngin_longBranch ngin_branchIfGreaterOrEqual, target
-    .elseif .xmatch( .left( 1, {branch} ), ngin_branchIfGreaterOrEqual )
+    .elseif __ngin_longBranchMatch ngin_branchIfGreaterOrEqual
         __ngin_longBranch ngin_branchIfLess, target
     .else
         .error "ngin_longBranch: couldn't invert branch"
     .endif
+
+    ; Give a warning if the branch could have been done without a long branch.
+    ; \todo Option to turn the warning off? There are situations where e.g.
+    ;       code generated from a macro might need a long branch in one
+    ;       expansion, but not need it in another.
+    ; \note The maximum range for backward branch is -128 from the instruction
+    ;       following the branch, but we must subtract 3 because we added a JMP.
+    ;       The maximum range for a forward branch is +127.
+    .assert target - * < -128-3 .or target - * > 127, warning, \
+            "branch could've been done without ngin_longBranch"
 .endmacro
 
 .endif
