@@ -59,9 +59,13 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         ; Save result directly to OAM, because we can.
         sta ngin_shadowOam + ppu::oam::Object::x_, x
 
-        ; Add carry to hibyte.
+        ; Add the hibyte of the origin of position, so that a position of
+        ; $8000 will result in the hibyte wrapping to 0, which we'll use to
+        ; find out whether the sprite is in range. All of this assumes that
+        ; the unsigned position origin is $8000.
         lda position + ngin_Vector2_16::x_ + 1
-        adc #0
+        .assert ngin_kSpriteRendererOriginX = $8000, error
+        adc #.hibyte( ngin_kSpriteRendererOriginX )
         ; If hibyte of X is 0, X is in range 0..255, so sprite is visible.
         ngin_branchIfNotZero notVisibleX
 
@@ -83,9 +87,9 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         adc position + ngin_Vector2_16::y_ + 0
         sta ngin_shadowOam + ppu::oam::Object::y_, x
 
-        ; Add carry to hibyte.
         lda position + ngin_Vector2_16::y_ + 1
-        adc #0
+        .assert ngin_kSpriteRendererOriginY = $8000, error
+        adc #.hibyte( ngin_kSpriteRendererOriginY )
         ; If hibyte of Y is 0, Y is in range 0..255, so sprite *might* be
         ; visible.
         ngin_branchIfNotZero notVisibleY

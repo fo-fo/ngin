@@ -74,9 +74,12 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #spriteDefinition, \
-                               #ngin_immediateVector2_16 0, 0
+        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX, \
+                                  ngin_kSpriteRendererOriginY
+
     ngin_SpriteRenderer_render #spriteDefinition, \
-                               #ngin_immediateVector2_16 -65, 50
+        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX-65, \
+                                  ngin_kSpriteRendererOriginY+50
 
     ngin_ShadowOam_endFrame
 

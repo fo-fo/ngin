@@ -1,6 +1,53 @@
 .if .not .defined( NGIN_ARITHMETIC_INC_INCLUDED )
 NGIN_ARITHMETIC_INC_INCLUDED = 1
 
+.macro ngin_add16 to, what1, what2
+    ; If two parameters were given, interpret as to = to + what1
+    .if .paramcount = 2
+        ngin_add16 {to}, {to}, {what1}
+        .exitmac
+    .endif
+
+    ; \todo Check .paramcount?
+    __ngin_requireParameter {to}, "to"
+    __ngin_requireParameter {what1}, "what1"
+    __ngin_requireParameter {what2}, "what2"
+
+    ; \todo Check for hibyte offset.
+
+    clc
+    ; \todo Factor out these common portions. Might also want to .definemacroify
+    ;       the immediate match and hash-stripping.
+    ; \todo Can optimize case where the lobyte of immediate parameter is 0.
+    .if .match( .left( 1, {what1} ), # )
+        .local what1Stripped
+        what1Stripped = .right( .tcount( {what1} ) - 1, {what1} )
+        lda #.lobyte( what1Stripped )
+    .else
+        lda 0+(what1)
+    .endif
+    .if .match( .left( 1, {what2} ), # )
+        .local what2Stripped
+        what2Stripped = .right( .tcount( {what2} ) - 1, {what2} )
+        adc #.lobyte( what2Stripped )
+    .else
+        adc 0+(what2)
+    .endif
+    sta 0+(to)
+
+    .if .match( .left( 1, {what1} ), # )
+        lda #.hibyte( what1Stripped )
+    .else
+        lda 1+(what1)
+    .endif
+    .if .match( .left( 1, {what2} ), # )
+        adc #.hibyte( what2Stripped )
+    .else
+        adc 1+(what2)
+    .endif
+    sta 1+(to)
+.endmacro
+
 .macro ngin_sbc8 to, what
     lda to
     sbc what
@@ -17,8 +64,37 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
 .endmacro
 
 .macro ngin_cmp8 with, what
+    __ngin_requireParameter {with}, "with"
+    __ngin_requireParameter {what}, "what"
+
     lda with
     cmp what
+.endmacro
+
+.macro __ngin_sbc8NoStore to, what
+    lda to
+    sbc what
+.endmacro
+
+.macro ngin_cmp16 with, what
+    __ngin_requireParameter {with}, "with"
+    __ngin_requireParameter {what}, "what"
+
+    ; \todo The first parameter should be able to be immediate as well, e.g.
+    ;       ngin_cmp16 #123, something
+    .if .match( .left( 1, {what} ), # )
+        .local whatStripped
+        whatStripped = .right( .tcount( {what} ) - 1, {what} )
+        ngin_cmp8 0+(with), #.lobyte( whatStripped )
+        __ngin_sbc8NoStore 1+(with), #.hibyte( whatStripped )
+    .else
+        ngin_cmp8 1+(with), 1+(what)
+        bne hibytesNotEqual
+            ; Hibytes were equal, compare lobytes.
+            ngin_cmp8 0+(with), 0+(what)
+        .local hibytesNotEqual
+        hibytesNotEqual:
+    .endif
 .endmacro
 
 .endif

@@ -55,7 +55,7 @@ NGIN_CORE_INC_INCLUDED = 1
         ngin_mov16 0+(to), #.loword( fromStripped )
         ngin_mov16 2+(to), #.hiword( fromStripped )
     .else
-        ngin_mov16 0+{to}, 0+{from}
+        ngin_mov16 0+(to), 0+(from)
         ngin_mov16 2+(to), 2+(from)
     .endif
 .endmacro

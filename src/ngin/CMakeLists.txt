@@ -19,6 +19,7 @@ add_library( ngin STATIC
     controller/controller-common.s
     controller/controller1.s
     controller/controller2.s
+    collision.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
