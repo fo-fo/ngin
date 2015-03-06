@@ -61,7 +61,9 @@ function( ngin_addSample name )
     set_target_properties( ${name}
         PROPERTIES
             OUTPUT_NAME ${name}.nes
-            COMPILE_FLAGS "${__ngin_compileFlags} --asm-include-dir ${currentBinaryDirRelative} --bin-include-dir ${currentBinaryDirRelative}"
+            COMPILE_FLAGS "${__ngin_compileFlags} \
+--asm-include-dir ${currentBinaryDirRelative} \
+--bin-include-dir ${currentBinaryDirRelative}"
             # \note --force-import is needed to bring in object files from the
             #       static library which would be otherwise stripped.
             LINK_FLAGS "-t none -C ${__ngin_sourceDir}/${__ngin_linkerConfig} \
