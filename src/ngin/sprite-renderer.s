@@ -8,15 +8,15 @@
 ; one scanline delay in PPU's sprite handling).
 kMaxVisibleY = 238
 
-.segment "ZEROPAGE"
+.segment "NGIN_ZEROPAGE" : zeropage
 
 __ngin_SpriteRenderer_render_spriteDefinition:  .addr 0
 
-.segment "BSS"
+.segment "NGIN_BSS"
 
 __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_SpriteRenderer_render
     spriteDefinition := __ngin_SpriteRenderer_render_spriteDefinition

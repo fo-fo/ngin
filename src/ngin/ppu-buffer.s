@@ -6,7 +6,7 @@
 ; \todo Should be configurable somewhere
 kPpuBufferSize = 64
 
-.segment "STACK"
+.segment "NGIN_STACK"
 
 ngin_ppuBuffer: .res kPpuBufferSize
 .assert .hibyte( ngin_ppuBuffer ) = 1 .and \
@@ -14,11 +14,11 @@ ngin_ppuBuffer: .res kPpuBufferSize
         .hibyte( ngin_ppuBuffer + .sizeof( ngin_ppuBuffer )-1 ) = 1, \
         error
 
-.segment "BSS"
+.segment "NGIN_BSS"
 
 ngin_ppuBufferPointer: .byte 0
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_PpuBuffer_startFrame
     ; Start filling the buffer from the beginning.
@@ -29,7 +29,7 @@ ngin_ppuBufferPointer: .byte 0
 
 .proc __ngin_PpuBuffer_upload
     .pushseg
-    .segment "BSS"
+    .segment "NGIN_BSS"
         savedStackPointer: .byte 0
     .popseg
 

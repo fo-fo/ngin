@@ -1,5 +1,7 @@
 .include "ngin/ppu.inc"
 
+.segment "NGIN_CODE"
+
 .proc __ngin_pollVBlank
     bit ppu::status
 

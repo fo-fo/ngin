@@ -1,6 +1,6 @@
 .include "generic-copy.inc"
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_copyMemory
     genericCopy CopyParameterType::memory, CopyParameterType::memory

@@ -5,17 +5,17 @@
 
 kShadowOamSize = 256
 
-.segment "SHADOW_OAM"
+.segment "NGIN_SHADOW_OAM"
 
 ngin_shadowOam:         .res kShadowOamSize
 .assert .lobyte( ngin_shadowOam ) = 0, error, \
         "ngin_shadowOam must be page aligned"
 
-.segment "BSS"
+.segment "NGIN_BSS"
 
 ngin_shadowOamPointer:  .byte 0
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_ShadowOam_startFrame
     ngin_mov8 ngin_shadowOamPointer, #0

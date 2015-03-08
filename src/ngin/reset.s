@@ -1,6 +1,8 @@
 .include "reset.inc"
 .include "ngin/ppu.inc"
 
+.segment "NGIN_CODE"
+
 .proc __ngin_reset
     ; \todo Proper reset code
     lda #0

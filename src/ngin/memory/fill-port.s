@@ -1,6 +1,6 @@
 .include "generic-copy.inc"
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_fillPort
     genericCopy CopyParameterType::port, CopyParameterType::constant

@@ -3,14 +3,14 @@
 .include "ngin/arithmetic.inc"
 .include "ngin/branch.inc"
 
-.segment "BSS"
+.segment "NGIN_BSS"
 
 __ngin_Collision_rectOverlap_rectATopLeft:      .tag ngin_Vector2_16
 __ngin_Collision_rectOverlap_rectABottomRight:  .tag ngin_Vector2_16
 __ngin_Collision_rectOverlap_rectBTopLeft:      .tag ngin_Vector2_16
 __ngin_Collision_rectOverlap_rectBBottomRight:  .tag ngin_Vector2_16
 
-.segment "CODE"
+.segment "NGIN_CODE"
 
 .proc __ngin_Collision_rectOverlap
     rectATopLeft     := __ngin_Collision_rectOverlap_rectATopLeft

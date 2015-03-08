@@ -1,6 +1,8 @@
 .include "ngin/controller.inc"
 .include "blargg-read-joy.inc"
 
+.segment "NGIN_CODE"
+
 kControllerIndex = 1
 
 readJoy:
