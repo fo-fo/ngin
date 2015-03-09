@@ -20,6 +20,7 @@ add_library( ngin STATIC
     controller/controller1.s
     controller/controller2.s
     collision.s
+    map-data.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

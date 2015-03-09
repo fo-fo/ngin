@@ -18,7 +18,7 @@ ngin_kPpuBufferIncrease32Mask = %0100_0000
     size        .byte
 
     ; Data comprises of "size" bytes.
-    data        .tag __ngin_emptyStruct
+    data        .tag __ngin_EmptyStruct
 .endstruct
 
 ; PPU buffer

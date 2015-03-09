@@ -13,5 +13,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/controller.inc"
 .include "ngin/collision.inc"
 .include "ngin/lua/lua.inc"
+.include "ngin/map-data.inc"
 
 .endif

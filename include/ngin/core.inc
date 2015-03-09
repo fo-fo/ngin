@@ -68,7 +68,7 @@ NGIN_CORE_INC_INCLUDED = 1
 .define ngin_immediateVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
                                               .loword( x_ ) )
 
-.struct __ngin_emptyStruct
+.struct __ngin_EmptyStruct
 .endstruct
 
 .endif
