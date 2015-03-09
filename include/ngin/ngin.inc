@@ -12,5 +12,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/build-log.inc"
 .include "ngin/controller.inc"
 .include "ngin/collision.inc"
+.include "ngin/lua/lua.inc"
 
 .endif
