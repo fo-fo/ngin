@@ -19,10 +19,14 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     ; \todo Factor out these common portions. Might also want to .definemacroify
     ;       the immediate match and hash-stripping.
     ; \todo Can optimize case where the lobyte of immediate parameter is 0.
+    ; \todo Better way to handle indirect parameters?
     .if .match( .left( 1, {what1} ), # )
         .local what1Stripped
         what1Stripped = .right( .tcount( {what1} ) - 1, {what1} )
         lda #.lobyte( what1Stripped )
+    .elseif .match( .left( 1, {what1} ), {(} )
+        ; Indirect -- assume an 8-bit value.
+        lda what1
     .else
         lda 0+(what1)
     .endif
@@ -30,6 +34,8 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
         .local what2Stripped
         what2Stripped = .right( .tcount( {what2} ) - 1, {what2} )
         adc #.lobyte( what2Stripped )
+    .elseif .match( .left( 1, {what2} ), {(} )
+        adc what2
     .else
         adc 0+(what2)
     .endif
@@ -37,11 +43,16 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
 
     .if .match( .left( 1, {what1} ), # )
         lda #.hibyte( what1Stripped )
+    .elseif .match( .left( 1, {what1} ), {(} )
+        ; Hibyte is assumed 0 for indirect.
+        lda #0
     .else
         lda 1+(what1)
     .endif
     .if .match( .left( 1, {what2} ), # )
         adc #.hibyte( what2Stripped )
+    .elseif .match( .left( 1, {what2} ), {(} )
+        adc #0
     .else
         adc 1+(what2)
     .endif
