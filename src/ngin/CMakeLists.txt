@@ -21,6 +21,7 @@ add_library( ngin STATIC
     controller/controller2.s
     collision.s
     map-data.s
+    map-scroller.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

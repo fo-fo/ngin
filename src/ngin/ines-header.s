@@ -1,8 +1,14 @@
 .export __ngin_inesHeaderForceImport : absolute = 1
 
+.enum inesMirroring
+    kHorizontal
+    kVertical
+    kFourScreen = 8
+.endenum
+
 .scope ines
     kMapperNumber   = 0
-    kMirroring      = 0
+    kMirroring      = inesMirroring::kHorizontal
     kNum16kPrgBanks = 2
     kNum8kChrBanks  = 1
 .endscope

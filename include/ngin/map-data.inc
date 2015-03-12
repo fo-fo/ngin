@@ -3,18 +3,31 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
-.struct ngin_MapData_Header
-    num16x16Metatiles   .byte
-    num32x32Metatiles   .byte
-    numScreens          .byte
-    mapWidth            .byte ; Unit: screens
-    data                .tag __ngin_EmptyStruct
+.struct ngin_MapData_Pointers
+    screenRowPointersLo         .addr
+    screenRowPointersHi         .addr
+    screenPointersLo            .addr
+    screenPointersHi            .addr
+    _16x16MetatileTopLeft       .addr
+    _16x16MetatileTopRight      .addr
+    _16x16MetatileBottomLeft    .addr
+    _16x16MetatileBottomRight   .addr
+    _16x16MetatileAttributes0   .addr
+    _32x32MetatileTopLeft       .addr
+    _32x32MetatileTopRight      .addr
+    _32x32MetatileBottomLeft    .addr
+    _32x32MetatileBottomRight   .addr
 .endstruct
 
-; \todo globalzp for pointers
+.struct ngin_MapData_Header
+    ; \todo Might need mapWidth/height for wrap over?
+    pointers        .tag ngin_MapData_Pointers
+.endstruct
 
-.global __ngin_MapData_load
-.global __ngin_MapData_load_mapAddress
+.globalzp ngin_MapData_pointers
+
+.global   __ngin_MapData_load
+.globalzp __ngin_MapData_load_mapAddress
 .macro ngin_MapData_load mapAddress
     __ngin_requireParameter {mapAddress}, "mapAddress"
 

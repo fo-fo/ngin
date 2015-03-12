@@ -15,4 +15,13 @@ ngin_Lua_kUniqueAddress = 1
     ndxLuaExecFile {filename}, {uniqueAddress}
 .endmacro
 
+.macro ngin_Lua_require filename
+    ; Use an empty segment that is placed at the reset handler to include
+    ; all of the required Lua files.
+    .pushseg
+    .segment "NGIN_LUA_REQUIRE"
+        ngin_Lua_file {filename}
+    .popseg
+.endmacro
+
 .endif

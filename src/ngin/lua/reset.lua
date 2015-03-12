@@ -1,1 +1,3 @@
-print( "[ngin] Running reset.lua" )
+print( "[ngin] Running reset code" )
+
+ngin = {}

@@ -51,15 +51,15 @@ kMetaspriteHeight = 24
 .define controllerDeltaX_ 0,  0, 0, -1, 1
 .define controllerDeltaY_ 0, -1, 1,  0, 0
 
-.proc controllerDeltaX
+.scope controllerDeltaX
     lo: .lobytes controllerDeltaX_
     hi: .hibytes controllerDeltaX_
-.endproc
+.endscope
 
-.proc controllerDeltaY
+.scope controllerDeltaY
     lo: .lobytes controllerDeltaY_
     hi: .hibytes controllerDeltaY_
-.endproc
+.endscope
 
 .segment "BSS"
 
