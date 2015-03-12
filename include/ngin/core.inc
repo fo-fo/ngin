@@ -14,6 +14,9 @@ NGIN_CORE_INC_INCLUDED = 1
     .endif
 .endmacro
 
+.define __ngin_choice( condition, if, else ) \
+    ((!!(condition)) * (if) + (!(condition)) * (else))
+
 .macro ngin_mov8 to, from
     __ngin_requireParameter {to}, "to"
     __ngin_requireParameter {from}, "from"
@@ -70,5 +73,16 @@ NGIN_CORE_INC_INCLUDED = 1
 
 .struct __ngin_EmptyStruct
 .endstruct
+
+; Converts a signed value -128..127 to a corresponding unsigned byte in range
+; 0..255. If the input value is out of range, returns -1. The intended usage
+; is for constants in places which normally only accept unsigned bytes, e.g.
+; lda #ngin_signedByte -66
+.define ngin_signedByte( value ) ( \
+    __ngin_choice \
+        (value) >= -128 .and (value) <= 127, \
+        .lobyte( value ), \
+        -1 \
+    )
 
 .endif

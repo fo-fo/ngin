@@ -3,9 +3,6 @@ NGIN_BUILD_LOG_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
-.define __ngin_choice( condition, if, else ) \
-    ((!!(condition)) * (if) + (!(condition)) * (else))
-
 .macro ngin_BuildLog_string string
     .byte string
 .endmacro
