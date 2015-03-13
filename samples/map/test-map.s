@@ -79,7 +79,7 @@
         topRight:    .byte 4, 3
         bottomLeft:  .byte 4, 2
         bottomRight: .byte 4, 1
-        attributes0: .byte 0, 0
+        attributes0: .byte 1, 0
     .endscope
     .assert .sizeof( _16x16Metatiles ) = 5*kNum16x16Metatiles, error
 

@@ -274,11 +274,29 @@ out:
     ngin_setPpuAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
-    ; Set some colors.
-    ngin_setPpuAddress #ppu::backgroundPalette+1
-    ngin_mov8 ppu::data, #$15
-    ngin_mov8 ppu::data, #$29
-    ngin_mov8 ppu::data, #$11
+    .if ::kUseTestMap
+        ; Set some colors.
+        ngin_setPpuAddress #ppu::backgroundPalette+1
+        ngin_mov8 ppu::data, #$15
+        ngin_mov8 ppu::data, #$29
+        ngin_mov8 ppu::data, #$11
+        bit ppu::data ; Skip one byte.
+        ngin_mov8 ppu::data, #$00
+        ngin_mov8 ppu::data, #$10
+        ngin_mov8 ppu::data, #$30
+    .else
+        .pushseg
+        .segment "RODATA"
+        .proc smb3Palette
+            .byte $3C, $0F, $30, $3C
+            .byte $3C, $0F, $36, $27
+            .byte $3C, $0F, $2A, $1A
+            .byte $3C, $0F, $31, $21
+        .endproc
+        .popseg
+        ngin_setPpuAddress #ppu::backgroundPalette
+        ngin_copyMemoryToPort #ppu::data, #smb3Palette, #.sizeof( smb3Palette )
+    .endif
 
     rts
 .endproc

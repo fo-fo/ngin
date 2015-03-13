@@ -2,19 +2,25 @@
 -- The implementation details don't represent the final 6502 implementation,
 -- but the functionality should be the same.
 
--- \todo Color attribute updates
-
 local MapScroller = {}
 
 -- Width of the scrollable area view that should be valid at any given time.
--- 240x224 should make a good default, since it can work with any mirroring
--- mode, although it will show artifacts on both axes.
--- "Minus 16" comes from the size of the color attribute block.
-local kViewWidth, kViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
--- local kViewWidth, kViewHeight = 256-16, 240 -- Horizontal mirroring
--- local kViewWidth, kViewHeight = 256, 240-16 -- Vertical mirroring
--- local kViewWidth, kViewHeight = 256, 240 -- Four-screen mirroring
--- local kViewWidth, kViewHeight = 64, 64 -- Custom
+-- Maximum possible value depends on the used mirroring mode:
+--   * One screen mirroring: 256-8, 240-8; 256-16, 240-16
+--     * Can also be used with other mirroring modes, but produces needless
+--       artifacts.
+--   * Horizontal mirroring: 256-8, 240; 256-16, 240
+--   * Vertical mirroring: 256, 240-8; 256, 240-16
+--   * Four-screen mirroring: 256, 240; 256, 240
+-- Custom sizes (e.g. 64x64) could be used as well.
+-- Note: The "maximum" is the maximum sensible value. E.g. with horizontal
+--       mirroring the view height could be 384 pixels, but most of the updated
+--       pixels would then go to waste. The tile and color attribute view
+--       sizes can also differ.
+-- Note: Using values other than "one screen mirroring" here requires manual
+--       changes to attributeCache.
+local kViewWidth, kViewHeight = 256-8, 240-8 -- One screen mirroring (generic)
+local kAttrViewWidth, kAttrViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
 
 local kDirectionVertical, kDirectionHorizontal = 0, 1
 
@@ -29,12 +35,14 @@ local kNametableTotalWidth = 2*kNametableWidth
 local kNametableTotalHeight = 2*kNametableHeight
 
 -- These values are (in pixels) the maximum amount of pixels that need to be
--- updated when the screen scroll. The reason for adding another 8 pixels is
+-- updated when the screen scrolls. The reason for adding another 8 pixels is
 -- that when the subtile offset is non-zero, one more tile of map is overlapped
 -- by the view window. These values are the worst case scenario -- if subtile
 -- offset is 0, only kViewWidth/kViewHeight pixels would need to be updated.
 local kTileUpdateWidthPixels = kViewWidth + kTile8Width
 local kTileUpdateHeightPixels = kViewHeight + kTile8Height
+local kAttributeTileUpdateWidthPixels = kAttrViewWidth + kTile16Width
+local kAttributeTileUpdateHeightPixels = kAttrViewHeight + kTile16Height
 
 -------------------------------------------------------------------------------
 
@@ -43,29 +51,38 @@ local kTileUpdateHeightPixels = kViewHeight + kTile8Height
 -- \note In practice, map position and PPU position could share the same
 --       subtile offset, and should be split into several parts for faster
 --       access (e.g. screen part, tile part, subtile offset, ...)
+--       There's also some redundancy in the tile/attribute counters.
 -- \note Map position and PPU position have to be aligned to the color attribute
 --       grid.
 scrollDataTop = {
     mapPosition = 0,
     ppuPosition = 0,
+    attrMapPosition = 0,
+    attrPpuPosition = 0,
     updateDirection = kDirectionHorizontal
 }
 
 scrollDataBottom = {
     mapPosition = scrollDataTop.mapPosition + kViewHeight-1,
     ppuPosition = (scrollDataTop.ppuPosition + kViewHeight-1) % kNametableTotalHeight,
+    attrMapPosition = scrollDataTop.mapPosition + kAttrViewHeight-1,
+    attrPpuPosition = (scrollDataTop.ppuPosition + kAttrViewHeight-1) % kNametableTotalHeight,
     updateDirection = kDirectionHorizontal
 }
 
 scrollDataLeft = {
     mapPosition = 0,
     ppuPosition = 0,
+    attrMapPosition = 0,
+    attrPpuPosition = 0,
     updateDirection = kDirectionVertical
 }
 
 scrollDataRight = {
     mapPosition = scrollDataLeft.mapPosition + kViewWidth-1,
     ppuPosition = (scrollDataLeft.ppuPosition + kViewWidth-1) % kNametableTotalWidth,
+    attrMapPosition = scrollDataLeft.mapPosition + kAttrViewWidth-1,
+    attrPpuPosition = (scrollDataLeft.ppuPosition + kAttrViewWidth-1) % kNametableTotalWidth,
     updateDirection = kDirectionVertical
 }
 
@@ -103,6 +120,15 @@ local pointersStructMembers = {
 local ngin_MapData_pointers = SYM.ngin_MapData_pointers[ 1 ]
 local ngin_ppuBuffer        = SYM.ngin_ppuBuffer[ 1 ]
 
+-- Attribute cache keeps a copy of the PPU color attributes in CPU memory.
+-- The required size depends on the view size. 9x9 bytes should be enough for
+-- all uses (although addressing the cache might be a bit tricky).
+local attributeCache = {}
+-- for i = 0, 255 do
+for i = 0, 63 do
+    attributeCache[ i ] = 0
+end
+
 -- Read a value of a map data pointer.
 local function readPointer( structMember )
     return read16( ngin_MapData_pointers +
@@ -117,8 +143,8 @@ local function signedByte( value )
     return value - 256
 end
 
--- Read a tile from map. X and Y parameters are in pixels.
-local function readTile( x, y )
+-- Read a 16x16px metatile from the map. X and Y parameters are in pixels.
+local function readMetatile16( x, y )
     -- Screen coordinates within the full map
     local screenX, screenY =
         math.floor( x / kScreenWidth ), math.floor( y / kScreenHeight )
@@ -133,11 +159,6 @@ local function readTile( x, y )
         math.floor( x / kTile16Width ) % ( kTile32Width / kTile16Width ),
         math.floor( y / kTile16Width ) % ( kTile32Height / kTile16Height )
 
-    -- 2x2 coordinates within the 16x16px metatile
-    local tile16X_2, tile16Y_2 =
-        math.floor( x / kTile8Width ) % ( kTile16Width / kTile8Width ),
-        math.floor( y / kTile8Width ) % ( kTile16Height / kTile8Width )
-
     -- Get address of screen row pointers.
     local screenRowPointersLo = readPointer( "screenRowPointersLo" )
     local screenRowPointersHi = readPointer( "screenRowPointersHi" )
@@ -151,12 +172,6 @@ local function readTile( x, y )
     local _32x32MetatileTopRight    = readPointer( "_32x32MetatileTopRight" )
     local _32x32MetatileBottomLeft  = readPointer( "_32x32MetatileBottomLeft" )
     local _32x32MetatileBottomRight = readPointer( "_32x32MetatileBottomRight" )
-
-    -- Get address of 16x16px metatile pointers.
-    local _16x16MetatileTopLeft     = readPointer( "_16x16MetatileTopLeft" )
-    local _16x16MetatileTopRight    = readPointer( "_16x16MetatileTopRight" )
-    local _16x16MetatileBottomLeft  = readPointer( "_16x16MetatileBottomLeft" )
-    local _16x16MetatileBottomRight = readPointer( "_16x16MetatileBottomRight" )
 
     -- Index the screen row pointers list with the Y coordinate.
     local screenRowPointerLo = NDX.readMemory( screenRowPointersLo + screenY )
@@ -190,8 +205,26 @@ local function readTile( x, y )
     end
     local metatile16 = NDX.readMemory( addr + metatile32 )
 
+    return metatile16
+end
+
+-- Read a tile from the map.
+local function readTile( x, y )
+    local metatile16 = readMetatile16( x, y )
+
+    -- 2x2 coordinates within the 16x16px metatile
+    local tile16X_2, tile16Y_2 =
+        math.floor( x / kTile8Width ) % ( kTile16Width / kTile8Width ),
+        math.floor( y / kTile8Width ) % ( kTile16Height / kTile8Width )
+
+    -- Get address of 16x16px metatile pointers.
+    local _16x16MetatileTopLeft     = readPointer( "_16x16MetatileTopLeft" )
+    local _16x16MetatileTopRight    = readPointer( "_16x16MetatileTopRight" )
+    local _16x16MetatileBottomLeft  = readPointer( "_16x16MetatileBottomLeft" )
+    local _16x16MetatileBottomRight = readPointer( "_16x16MetatileBottomRight" )
+
     -- Read the 8x8px tile index from the 16x16px metatile.
-    local addr = -1
+    local addr = nil
     if tile16X_2 == 0 and tile16Y_2 == 0 then
         addr = _16x16MetatileTopLeft
     elseif tile16X_2 == 1 and tile16Y_2 == 0 then
@@ -204,7 +237,16 @@ local function readTile( x, y )
     local tile8 = NDX.readMemory( addr + metatile16 )
 
     return tile8
+end
 
+-- Read an attribute from the map.
+local function readAttribute( x, y )
+    local metatile16 = readMetatile16( x, y )
+
+    local _16x16MetatileAttributes0 = readPointer( "_16x16MetatileAttributes0" )
+    local attribute = NDX.readMemory( _16x16MetatileAttributes0 + metatile16 )
+
+    return attribute
 end
 
 -- Add a byte to PPU buffer.
@@ -256,6 +298,59 @@ local function ppuAddressFromCoord( x, y )
                     ( kNametableHeight / kTile8Height )
 
     return 0x2000 + 0x400 * nametable + 32*tileY + tileX
+end
+
+-- Generate a PPU attribute table address from coordinates (0..511, 0..479)
+local function ppuAttributeAddressFromCoord( x, y )
+    local nametable = 2 * ( math.floor( y / kNametableHeight ) % 2 ) +
+                      math.floor( x / kNametableWidth ) % 2
+
+    local attributeByteX = math.floor( x / kTile32Width ) %
+                    ( kNametableWidth / kTile32Width )
+    -- \note The nametable height (240px) is not an even multiple of attribute
+    --       byte height (32px).
+    local attributeByteY = math.floor( ( y % kNametableHeight ) / kTile32Height )
+
+    return 0x2000 + 0x400 * nametable + 32*30 + 8*attributeByteY + attributeByteX
+end
+
+-- Updates attribute cache with attributeBits at (x, y), returns the updated
+-- attribute byte corresponding to the coordinates.
+local function updateAttributeCache( x, y, attributeBits )
+    local attributeAddress = ppuAttributeAddressFromCoord( x, y )
+
+    -- Strip out the nametable portion, leave only the attribute part.
+    -- \todo Mask 0x3F works for a limited view size (one screen mirroring)
+    --       For bigger views we would need a slightly bigger cache.
+    attributeAddress = bit32.bor(
+        bit32.band( attributeAddress, 0x3F ),
+        -- Add the attribute bits to expand to 8-bit range.
+        -- bit32.rshift( bit32.band( attributeAddress, 0xC00 ), 4 )
+        0
+    )
+
+    -- Get the quadrant within the attribute byte.
+    local attributeQuadrantX = math.floor( x / kTile16Width ) % 2
+    -- \note A possibility of a subtle error here requires us to modulo the
+    --       Y coordinate with nametable height before division. Otherwise
+    --       e.g. Y = 240 would produce quadrantY = 1
+    local attributeQuadrantY = math.floor( ( y % kNametableHeight ) / kTile16Height ) % 2
+
+    -- Calculate the shift amount.
+    -- (0,0) -> 0, (0,1) -> 2, (1,0) -> 4, (1,1) -> 6
+    local shiftAmount = 2 * ( 2*attributeQuadrantY + attributeQuadrantX )
+
+    -- Update the cache.
+    local attributeByte = attributeCache[ attributeAddress ]
+    attributeByte = bit32.bor(
+        -- Clear out the existing data with AND.
+        bit32.band( attributeByte, bit32.bnot( bit32.lshift( 0x3, shiftAmount ) ) ),
+        bit32.lshift( attributeBits, shiftAmount )
+    )
+    attributeCache[ attributeAddress ] = attributeByte
+
+    return attributeByte
+
 end
 
 -- Generates a PPU buffer update to add a new row/column of tiles.
@@ -330,12 +425,82 @@ local function update( scrollData, perpScrollData )
     end
 
     endPpuBufferSizeCounting()
+    terminatePpuBuffer()
+end
 
+-- Mostly copied from update(). Annoyingly different enough to make combining
+-- the two functions quite difficult.
+local function updateAttributes( scrollData, perpScrollData )
+    local kUpdateLengthPixels, kAttributeTileSize
+    if scrollData.updateDirection == kDirectionVertical then
+        kUpdateLengthPixels = kAttributeTileUpdateHeightPixels
+        kAttributeTileSize = kTile16Height
+    else
+        kUpdateLengthPixels = kAttributeTileUpdateWidthPixels
+        kAttributeTileSize = kTile16Width
+    end
+
+    local previousPpuAddress = nil
+
+    local mapX = scrollData.attrMapPosition
+    for mapY = perpScrollData.attrMapPosition,
+            perpScrollData.attrMapPosition+kUpdateLengthPixels-1,
+            kAttributeTileSize do
+
+        ppuY = perpScrollData.attrPpuPosition + mapY - perpScrollData.attrMapPosition
+
+        local ppuAddress
+        if scrollData.updateDirection == kDirectionVertical then
+            ppuAddress = ppuAttributeAddressFromCoord( scrollData.attrPpuPosition,
+                                                       ppuY )
+        else
+            ppuAddress = ppuAttributeAddressFromCoord( ppuY,
+                                                       scrollData.attrPpuPosition )
+        end
+
+        -- If update is to the same address as before, replace the old update.
+        -- This can happen because several attributes are packed into a single
+        -- byte.
+        if ppuAddress == previousPpuAddress then
+            -- Replace the previous update by moving the pointer backwards.
+            RAM.ngin_ppuBufferPointer = RAM.ngin_ppuBufferPointer - 1
+        -- If nametable changed, OR doing a vertical update, start a new update
+        -- batch (always needed for vertical, since there's no "inc8" mode)
+        elseif previousPpuAddress == nil or bit32.band( ppuAddress, 0xC00 ) ~=
+                bit32.band( previousPpuAddress, 0xC00 ) or
+                scrollData.updateDirection == kDirectionVertical then
+            endPpuBufferSizeCounting()
+
+            -- \note Inc1 mode is always used for attributes.
+
+            addPpuBufferByte( bit32.rshift( ppuAddress, 8 ) )
+            addPpuBufferByte( bit32.band( ppuAddress, 0xFF ) )
+            startPpuBufferSizeCounting()
+            addPpuBufferByte( 0 )
+        end
+        previousPpuAddress = ppuAddress
+
+        -- Read an attribute from the map, combine it with cached attributes,
+        -- store back in cache, and add to the update buffer.
+        local attribute
+        if scrollData.updateDirection == kDirectionVertical then
+            attribute = updateAttributeCache( scrollData.attrPpuPosition, ppuY,
+                readAttribute( mapX, mapY ) )
+        else
+            attribute = updateAttributeCache( ppuY, scrollData.attrPpuPosition,
+                readAttribute( mapY, mapX ) )
+        end
+
+        addPpuBufferByte( attribute )
+    end
+
+    endPpuBufferSizeCounting()
     terminatePpuBuffer()
 end
 
 local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
     local previousPosition = scrollData.mapPosition
+    local previousAttrPosition = scrollData.attrMapPosition
 
     -- Update the position in the map, on the side we're scrolling to, and on
     -- the opposite side.
@@ -343,6 +508,9 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
     --       for a repeating map.
     scrollData.mapPosition = scrollData.mapPosition + amount
     oppositeScrollData.mapPosition = oppositeScrollData.mapPosition + amount
+
+    scrollData.attrMapPosition = scrollData.attrMapPosition + amount
+    oppositeScrollData.attrMapPosition = oppositeScrollData.attrMapPosition + amount
 
     -- Determine the maximum nametable coordinate based on update direction.
     local kPpuPositionMax
@@ -357,6 +525,11 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
     oppositeScrollData.ppuPosition =
         (oppositeScrollData.ppuPosition + amount) % kPpuPositionMax
 
+    scrollData.attrPpuPosition =
+        (scrollData.attrPpuPosition + amount) % kPpuPositionMax
+    oppositeScrollData.attrPpuPosition =
+        (oppositeScrollData.attrPpuPosition + amount) % kPpuPositionMax
+
     -- If the scroll position update pushed us over to a new tile, we need to
     -- update a new tile row/column. In an actual implementation we could check
     -- if the subtile offset overflowed.
@@ -364,6 +537,11 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
             math.floor( scrollData.mapPosition/8 ) then
         -- A new tile row/column is visible, generate PPU update for it.
         update( scrollData, perpScrollData )
+    end
+
+    if math.floor( previousAttrPosition/16 ) ~=
+            math.floor( scrollData.attrMapPosition/16 ) then
+        updateAttributes( scrollData, perpScrollData )
     end
 end
 
