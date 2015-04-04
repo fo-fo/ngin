@@ -8,6 +8,9 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
     screenRowPointersHi         .addr
     screenPointersLo            .addr
     screenPointersHi            .addr
+    ; \todo Add a level of indirection here? Specify a metatileset
+    ;       index in map data, then read these pointers from elsewhere.
+    ;       (NOTE: These pointers should still exist in RAM)
     _16x16MetatileTopLeft       .addr
     _16x16MetatileTopRight      .addr
     _16x16MetatileBottomLeft    .addr

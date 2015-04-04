@@ -24,6 +24,7 @@ __ngin_Collision_rectOverlap_rectBBottomRight:  .tag ngin_Vector2_16
     ;     rectATopLeft.Y     < rectBBottomRight.Y  and
     ;     rectABottomRight.Y > rectBTopLeft.Y
 
+    ; \todo The horizontal and vertical case can be macroified.
     ngin_cmp16 rectATopLeft     + ngin_Vector2_16::x_, \
                rectBBottomRight + ngin_Vector2_16::x_
     ngin_branchIfGreaterOrEqual noOverlapClearCarry
