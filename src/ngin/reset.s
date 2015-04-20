@@ -1,4 +1,4 @@
-.include "reset.inc"
+.include "reset-private.inc"
 .include "ngin/ppu.inc"
 .include "ngin/lua/lua.inc"
 

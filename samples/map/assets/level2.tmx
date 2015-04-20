@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="48" height="32" tilewidth="16" tileheight="16" nextobjectid="1">
+ <tileset firstgid="1" source="tiles/tileset.tsx"/>
+ <tileset firstgid="257" source="tiles/screen-grid.tsx"/>
+ <layer name="Base" width="48" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt1ksKgDAMANFIBT/gnT263RSCtBRsIA3O4i2Nk6yaRCQ5WgZZzPD8N/30e894uxTv/lWJ2K/3iNj/5f7Wtxvtt+7m/rYzao7szDaRO1J/6d6V1g4z9de6ezvM0N/rru1QvrHqj/x+BgAAAPAfD72ECjE=
+  </data>
+ </layer>
+ <layer name="Detail" width="48" height="32">
+  <data encoding="base64" compression="zlib">
+   eJztwQENAAAAwqD3T20PBxQAAAAAAPBmGAAAAQ==
+  </data>
+ </layer>
+ <layer name="Screen Grid" width="48" height="32">
+  <properties>
+   <property name="IgnoreAttributes" value="true"/>
+   <property name="IgnoreGraphics" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJzt1rEJAAAIBDHdf2lXeLAQIemvvyoAACDV/bsHAABy1/++7Qdl+gAN
+  </data>
+ </layer>
+</map>

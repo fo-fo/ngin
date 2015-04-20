@@ -20,5 +20,7 @@ endif()
 
 set( __ngin_rootDir ${CMAKE_CURRENT_SOURCE_DIR} )
 
+include( cmake/ngin-functions.cmake )
+
 add_subdirectory( src/ngin )
 add_subdirectory( samples )

@@ -22,6 +22,7 @@ add_library( ngin STATIC
     collision.s
     map-data.s
     map-scroller.s
+    nmi.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

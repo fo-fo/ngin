@@ -1,10 +1,6 @@
 .include "ngin/ngin.inc"
 
-.import smb3MapDataHeader
-.import testMapDataHeader
-
-; If 1, use the test map. If 0, use the SMB3 map.
-kUseTestMap = 0
+.include "assets/maps.inc"
 
 .segment "BSS"
 
@@ -24,11 +20,7 @@ ngin_entryPoint start
     jsr uploadPalette
     jsr uploadNametable
 
-    .if ::kUseTestMap
-        ngin_MapData_load #testMapDataHeader
-    .else
-        ngin_MapData_load #smb3MapDataHeader
-    .endif
+    ngin_MapData_load #maps_level1
 
     ; Some test routines, need to be run with rendering off.
     ; jsr horizontalTests
@@ -138,17 +130,22 @@ ngin_entryPoint start
 
     jsr initializeView
 
+    ; Enable NMI so that we can use ngin_waitVBlank.
+    ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
+
     loop:
         ngin_PpuBuffer_startFrame
         jsr readController
         jsr interactiveLogic
         ngin_PpuBuffer_endFrame
 
-        ngin_pollVBlank
+        ngin_waitVBlank
         ngin_PpuBuffer_upload
         ngin_mov8 ppu::scroll, scrollX
         ngin_mov8 ppu::scroll, scrollY
-        ngin_mov8 ppu::ctrl, scrollNametable
+        lda #ppu::ctrl::kGenerateVblankNmi
+        ora scrollNametable
+        sta ppu::ctrl
         ngin_mov8 ppu::mask, #( ppu::mask::kShowBackground | \
                                 ppu::mask::kShowBackgroundLeft )
     jmp loop
@@ -274,29 +271,17 @@ out:
     ngin_setPpuAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
-    .if ::kUseTestMap
-        ; Set some colors.
-        ngin_setPpuAddress #ppu::backgroundPalette+1
-        ngin_mov8 ppu::data, #$15
-        ngin_mov8 ppu::data, #$29
-        ngin_mov8 ppu::data, #$11
-        bit ppu::data ; Skip one byte.
-        ngin_mov8 ppu::data, #$00
-        ngin_mov8 ppu::data, #$10
-        ngin_mov8 ppu::data, #$30
-    .else
-        .pushseg
-        .segment "RODATA"
-        .proc smb3Palette
-            .byte $3C, $0F, $30, $3C
-            .byte $3C, $0F, $36, $27
-            .byte $3C, $0F, $2A, $1A
-            .byte $3C, $0F, $31, $21
-        .endproc
-        .popseg
-        ngin_setPpuAddress #ppu::backgroundPalette
-        ngin_copyMemoryToPort #ppu::data, #smb3Palette, #.sizeof( smb3Palette )
-    .endif
+    .pushseg
+    .segment "RODATA"
+    .proc palette
+        .byte $0F, $06, $16, $26
+        .byte $0F, $09, $19, $29
+        .byte $0F, $02, $12, $22
+        .byte $0F, $04, $14, $24
+    .endproc
+    .popseg
+    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
     rts
 .endproc
@@ -312,55 +297,5 @@ out:
 
 .segment "CHR_ROM"
 
-.if kUseTestMap
-
-    ngin_tile "        " \
-              "        " \
-              "        " \
-              "        " \
-              "        " \
-              "        " \
-              "        " \
-              "        "
-
-    ngin_tile "........" \
-              "........" \
-              "........" \
-              "........" \
-              "........" \
-              "........" \
-              "........" \
-              "........"
-
-    ngin_tile "::::::::" \
-              "::::::::" \
-              "::::::::" \
-              "::::::::" \
-              "::::::::" \
-              "::::::::" \
-              "::::::::" \
-              "::::::::"
-
-    ngin_tile "########" \
-              "########" \
-              "########" \
-              "########" \
-              "########" \
-              "########" \
-              "########" \
-              "########"
-
-    ngin_tile ". . . . " \
-              " . . . ." \
-              ". . . . " \
-              " . . . ." \
-              ". . . . " \
-              " . . . ." \
-              ". . . . " \
-              " . . . ."
-
-.else
-
-    .incbin "data/smb3.chr"
-
-.endif
+; \todo Apply CHR in .s automatically?
+.incbin "assets/maps.chr"

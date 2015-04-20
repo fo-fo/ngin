@@ -1,5 +1,8 @@
+add_subdirectory( assets )
+
 ngin_addSample( ngin-sample-map
     map.s
-    smb3-map.s
-    test-map.s
+
+    # From assets:
+    $<TARGET_OBJECTS:ngin-sample-map-maps>
 )

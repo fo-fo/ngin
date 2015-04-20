@@ -16,5 +16,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/map-data.inc"
 .include "ngin/map-scroller.inc"
 .include "ngin/util.inc"
+.include "ngin/nmi.inc"
 
 .endif
