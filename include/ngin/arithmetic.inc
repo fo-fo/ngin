@@ -74,6 +74,21 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     noUnderflow:
 .endmacro
 
+.macro ngin_adc8 to, what
+    lda to
+    adc what
+    sta to
+.endmacro
+
+.macro ngin_add16_8 to, what
+    clc
+    ngin_adc8 {to}, {what}
+    .local noOverflow
+    bcc noOverflow
+        inc 1+(to)
+    noOverflow:
+.endmacro
+
 .macro ngin_cmp8 with, what
     __ngin_requireParameter {with}, "with"
     __ngin_requireParameter {what}, "what"

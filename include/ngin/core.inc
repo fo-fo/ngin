@@ -75,14 +75,49 @@ NGIN_CORE_INC_INCLUDED = 1
 .endstruct
 
 ; Converts a signed value -128..127 to a corresponding unsigned byte in range
-; 0..255. If the input value is out of range, returns -1. The intended usage
-; is for constants in places which normally only accept unsigned bytes, e.g.
-; lda #ngin_signedByte -66
+; 0..255. If the input value is out of range, causes a division by zero, which
+; stops the compilation. Division by zero is used to stop the compilation so
+; that it will work even if force_range feature is enabled. The intended usage
+; is for constants in places which normally only accept unsigned bytes,
+; e.g. lda #ngin_signedByte -66
 .define ngin_signedByte( value ) ( \
     __ngin_choice \
         (value) >= -128 .and (value) <= 127, \
         .lobyte( value ), \
-        -1 \
+        1 / ( (value) >= -128 .and (value) <= 127 ) \
     )
+
+; Same as ngin_signedByte, except for 16-bit values
+.define ngin_signedWord( value ) ( \
+    __ngin_choice \
+        (value) >= -32768 .and (value) <= 32767, \
+        .loword( value ), \
+        1 / ( (value) >= -32768 .and (value) <= 32767 ) \
+    )
+
+.macro ngin_segmentData segment, data
+    .pushseg
+    .segment segment
+    data
+    .popseg
+.endmacro
+
+.macro ngin_bss data
+    ngin_segmentData "BSS", {data}
+.endmacro
+
+.macro ngin_rodata data
+    ngin_segmentData "RODATA", {data}
+.endmacro
+
+; Push current segment, and switch to 'segment'.
+.macro ngin_pushSeg segment
+    .pushseg
+    .segment segment
+.endmacro
+
+.macro ngin_popSeg
+    .popseg
+.endmacro
 
 .endif

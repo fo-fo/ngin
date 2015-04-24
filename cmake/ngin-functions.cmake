@@ -4,12 +4,16 @@ set( __ngin_toolsRoot ${__ngin_rootDir}/tools )
 
 # \todo Make it possible to specify the segment for the common data and each
 #       map separately.
+# OUTFILE:  Prefix for the output filenames
+# MAPS:     List of TMX maps that should be imported.
+# SYMBOLS:  List of symbols corresponding to each map listed in MAPS.
+# DEPENDS:  Additional dependencies (e.g. tileset images/files)
 function( ngin_addMapAssets target )
     cmake_parse_arguments(
         TOOLARGS
         ""                              # Options
         "OUTFILE"                       # One-value arguments
-        "MAPS;SYMBOLS"                  # Multi-value arguments
+        "MAPS;SYMBOLS;DEPENDS"          # Multi-value arguments
         ${ARGN}
     )
 
@@ -35,6 +39,7 @@ function( ngin_addMapAssets target )
             ${tiledMapImporter}
             # \todo May need to expand to full path to avoid UB?
             ${TOOLARGS_MAPS}
+            ${TOOLARGS_DEPENDS}
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT
@@ -44,5 +49,15 @@ function( ngin_addMapAssets target )
 
     add_library( ${target} OBJECT
         ${TOOLARGS_OUTFILE}.s
+    )
+
+    file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR} )
+
+    set_target_properties( ${target}
+        PROPERTIES
+            COMPILE_FLAGS "${__ngin_compileFlags} \
+--asm-include-dir ${currentBinaryDirRelative} \
+--bin-include-dir ${currentBinaryDirRelative}"
     )
 endfunction()

@@ -20,6 +20,11 @@ ngin_Lua_kUniqueAddress = 1
     ; all of the required Lua files.
     .pushseg
     .segment "NGIN_LUA_REQUIRE"
+        ; \todo Would be better to use something akin to Lua's require() here,
+        ;       so that double inclusion could be avoided. Should be doable
+        ;       by modifying NDX's string execution to include the current
+        ;       source file in the search path, and then using ngin_Lua_string
+        ;       here to require() the file.
         ngin_Lua_file {filename}
     .popseg
 .endmacro

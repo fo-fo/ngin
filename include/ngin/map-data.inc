@@ -3,6 +3,11 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
+.enum ngin_MapData_Attributes0
+    ; \note The bottom two bits are used for the color set index.
+    kSolid = %1_00
+.endenum
+
 .struct ngin_MapData_Pointers
     screenRowPointersLo         .addr
     screenRowPointersHi         .addr
@@ -23,14 +28,15 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 .endstruct
 
 .struct ngin_MapData_Header
-    ; \todo Might need mapWidth/height for wrap over?
+    widthScreens    .byte
+    heightScreens   .byte
     pointers        .tag ngin_MapData_Pointers
 .endstruct
 
 .globalzp ngin_MapData_pointers
 
-.global   __ngin_MapData_load
-.globalzp __ngin_MapData_load_mapAddress
+.global __ngin_MapData_load
+.global __ngin_MapData_load_mapAddress
 .macro ngin_MapData_load mapAddress
     __ngin_requireParameter {mapAddress}, "mapAddress"
 
