@@ -17,6 +17,19 @@ ngin_ShadowOam_pointer:  .byte 0
 
 .segment "NGIN_CODE"
 
+ngin_constructor __ngin_ShadowOam_construct
+.proc __ngin_ShadowOam_construct
+    ; Clear the whole buffer to $FF.
+    ldx #0
+    lda #$FF
+    loop:
+        sta ngin_ShadowOam_buffer, x
+        inx
+    ngin_branchIfNotZero loop
+
+    rts
+.endproc
+
 .proc __ngin_ShadowOam_startFrame
     ngin_mov8 ngin_ShadowOam_pointer, #0
     rts

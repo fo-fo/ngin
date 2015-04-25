@@ -120,4 +120,10 @@ NGIN_CORE_INC_INCLUDED = 1
     .popseg
 .endmacro
 
+.macro ngin_constructor symbol
+    ngin_pushSeg "NGIN_RESET_CONSTRUCTORS"
+    jsr symbol
+    ngin_popSeg
+.endmacro
+
 .endif

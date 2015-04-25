@@ -9,14 +9,19 @@
 ;       might be problematic for embedded code.
 ngin_Lua_require "lua/reset.lua"
 
-.segment "NGIN_RESET_CODE"
-
+.segment "NGIN_RESET_PROLOGUE"
 .proc __ngin_reset
     ; \todo Proper reset code
     lda #0
     sta ppu::ctrl
     sta ppu::mask
+    ; Fall through to NGIN_RESET_CONSTRUCTORS segment.
 
+    ; Make sure the segment exists.
+    .segment "NGIN_RESET_CONSTRUCTORS"
+
+    ; Execution continues from NGIN_RESET_CONSTRUCTORS segment to this segment.
+    .segment "NGIN_RESET_EPILOGUE"
     ; __ngin_start is defined in the user application with the ngin_entryPoint
     ; macro.
     .import __ngin_start
