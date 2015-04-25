@@ -18,7 +18,7 @@ ngin_entryPoint start
     jsr renderSprites
 
     ngin_pollVBlank
-    ngin_mov8 ppu::oam::dma, #.hibyte( ngin_shadowOam )
+    ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kSpriteSize8x16
     ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                             ppu::mask::kShowSpritesLeft )
@@ -43,12 +43,12 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #metasprite0, \
-        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX+32, \
-                                  ngin_kSpriteRendererOriginY
+        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX+32, \
+                                  ngin_SpriteRenderer_kOriginY
 
     ngin_SpriteRenderer_render #metasprite1, \
-        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX-32, \
-                                  ngin_kSpriteRendererOriginY
+        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX-32, \
+                                  ngin_SpriteRenderer_kOriginY
 
     ngin_ShadowOam_endFrame
 

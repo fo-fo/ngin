@@ -90,7 +90,7 @@ scrollDataRight = {
 -------------------------------------------------------------------------------
 
 -- Retrieve values of some of the symbols defined by ngin.
-local ngin_ppuBuffer        = SYM.ngin_ppuBuffer[ 1 ]
+local ngin_PpuBuffer_buffer        = SYM.ngin_PpuBuffer_buffer[ 1 ]
 
 -- Attribute cache keeps a copy of the PPU color attributes in CPU memory.
 -- The required size depends on the view size. 9x9 bytes should be enough for
@@ -103,13 +103,13 @@ end
 
 -- Add a byte to PPU buffer.
 local function addPpuBufferByte( value )
-    RAM[ ngin_ppuBuffer + RAM.ngin_ppuBufferPointer ] = value
-    RAM.ngin_ppuBufferPointer = RAM.ngin_ppuBufferPointer + 1
+    RAM[ ngin_PpuBuffer_buffer + RAM.ngin_PpuBuffer_pointer ] = value
+    RAM.ngin_PpuBuffer_pointer = RAM.ngin_PpuBuffer_pointer + 1
 end
 
 -- Terminate the PPU buffer.
 local function terminatePpuBuffer()
-    RAM[ ngin_ppuBuffer + RAM.ngin_ppuBufferPointer ] = 0x80
+    RAM[ ngin_PpuBuffer_buffer + RAM.ngin_PpuBuffer_pointer ] = 0x80
 end
 
 -- Stores the position of the "size" byte within the buffer, so that we know
@@ -118,7 +118,7 @@ local ppuBufferSizePointer = nil
 
 -- Start counting the size of a PPU buffer update.
 local function startPpuBufferSizeCounting()
-    ppuBufferSizePointer = RAM.ngin_ppuBufferPointer
+    ppuBufferSizePointer = RAM.ngin_PpuBuffer_pointer
 end
 
 -- Stop counting the size of a PPU buffer update. Update the size byte in the
@@ -131,10 +131,10 @@ local function endPpuBufferSizeCounting()
 
     -- Calculate the size based on current PPU pointer and where the size
     -- byte was.
-    local size = RAM.ngin_ppuBufferPointer - ppuBufferSizePointer - 1
+    local size = RAM.ngin_PpuBuffer_pointer - ppuBufferSizePointer - 1
 
     -- Update the size in the buffer.
-    RAM[ ngin_ppuBuffer + ppuBufferSizePointer ] = size
+    RAM[ ngin_PpuBuffer_buffer + ppuBufferSizePointer ] = size
 
     ppuBufferSizePointer = nil
 end
@@ -315,7 +315,7 @@ local function updateAttributes( scrollData, perpScrollData )
         -- byte.
         if ppuAddress == previousPpuAddress then
             -- Replace the previous update by moving the pointer backwards.
-            RAM.ngin_ppuBufferPointer = RAM.ngin_ppuBufferPointer - 1
+            RAM.ngin_PpuBuffer_pointer = RAM.ngin_PpuBuffer_pointer - 1
         -- If nametable changed, OR doing a vertical update, start a new update
         -- batch (always needed for vertical, since there's no "inc8" mode)
         elseif previousPpuAddress == nil or bit32.band( ppuAddress, 0xC00 ) ~=

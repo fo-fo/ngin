@@ -7,18 +7,18 @@ kShadowOamSize = 256
 
 .segment "NGIN_SHADOW_OAM"
 
-ngin_shadowOam:         .res kShadowOamSize
-.assert .lobyte( ngin_shadowOam ) = 0, error, \
-        "ngin_shadowOam must be page aligned"
+ngin_ShadowOam_buffer:         .res kShadowOamSize
+.assert .lobyte( ngin_ShadowOam_buffer ) = 0, error, \
+        "ngin_ShadowOam_buffer must be page aligned"
 
 .segment "NGIN_BSS"
 
-ngin_shadowOamPointer:  .byte 0
+ngin_ShadowOam_pointer:  .byte 0
 
 .segment "NGIN_CODE"
 
 .proc __ngin_ShadowOam_startFrame
-    ngin_mov8 ngin_shadowOamPointer, #0
+    ngin_mov8 ngin_ShadowOam_pointer, #0
     rts
 .endproc
 
@@ -26,21 +26,21 @@ ngin_shadowOamPointer:  .byte 0
     ; If shadow OAM not full, hide the rest of the sprites.
     ; \todo Can use the pointer from previous frame to know the maximum amount
     ;       of sprites needed to hide (but remember OAM decay).
-    ldx ngin_shadowOamPointer
-    cpx #ngin_kShadowOamFull
+    ldx ngin_ShadowOam_pointer
+    cpx #ngin_ShadowOam_kFull
     beq full
         ; Not full. Hide the rest of the sprites.
         lda #$FF
 
         loop:
-            sta ngin_shadowOam + ppu::oam::Object::y_, x
+            sta ngin_ShadowOam_buffer + ppu::oam::Object::y_, x
             axs #.lobyte( -.sizeof( ppu::oam::Object ) )
         ngin_branchIfNotZero loop
 
         ; Set the full flag for consistency, even though it shouldn't be used
         ; after this function has been called.
-        .assert ngin_kShadowOamFull = $FF, error
-        sta ngin_shadowOamPointer
+        .assert ngin_ShadowOam_kFull = $FF, error
+        sta ngin_ShadowOam_pointer
     full:
     rts
 .endproc

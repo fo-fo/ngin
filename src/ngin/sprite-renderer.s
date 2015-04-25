@@ -23,10 +23,10 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
     position := __ngin_SpriteRenderer_render_position
 
     ; Load shadow OAM pointer.
-    ldx ngin_shadowOamPointer
+    ldx ngin_ShadowOam_pointer
 
     ; Check if OAM is already full.
-    cpx #ngin_kShadowOamFull
+    cpx #ngin_ShadowOam_kFull
     beq oamFullOnEntry
 
     ldy #0
@@ -35,12 +35,12 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         lda ( spriteDefinition ), y
 
         ; Terminator must be zero or this fails (need to add cmp in that case).
-        .assert ngin_kSpriteDefinitionTerminator = 0, error
+        .assert ngin_SpriteRenderer_kDefinitionTerminator = 0, error
         ngin_branchIfZero endOfSpriteDefinition
 
         ; Store the attributes. The value might go unused since we haven't
         ; clipped yet, but no harm done because we know there's space.
-        sta ngin_shadowOam + ppu::oam::Object::attributes, x
+        sta ngin_ShadowOam_buffer + ppu::oam::Object::attributes, x
 
         ; \todo X and Y handling is almost identical, might want to macroify.
 
@@ -57,15 +57,15 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         clc
         adc position + ngin_Vector2_16::x_ + 0
         ; Save result directly to OAM, because we can.
-        sta ngin_shadowOam + ppu::oam::Object::x_, x
+        sta ngin_ShadowOam_buffer + ppu::oam::Object::x_, x
 
         ; Add the hibyte of the origin of position, so that a position of
         ; $8000 will result in the hibyte wrapping to 0, which we'll use to
         ; find out whether the sprite is in range. All of this assumes that
         ; the unsigned position origin is $8000.
         lda position + ngin_Vector2_16::x_ + 1
-        .assert ngin_kSpriteRendererOriginX = $8000, error
-        adc #.hibyte( ngin_kSpriteRendererOriginX )
+        .assert ngin_SpriteRenderer_kOriginX = $8000, error
+        adc #.hibyte( ngin_SpriteRenderer_kOriginX )
         ; If hibyte of X is 0, X is in range 0..255, so sprite is visible.
         ngin_branchIfNotZero notVisibleX
 
@@ -85,22 +85,22 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         ; Add to the position.
         clc
         adc position + ngin_Vector2_16::y_ + 0
-        sta ngin_shadowOam + ppu::oam::Object::y_, x
+        sta ngin_ShadowOam_buffer + ppu::oam::Object::y_, x
 
         lda position + ngin_Vector2_16::y_ + 1
-        .assert ngin_kSpriteRendererOriginY = $8000, error
-        adc #.hibyte( ngin_kSpriteRendererOriginY )
+        .assert ngin_SpriteRenderer_kOriginY = $8000, error
+        adc #.hibyte( ngin_SpriteRenderer_kOriginY )
         ; If hibyte of Y is 0, Y is in range 0..255, so sprite *might* be
         ; visible.
         ngin_branchIfNotZero notVisibleY
             ; Might be visible, check if in range 0..kMaxVisibleY.
-            ngin_cmp8 { ngin_shadowOam + ppu::oam::Object::y_, x }, \
+            ngin_cmp8 { ngin_ShadowOam_buffer + ppu::oam::Object::y_, x }, \
                       #kMaxVisibleY+1
             ngin_branchIfGreaterOrEqual notVisibleY
 
             ; Sprite is visible, display it.
             ; Read the tile and store to OAM.
-            ngin_mov8 { ngin_shadowOam + ppu::oam::Object::tile, x }, \
+            ngin_mov8 { ngin_ShadowOam_buffer + ppu::oam::Object::tile, x }, \
                       { ( spriteDefinition ), y }
 
             ; Move to the next sprite in sprite definition.
@@ -127,11 +127,11 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 
 oamFull:
     ; OAM is full. Set the OAM pointer to a magic value to indicate that.
-    ldx #ngin_kShadowOamFull
+    ldx #ngin_ShadowOam_kFull
 
 endOfSpriteDefinition:
     ; End of sprite definition reached.
-    stx ngin_shadowOamPointer
+    stx ngin_ShadowOam_pointer
 
 oamFullOnEntry:
     rts

@@ -3,21 +3,21 @@
 .segment "RODATA"
 
 .proc spriteDefinitionLit
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_kSpriteDefinitionTerminator
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endproc
 
 .proc spriteDefinitionDim
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 2                                         ; Tile
 
-    .byte ngin_kSpriteDefinitionTerminator
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endproc
 
 .segment "BSS"
@@ -37,7 +37,7 @@ ngin_entryPoint start
         jsr renderSprites
 
         ngin_pollVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_shadowOam )
+        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
         ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                                 ppu::mask::kShowSpritesLeft )
     jmp loop
@@ -75,8 +75,8 @@ ngin_entryPoint start
     .repeat 2, controller
         .repeat 8, i
         .scope
-            x_ .set ::ngin_kSpriteRendererTopLeftX + 128 + 12*(i-4)
-            y_ .set ::ngin_kSpriteRendererTopLeftY + 120 + 12*(controller-1)
+            x_ .set ::ngin_SpriteRenderer_kTopLeftX + 128 + 12*(i-4)
+            y_ .set ::ngin_SpriteRenderer_kTopLeftY + 120 + 12*(controller-1)
 
             lda controllers+controller
             and #1 << i

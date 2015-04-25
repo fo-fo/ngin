@@ -65,31 +65,31 @@ ngin_entryPoint start
 .endproc
 
 .macro constructPpuBuffer_template counter, tile
-    ldx ngin_ppuBufferPointer
+    ldx ngin_PpuBuffer_pointer
 
     ; Set the PPU address and flags.
     ; \note PPU address is big endian.
-    ngin_mov8 { ngin_ppuBuffer + ngin_PpuBufferElement::ppuAddress + 0, x }, \
+    ngin_mov8 { ngin_PpuBuffer_buffer + ngin_PpuBuffer_Element::ppuAddress + 0, x }, \
               #.hibyte( ppu::nametable0 + 8*32 )
-    ngin_mov8 { ngin_ppuBuffer + ngin_PpuBufferElement::ppuAddress + 1, x }, \
+    ngin_mov8 { ngin_PpuBuffer_buffer + ngin_PpuBuffer_Element::ppuAddress + 1, x }, \
               {counter}
 
     ; Set the size.
-    ngin_mov8 { ngin_ppuBuffer + ngin_PpuBufferElement::size, x }, #1
+    ngin_mov8 { ngin_PpuBuffer_buffer + ngin_PpuBuffer_Element::size, x }, #1
 
     ; Set the data (tile).
-    ngin_mov8 { ngin_ppuBuffer + ngin_PpuBufferElement::data, x }, {tile}
+    ngin_mov8 { ngin_PpuBuffer_buffer + ngin_PpuBuffer_Element::data, x }, {tile}
 
     ; Update ngin_ppuBufferPointer. We added the header and one data byte.
     txa
     clc
-    adc #.sizeof( ngin_PpuBufferElement ) + 1
+    adc #.sizeof( ngin_PpuBuffer_Element ) + 1
     tax
-    stx ngin_ppuBufferPointer
+    stx ngin_PpuBuffer_pointer
 
     ; Set the terminator.
-    ngin_mov8 { ngin_ppuBuffer + ngin_PpuBufferElement::ppuAddress + 0, x }, \
-              #ngin_kPpuBufferTerminatorMask
+    ngin_mov8 { ngin_PpuBuffer_buffer + ngin_PpuBuffer_Element::ppuAddress + 0, x }, \
+              #ngin_PpuBuffer_kTerminatorMask
 
     inc counter
 

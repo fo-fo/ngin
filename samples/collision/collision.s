@@ -7,37 +7,37 @@ kMetaspriteWidth  = 16
 kMetaspriteHeight = 24
 
 .macro defineMetasprite tile
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+8             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+8             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+8             ; X
-    .byte ngin_kSpriteRendererAdjustY+8             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+16            ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+16            ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+8             ; X
-    .byte ngin_kSpriteRendererAdjustY+16            ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+16            ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_kSpriteDefinitionTerminator
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endmacro
 
 .proc spriteDefinition0
@@ -92,7 +92,7 @@ ngin_entryPoint start
         jsr renderSprites
 
         ngin_pollVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_shadowOam )
+        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
         ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                                 ppu::mask::kShowSpritesLeft )
 
@@ -102,9 +102,9 @@ ngin_entryPoint start
 
 .proc initialize
     kSpriteOrigin0 = ngin_immediateVector2_16 \
-        ngin_kSpriteRendererOriginX, ngin_kSpriteRendererOriginY
+        ngin_SpriteRenderer_kOriginX, ngin_SpriteRenderer_kOriginY
     kSpriteOrigin1 = ngin_immediateVector2_16 \
-        ngin_kSpriteRendererOriginX+24, ngin_kSpriteRendererOriginY+24
+        ngin_SpriteRenderer_kOriginX+24, ngin_SpriteRenderer_kOriginY+24
 
     ngin_mov32 positions + 0 * .sizeof( ngin_Vector2_16 ), #kSpriteOrigin0
     ngin_mov32 positions + 1 * .sizeof( ngin_Vector2_16 ), #kSpriteOrigin1

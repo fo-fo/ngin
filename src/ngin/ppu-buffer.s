@@ -8,22 +8,22 @@ kPpuBufferSize = 64
 
 .segment "NGIN_STACK"
 
-ngin_ppuBuffer: .res kPpuBufferSize
-.assert .hibyte( ngin_ppuBuffer ) = 1 .and \
-        .sizeof( ngin_ppuBuffer ) > 0 .and \
-        .hibyte( ngin_ppuBuffer + .sizeof( ngin_ppuBuffer )-1 ) = 1, \
+ngin_PpuBuffer_buffer: .res kPpuBufferSize
+.assert .hibyte( ngin_PpuBuffer_buffer ) = 1 .and \
+        .sizeof( ngin_PpuBuffer_buffer ) > 0 .and \
+        .hibyte( ngin_PpuBuffer_buffer + .sizeof( ngin_PpuBuffer_buffer )-1 ) = 1, \
         error
 
 .segment "NGIN_BSS"
 
-ngin_ppuBufferPointer: .byte 0
+ngin_PpuBuffer_pointer: .byte 0
 
 .segment "NGIN_CODE"
 
 .proc __ngin_PpuBuffer_startFrame
     ; Start filling the buffer from the beginning.
-    ngin_mov8 ngin_ppuBufferPointer, #0
-    ngin_mov8 ngin_ppuBuffer, #ngin_kPpuBufferTerminatorMask
+    ngin_mov8 ngin_PpuBuffer_pointer, #0
+    ngin_mov8 ngin_PpuBuffer_buffer, #ngin_PpuBuffer_kTerminatorMask
     rts
 .endproc
 
@@ -41,7 +41,7 @@ ngin_ppuBufferPointer: .byte 0
 
     ; Point stack pointer to the beginning of the PPU buffer.
     ; Need to subtract one because PLA increments before fetching.
-    ldx #.lobyte( ngin_ppuBuffer - 1 )
+    ldx #.lobyte( ngin_PpuBuffer_buffer - 1 )
     txs
 
     ; Clear the ppu::addr even/odd write flag, and acknowledge the NMI.
@@ -57,7 +57,7 @@ ngin_ppuBufferPointer: .byte 0
         ;       otherwise trash the address.
         ; AND with the mask. If zero, can use as ppu::ctrl as is. Otherwise,
         ; set the kAddressIncrement32 flag in ppu::ctrl.
-        and #ngin_kPpuBufferIncrease32Mask
+        and #ngin_PpuBuffer_kIncrease32Mask
         ngin_branchIfZero increase1
             ; Increase 32
             lda #ppu::ctrl::kAddressIncrement32
@@ -88,7 +88,7 @@ ngin_ppuBufferPointer: .byte 0
         ; Get the hibyte of PPU address from buffer.
         pla
     ; If top bit is set, exit loop.
-    .assert ngin_kPpuBufferTerminatorMask = %1000_0000, error
+    .assert ngin_PpuBuffer_kTerminatorMask = %1000_0000, error
     bpl loop
 
 loopDone:

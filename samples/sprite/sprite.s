@@ -6,27 +6,27 @@ spriteDefinition:
     ; \note Sprite coordinate origin is close to the center of the screen
     ;       because of the adjustments.
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_01 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+0             ; X
-    .byte ngin_kSpriteRendererAdjustY+8             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_00 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+8             ; X
-    .byte ngin_kSpriteRendererAdjustY+8             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_kSpriteRendererAttribute|%000_000_01 ; Attributes
-    .byte ngin_kSpriteRendererAdjustX+8             ; X
-    .byte ngin_kSpriteRendererAdjustY+0             ; Y
+    .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
+    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_kSpriteDefinitionTerminator
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 
 .proc spritePalette
     ; \todo Symbolic constants for color hues? (separate hue and brightness)
@@ -48,7 +48,7 @@ ngin_entryPoint start
     jsr renderSprites
 
     ngin_pollVBlank
-    ngin_mov8 ppu::oam::dma, #.hibyte( ngin_shadowOam )
+    ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
     ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                             ppu::mask::kShowSpritesLeft )
 
@@ -74,12 +74,12 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #spriteDefinition, \
-        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX, \
-                                  ngin_kSpriteRendererOriginY
+        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX, \
+                                  ngin_SpriteRenderer_kOriginY
 
     ngin_SpriteRenderer_render #spriteDefinition, \
-        #ngin_immediateVector2_16 ngin_kSpriteRendererOriginX-65, \
-                                  ngin_kSpriteRendererOriginY+50
+        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX-65, \
+                                  ngin_SpriteRenderer_kOriginY+50
 
     ngin_ShadowOam_endFrame
 

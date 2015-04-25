@@ -12,14 +12,14 @@
 # - Sprites: 256 bytes
 # - Palette: 32 bytes
 
-kSpriteTemplate = """    .byte ngin_kSpriteRendererAttribute|{}
-    .byte ngin_kSpriteRendererAdjustX+{}
-    .byte ngin_kSpriteRendererAdjustY+{}
+kSpriteTemplate = """    .byte ngin_SpriteRenderer_kAttribute|{}
+    .byte ngin_SpriteRenderer_kAdjustX+{}
+    .byte ngin_SpriteRenderer_kAdjustY+{}
     .byte {}
 
 """
 
-kTerminatorTemplate = """    .byte ngin_kSpriteDefinitionTerminator
+kTerminatorTemplate = """    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endproc
 
 """

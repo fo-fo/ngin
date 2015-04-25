@@ -8,13 +8,13 @@
 
 .proc spriteDefinition
     .repeat 9, i
-        .byte ngin_kSpriteRendererAttribute|%000_000_01 ; Attributes
-        .byte ngin_kSpriteRendererAdjustX+8*(i .mod 3)  ; X
-        .byte ngin_kSpriteRendererAdjustY+8*(i   /  3)  ; Y
+        .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
+        .byte ngin_SpriteRenderer_kAdjustX+8*(i .mod 3)  ; X
+        .byte ngin_SpriteRenderer_kAdjustY+8*(i   /  3)  ; Y
         .byte objectTilesFirstIndex+i                   ; Tile
     .endrepeat
 
-    .byte ngin_kSpriteDefinitionTerminator
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endproc
 
 kBoundingBoxWidth  = 20
@@ -48,7 +48,7 @@ ngin_entryPoint start
     loop:
         jsr update
         ngin_waitVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_shadowOam )
+        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
         ; \note Doesn't match the real scroll position of the map, since
         ;       currently MapScroller module doesn't provide access to it.
         ngin_mov8 ppu::scroll, #0

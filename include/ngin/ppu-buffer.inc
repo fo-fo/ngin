@@ -4,13 +4,13 @@ NGIN_PPU_BUFFER_INC_INCLUDED = 1
 .include "ngin/core.inc"
 
 ; This bit has to be set in a terminating byte of a PPU buffer.
-ngin_kPpuBufferTerminatorMask = %1000_0000
+ngin_PpuBuffer_kTerminatorMask = %1000_0000
 
 ; This bit has to be set in hibyte of ppuAddress of ngin_PpuBufferElement for
 ; PPU address to be increased by 32 for each data byte. Otherwise increase is 1.
-ngin_kPpuBufferIncrease32Mask = %0100_0000
+ngin_PpuBuffer_kIncrease32Mask = %0100_0000
 
-.struct ngin_PpuBufferElement
+.struct ngin_PpuBuffer_Element
     ; PPU address, big endian
     ppuAddress  .dbyt
 
@@ -22,10 +22,10 @@ ngin_kPpuBufferIncrease32Mask = %0100_0000
 .endstruct
 
 ; PPU buffer
-.global ngin_ppuBuffer
+.global ngin_PpuBuffer_buffer
 
 ; Index to the first usable byte within ngin_ppuBuffer.
-.global ngin_ppuBufferPointer
+.global ngin_PpuBuffer_pointer
 
 .global __ngin_PpuBuffer_startFrame
 .macro ngin_PpuBuffer_startFrame

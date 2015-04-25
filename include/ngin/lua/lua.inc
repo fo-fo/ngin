@@ -1,5 +1,5 @@
-.if .not .defined( NGIN_LUA_INC_INCLUDED )
-NGIN_LUA_INC_INCLUDED = 1
+.if .not .defined( NGIN_LUA_LUA_INC_INCLUDED )
+NGIN_LUA_LUA_INC_INCLUDED = 1
 
 .include "ndx/ndxdebug.inc"
 
