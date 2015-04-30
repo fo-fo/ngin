@@ -121,6 +121,12 @@ __ngin_mov8_baseCount .set 0
 .struct __ngin_EmptyStruct
 .endstruct
 
+.define __ngin_isSignedByteInRange( value ) \
+    ( (value) >= -128 .and (value) <= 127 )
+
+.define __ngin_isSignedWordInRange( value ) \
+    ( (value) >= -32768 .and (value) <= 32767 )
+
 ; Converts a signed value -128..127 to a corresponding unsigned byte in range
 ; 0..255. If the input value is out of range, causes a division by zero, which
 ; stops the compilation. Division by zero is used to stop the compilation so
@@ -129,17 +135,17 @@ __ngin_mov8_baseCount .set 0
 ; e.g. lda #ngin_signedByte -66
 .define ngin_signedByte( value ) ( \
     __ngin_choice \
-        (value) >= -128 .and (value) <= 127, \
+        __ngin_isSignedByteInRange {value}, \
         .lobyte( value ), \
-        1 / ( (value) >= -128 .and (value) <= 127 ) \
+        1 / ( __ngin_isSignedByteInRange {value} ) \
     )
 
 ; Same as ngin_signedByte, except for 16-bit values
 .define ngin_signedWord( value ) ( \
     __ngin_choice \
-        (value) >= -32768 .and (value) <= 32767, \
+        __ngin_isSignedWordInRange {value}, \
         .loword( value ), \
-        1 / ( (value) >= -32768 .and (value) <= 32767 ) \
+        1 / ( __ngin_isSignedWordInRange {value} ) \
     )
 
 .macro ngin_segmentData segment, data
