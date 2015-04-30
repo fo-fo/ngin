@@ -11,7 +11,7 @@
         .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
         .byte ngin_SpriteRenderer_kAdjustX+8*(i .mod 3)  ; X
         .byte ngin_SpriteRenderer_kAdjustY+8*(i   /  3)  ; Y
-        .byte objectTilesFirstIndex+i                   ; Tile
+        .byte objectTilesFirstIndex+i                    ; Tile
     .endrepeat
 
     .byte ngin_SpriteRenderer_kDefinitionTerminator
@@ -36,11 +36,10 @@ ngin_entryPoint start
     jsr uploadNametable
 
     ngin_MapData_load #maps_collisionTest
-
-    jsr initializeView
+    ngin_Camera_initializeView #maps_collisionTest::markers::camera
 
     ; \note World coordinate (32768, 32768) maps to ~middle of the map.
-    ngin_mov32 position, #ngin_immediateVector2_16 $8000+224, $8000+128
+    ngin_mov32 position, #maps_collisionTest::markers::player
 
     ; Enable NMI so that we can use ngin_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
@@ -49,11 +48,12 @@ ngin_entryPoint start
         jsr update
         ngin_waitVBlank
         ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
-        ; \note Doesn't match the real scroll position of the map, since
-        ;       currently MapScroller module doesn't provide access to it.
-        ngin_mov8 ppu::scroll, #0
-        ngin_mov8 ppu::scroll, #0
-        ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
+        ngin_PpuBuffer_upload
+        ngin_MapScroller_ppuRegisters
+        stx ppu::scroll
+        sty ppu::scroll
+        ora #ppu::ctrl::kGenerateVblankNmi
+        sta ppu::ctrl
         ngin_mov8 ppu::mask, #( ppu::mask::kShowBackground     | \
                                 ppu::mask::kShowBackgroundLeft | \
                                 ppu::mask::kShowSprites        | \
@@ -62,9 +62,13 @@ ngin_entryPoint start
 .endproc
 
 .proc update
+    ngin_PpuBuffer_startFrame
+
     jsr readControllers
     jsr moveObjects
     jsr renderSprites
+
+    ngin_PpuBuffer_endFrame
 
     rts
 .endproc
@@ -120,6 +124,8 @@ ngin_entryPoint start
                    ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
     doneMovingRight:
 
+    ngin_Camera_move deltaX, #0
+
     rts
 .endproc
 
@@ -173,6 +179,8 @@ ngin_entryPoint start
                    ngin_MapCollision_lineSegmentEjectVertical_ejectedY
     doneMovingDown:
 
+    ngin_Camera_move #0, deltaY
+
     rts
 .endproc
 
@@ -193,45 +201,14 @@ ngin_entryPoint start
 .proc renderSprites
     ngin_ShadowOam_startFrame
 
-    ; Adjust the coordinate for sprite rendering.
+    ; Adjust the object coordinate for sprite rendering.
     ; Slightly inefficient, since could output directly to the parameter area
     ; of ngin_SpriteRenderer_render.
-    ngin_add16 spritePosition + ngin_Vector2_16::x_, \
-               position       + ngin_Vector2_16::x_, \
-               #ngin_signedWord -132
-    ngin_add16 spritePosition + ngin_Vector2_16::y_, \
-               position       + ngin_Vector2_16::y_, \
-               #ngin_signedWord -133
+    ngin_Camera_worldToSpritePosition position, spritePosition
 
     ngin_SpriteRenderer_render #spriteDefinition, spritePosition
 
     ngin_ShadowOam_endFrame
-
-    rts
-.endproc
-
-.proc scrollTileRight
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
-; \todo Implement similar function in MapScroller module.
-.proc initializeView
-    ngin_bss counter: .byte 0
-
-    ; Initialize the view by scrolling 256 pixels to the right.
-    ; Assumes that we start from the top left part of the map.
-    lda #256/8
-    sta counter
-
-    loop:
-        jsr scrollTileRight
-        dec counter
-    ngin_branchIfNotZero loop
 
     rts
 .endproc
@@ -269,9 +246,6 @@ ngin_entryPoint start
 ; -----------------------------------------------------------------------------
 
 .segment "CHR_ROM"
-
-; \todo Apply CHR in .s automatically?
-.incbin "assets/maps.chr"
 
 objectTilesFirstIndex = .lobyte( */16 )
     ngin_tile "####################    " \

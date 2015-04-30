@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="16" tilewidth="16" tileheight="16" nextobjectid="4">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="16" tileheight="16" nextobjectid="7">
  <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16">
   <image source="tileset.png" width="48" height="16"/>
   <tile id="1">
@@ -8,9 +8,13 @@
    </properties>
   </tile>
  </tileset>
- <layer name="Tile Layer 1" width="32" height="16">
+ <layer name="Tile Layer 1" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYBxGmIkEPNDuo4f/B8J+ZijGJg+TGwn24wtnetiP7E96pXlc+Wwg89xgsJ9efiQmPmgRDgMdtyPRbmpgAIT3Ak8=
+   eJzt1ksOgCAMBNBS7n9nN7pCYYb0k2AXs1CCj0KNqohoclpSrH225uj6UX/3jFZzGH92PfP7nbfxZ+wP/uzcEL/LuF7GR+u09pn3zLr/V+tC70fF0kf3UR383WectP/ln+VH/FtF+F/fQtbvYDx95kzLt/Wz+y/ab4L3/Cq7vnfKz88FFbAFnQ==
   </data>
  </layer>
+ <objectgroup name="Markers">
+  <object id="4" name="camera" type="Marker" x="0" y="0" width="256" height="256"/>
+  <object id="5" name="player" type="Marker" x="181" y="147.667" width="20" height="20"/>
+ </objectgroup>
 </map>

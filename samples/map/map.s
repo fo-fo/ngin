@@ -5,11 +5,6 @@
 .segment "BSS"
 
 controller: .byte 0
-scrollX: .byte 0
-scrollY: .byte 0
-; Nametable bit (high bit of scroll) for both X and Y.
-; In same format as required by ppu::ctrl.
-scrollNametable: .byte 0
 
 ; -----------------------------------------------------------------------------
 
@@ -21,115 +16,14 @@ ngin_entryPoint start
     jsr uploadNametable
 
     ngin_MapData_load #maps_level1
-
-    ; Some test routines, need to be run with rendering off.
-    ; jsr horizontalTests
-    ; jsr verticalTests
-    ; jsr combinedTests
+    ngin_Camera_initializeView #maps_level1::markers::topLeft
 
     jsr interactiveTest
 
     jmp *
 .endproc
 
-.proc horizontalTests
-    ; Horizontal tests:
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #1
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #ngin_signedByte -1
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #ngin_signedByte -8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #ngin_signedByte -8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #ngin_signedByte -8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
-.proc verticalTests
-    ; Vertical tests:
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollVertical #1
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollVertical #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollVertical #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
-.proc combinedTests
-    ; Combined tests:
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollHorizontal #8
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    ; ngin_PpuBuffer_startFrame
-    ; ngin_MapScroller_scrollVertical #1
-    ; ngin_PpuBuffer_endFrame
-    ; ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
 .proc interactiveTest
-    ; Initialize X scroll to 256, because initializeView scrolls 256 pixels to
-    ; the right.
-    lda #0
-    sta scrollX
-    sta scrollY
-    ngin_mov8 scrollNametable, #%01
-
-    jsr initializeView
-
     ; Enable NMI so that we can use ngin_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
@@ -141,10 +35,10 @@ ngin_entryPoint start
 
         ngin_waitVBlank
         ngin_PpuBuffer_upload
-        ngin_mov8 ppu::scroll, scrollX
-        ngin_mov8 ppu::scroll, scrollY
-        lda #ppu::ctrl::kGenerateVblankNmi
-        ora scrollNametable
+        ngin_MapScroller_ppuRegisters
+        stx ppu::scroll
+        sty ppu::scroll
+        ora #ppu::ctrl::kGenerateVblankNmi
         sta ppu::ctrl
         ngin_mov8 ppu::mask, #( ppu::mask::kShowBackground | \
                                 ppu::mask::kShowBackgroundLeft )
@@ -161,106 +55,39 @@ ngin_entryPoint start
 .proc interactiveLogic
     ; Scroll the map based on controller input. Currently can only scroll
     ; one pixel at a time.
-    ; PPU scroll coordinates are updated manually here. In practice might be
-    ; better to get them from map scroller directly, since it needs to store
-    ; them in some format anyways.
+    ngin_bss deltaX: .byte 0
+    ngin_bss deltaY: .byte 0
+
+    ngin_mov8 deltaX, #0
+    ngin_mov8 deltaY, #0
 
     lda controller
     and #ngin_Controller::kLeft
     ngin_branchIfZero notLeft
-        ngin_MapScroller_scrollHorizontal #ngin_signedByte -1
-        ldx scrollX
-        ngin_branchIfNotZero :+
-            lda scrollNametable
-            eor #%1
-            sta scrollNametable
-        :
-        dex
-        stx scrollX
+        ngin_mov8 deltaX, #ngin_signedByte -1
     notLeft:
 
     lda controller
     and #ngin_Controller::kRight
     ngin_branchIfZero notRight
-        ngin_MapScroller_scrollHorizontal #ngin_signedByte 1
-        inc scrollX
-        ngin_branchIfNotZero :+
-            lda scrollNametable
-            eor #%1
-            sta scrollNametable
-        :
+        ngin_mov8 deltaX, #ngin_signedByte 1
     notRight:
 
     lda controller
     and #ngin_Controller::kUp
     ngin_branchIfZero notUp
-        ngin_MapScroller_scrollVertical #ngin_signedByte -1
-        ldx scrollY
-        ngin_branchIfNotZero :+
-            lda scrollNametable
-            eor #%10
-            sta scrollNametable
-            ldx #240
-        :
-        dex
-        stx scrollY
+        ngin_mov8 deltaY, #ngin_signedByte -1
     notUp:
 
     lda controller
     and #ngin_Controller::kDown
     ngin_branchIfZero notDown
-        ngin_MapScroller_scrollVertical #ngin_signedByte 1
-        ldx scrollY
-        inx
-        cpx #240
-        bne :+
-            lda scrollNametable
-            eor #%10
-            sta scrollNametable
-            ldx #0
-        :
-        stx scrollY
+        ngin_mov8 deltaY, #ngin_signedByte 1
     notDown:
 
+    ngin_Camera_move deltaX, deltaY
+
 out:
-    rts
-.endproc
-
-.proc scrollTileRight
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollHorizontal #8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
-.proc scrollTileDown
-    ngin_PpuBuffer_startFrame
-    ngin_MapScroller_scrollVertical #8
-    ngin_PpuBuffer_endFrame
-    ngin_PpuBuffer_upload
-
-    rts
-.endproc
-
-.proc initializeView
-    .pushseg
-    .segment "BSS"
-    counter: .byte 0
-    .popseg
-
-    ; Initialize the view by scrolling 256 pixels to the right.
-    ; Assumes that we start from the top left part of the map.
-    lda #256/8
-    sta counter
-
-    loop:
-        jsr scrollTileRight
-        ; jsr scrollTileDown
-        dec counter
-    ngin_branchIfNotZero loop
-
     rts
 .endproc
 
@@ -292,10 +119,3 @@ out:
 
     rts
 .endproc
-
-; -----------------------------------------------------------------------------
-
-.segment "CHR_ROM"
-
-; \todo Apply CHR in .s automatically?
-.incbin "assets/maps.chr"

@@ -31,23 +31,18 @@ end
 -- for the vertical case by swapping axes.
 local function lineSegmentEjectGeneric(
     x, y0, length, deltaX,
-    widthScreens, heightScreens,
+    adjustX, adjustY,
     readAttribute
 )
     -- \todo Move this assert to the assembly side (with inline Lua)
     assert( deltaX ~= 0, "deltaX can't be zero" )
     -- \todo Assert that deltaX isn't too small/big to avoid tunneling.
 
-    -- \note World coordinate (32768, 32768) is placed at ~center of the map.
-    --       Need to adjust the incoming coordinates to be able to index the
-    --       map, because in map coordinates (0, 0) is at the top left corner
-    --       of the map. The adjustment is done for the hibyte only, so it's
-    --       only precise up to screen level.
-    local kAdjustX = -0x8000 + kScreenSize * math.floor( widthScreens  / 2 )
-    local kAdjustY = -0x8000 + kScreenSize * math.floor( heightScreens / 2 )
-
-    local mapX  = x  + kAdjustX
-    local mapY0 = y0 + kAdjustY
+    -- Adjust the incoming coordinates so that we can index the map
+    -- properly. The adjustment is done for the hibyte only (precise up to
+    -- screen level).
+    local mapX  = x  + adjustX
+    local mapY0 = y0 + adjustY
 
     -- \todo Could do a sanity check here to verify that the current line
     --       segment is not inside a solid.
@@ -84,7 +79,7 @@ local function lineSegmentEjectGeneric(
         end
     end
 
-    return ejectedX - kAdjustX
+    return ejectedX - adjustX
 end
 
 function MapCollision.lineSegmentEjectHorizontal()
@@ -97,7 +92,7 @@ function MapCollision.lineSegmentEjectHorizontal()
 
     local ejectedX = lineSegmentEjectGeneric(
         x, y0, length, deltaX,
-        MapData.widthScreens(), MapData.heightScreens(),
+        MapData.adjustX(), MapData.adjustY(),
         MapData.readAttribute
     )
 
@@ -115,7 +110,7 @@ function MapCollision.lineSegmentEjectVertical()
 
     local ejectedY = lineSegmentEjectGeneric(
         y, x0, length, deltaY,
-        MapData.heightScreens(), MapData.widthScreens(),
+        MapData.adjustY(), MapData.adjustX(),
         function ( x, y ) return MapData.readAttribute( y, x ) end
     )
 

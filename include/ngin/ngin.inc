@@ -19,5 +19,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/nmi.inc"
 .include "ngin/map-collision.inc"
 .include "ngin/ascii.inc"
+.include "ngin/camera.inc"
 
 .endif

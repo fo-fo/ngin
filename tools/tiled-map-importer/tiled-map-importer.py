@@ -27,6 +27,11 @@ kGidFlagMask = kGidHorzFlip|kGidVertFlip|kGidDiagFlip
 
 kSolidAttribute = "ngin_MapData_Attributes0::kSolid"
 
+kScreenSizeX, kScreenSizeY = 256, 256
+kMt32SizeX, kMt32SizeY = 32, 32
+kMt16SizeX, kMt16SizeY = 16, 16
+kTile8SizeX, kTile8SizeY = 8, 8
+
 class Size( object ):
     def __init__( self, width, height ):
         self.width = width
@@ -37,6 +42,18 @@ class NginMapData( object ):
         self.map = map
         # Size of the map in screen units
         self.sizeScreens = None
+
+    # This function converts a point from the map's coordinate system
+    # (with origin at the top left corner) to the world coordinate system of
+    # Ngin (unsigned coordinates, origin at about the middle of the map).
+    def mapPixelToNginWorldPoint( self, mapPixelPoint ):
+        # \note This logic is duplicated in map-data.lua in the engine code.
+        adjustX = -0x8000 + kScreenSizeX * ( self.sizeScreens[0] // 2 )
+        adjustY = -0x8000 + kScreenSizeY * ( self.sizeScreens[1] // 2 )
+        return (
+            mapPixelPoint[0] - adjustX,
+            mapPixelPoint[1] - adjustY
+        )
 
 class NginCommonMapData( object ):
     def __init__( self ):
@@ -96,11 +113,12 @@ class NginCommonMapData( object ):
         return len( self.maps ) - 1
 
 class Map( object ):
-    def __init__( self, size, tileSize, tilesets, layers ):
+    def __init__( self, size, tileSize, tilesets, layers, objectLayers ):
         self.size = size
         self.tileSize = tileSize
         self.tilesets = tilesets
         self.layers = layers
+        self.objectLayers = objectLayers
 
     def tilesetFromGid( self, gid ):
         # \note Tilesets are guaranteed to be ordered by firstGid.
@@ -122,6 +140,18 @@ class Layer( object ):
     def __init__( self, data, properties ):
         self.data = data
         self.properties = properties
+
+class ObjectLayer( object ):
+    def __init__( self, objects, properties ):
+        self.objects = objects
+        self.properties = properties
+
+class Object( object ):
+    def __init__( self, name, type, position, size ):
+        self.name = name
+        self.type = type
+        self.position = position
+        self.size = size
 
 class Properties( object ):
     def __init__( self, properties ):
@@ -309,6 +339,36 @@ def parseTmx( infile ):
             else:
                 raise unexpectedElem( event, elem )
 
+    def parseObjectLayer( objectLayerElem, iterator ):
+        objects = []
+        properties = Properties( {} )
+        for event, elem in iterator:
+            if event == "end" and elem.tag == "objectgroup":
+                return ObjectLayer( objects, properties )
+            elif event == "start" and elem.tag == "object":
+                objects.append( parseObject( elem, iterator ) )
+            elif event == "start" and elem.tag == "properties":
+                properties = parseProperties( elem, iterator )
+            else:
+                raise unexpectedElem( event, elem )
+
+    def parseObject( objectElem, iterator ):
+        for event, elem in iterator:
+            if event == "end" and elem.tag == "object":
+                name = elem.attrib[ "name" ]
+                type = elem.attrib[ "type" ]
+                position = (
+                    float( elem.attrib[ "x" ] ),
+                    float( elem.attrib[ "y" ] )
+                )
+                size = Size(
+                    float( elem.attrib[ "width" ] ),
+                    float( elem.attrib[ "height" ] )
+                )
+                return Object( name, type, position, size )
+            else:
+                raise unexpectedElem( event, elem )
+
     def parseTileAnimationFrame( frameElem, iterator ):
         for event, elem in iterator:
             if event == "end" and elem.tag == "frame":
@@ -408,6 +468,7 @@ def parseTmx( infile ):
     def parseMap( mapElem, iterator ):
         tilesets = []
         layers = []
+        objectLayers = []
         for event, elem in iterator:
             if event == "end" and elem.tag == "map":
                 size = Size(
@@ -418,12 +479,14 @@ def parseTmx( infile ):
                     int( elem.attrib[ "tilewidth" ] ),
                     int( elem.attrib[ "tileheight" ] )
                 )
-                return Map( size, tileSize, tilesets, layers )
+                return Map( size, tileSize, tilesets, layers, objectLayers )
             elif event == "start" and elem.tag == "tileset":
                 tileset = parseTileset( elem, iterator )
                 tilesets.append( tileset )
             elif event == "start" and elem.tag == "layer":
                 layers.append( parseLayer( elem, iterator ) )
+            elif event == "start" and elem.tag == "objectgroup":
+                objectLayers.append( parseObjectLayer( elem, iterator ) )
             else:
                 raise unexpectedElem( event, elem )
 
@@ -474,11 +537,6 @@ def combineProperties( propertyList, palette ):
 
 def processFlattenedMap( flatMap, flatProperties, nginCommonMapData ):
     # \todo Ensure that the flattened map size is a multiple of screen size(?)
-
-    kScreenSizeY, kScreenSizeX = 256, 256
-    kMt32SizeX, kMt32SizeY = 32, 32
-    kMt16SizeX, kMt16SizeY = 16, 16
-    kTile8SizeX, kTile8SizeY = 8, 8
 
     flatMapWidthMt16  = flatMap.size[ 0 ] / kMt16SizeX
     flatMapHeightMt16 = flatMap.size[ 1 ] / kMt16SizeY
@@ -642,6 +700,7 @@ def processMap( map, nginCommonMapData, produceDebugImage ):
     # Go through the resulting flattened map.
     # Extract 8x8px tiles, 16x16px metatiles, 32x32px metatiles and screens.
     mapIndex = processFlattenedMap( flatImage, flatProperties, nginCommonMapData )
+    mapData = nginCommonMapData.maps[ mapIndex ]
 
     if produceDebugImage:
         debugImage.save( "debug{}.png".format( mapIndex ) )
@@ -649,10 +708,22 @@ def processMap( map, nginCommonMapData, produceDebugImage ):
     # \todo Verify somewhere that map size is a multiple of screen size,
     #       or pad with empty space accordingly.
     kMt16PerScreenX, kMt16PerScreenY = 256/16, 256/16
-    nginCommonMapData.maps[ mapIndex ].sizeScreens = (
+    mapData.sizeScreens = (
         ( map.size.width  + kMt16PerScreenX - 1 ) / kMt16PerScreenX,
         ( map.size.height + kMt16PerScreenY - 1 ) / kMt16PerScreenY
     )
+
+    # Gather markers from the object layers.
+    mapData.markers = []
+    for objectLayer in map.objectLayers:
+        for object in objectLayer.objects:
+            if object.type.lower() == "marker":
+                # Round the position to an integer.
+                mapData.markers.append( (
+                    object.name,
+                    ( int( round( object.position[0] ) ),
+                      int( round( object.position[1] ) ) )
+                ) )
 
 def listToString( list ):
     return ", ".join( map( "{:3}".format, list ) )
@@ -714,15 +785,25 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             map( lambda x: x[ 3 ], nginCommonMapData.uniqueMt32 ) )
         f.write( ".endscope\n\n" )
 
+        f.write( 'ngin_pushSeg "CHR_ROM"\n' )
+        f.write( ".proc chrData\n" )
+        f.write( '    .incbin "{}.chr"\n'.format( outPrefixBase ) )
+        f.write( ".endproc\n" )
+        f.write( "ngin_popSeg\n\n" )
+
+        def withBase( index ):
+            return lambda x: "B+{}".format( x[ index ] )
+
         f.write( ".scope _16x16Metatiles\n" )
+        f.write( "    B = .lobyte( chrData/16 )\n" )
         writeByteArray( f, "    topLeft:     ",
-            map( lambda x: x[ 0 ], nginCommonMapData.uniqueMt16 ) )
+            map( withBase( 0 ), nginCommonMapData.uniqueMt16 ) )
         writeByteArray( f, "    topRight:    ",
-            map( lambda x: x[ 1 ], nginCommonMapData.uniqueMt16 ) )
+            map( withBase( 1 ), nginCommonMapData.uniqueMt16 ) )
         writeByteArray( f, "    bottomLeft:  ",
-            map( lambda x: x[ 2 ], nginCommonMapData.uniqueMt16 ) )
+            map( withBase( 2 ), nginCommonMapData.uniqueMt16 ) )
         writeByteArray( f, "    bottomRight: ",
-            map( lambda x: x[ 3 ], nginCommonMapData.uniqueMt16 ) )
+            map( withBase( 3 ), nginCommonMapData.uniqueMt16 ) )
         writeByteArray( f, "    attributes0: ",
             map( lambda x: "|".join( x[ 4 ] ), nginCommonMapData.uniqueMt16 ) )
         f.write( ".endscope\n\n" )
@@ -805,8 +886,25 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
                        str( uuid.uuid4() ).upper().replace( "-", "_" )
         f.write( ".if .not .defined( {} )\n".format( uniqueSymbol ) )
         f.write( "{} = 1\n\n".format( uniqueSymbol ) )
-        for symbol in symbols:
+        f.write( '.include "ngin/ngin.inc"\n\n' )
+
+        def writeMarker( name, position ):
+            worldPoint = nginMapData.mapPixelToNginWorldPoint( position )
+            f.write( "        {} = ngin_immediateVector2_16 {}, {}\n".format(
+                name, worldPoint[0], worldPoint[1] ) )
+
+        for symbol, nginMapData in zip( symbols, nginCommonMapData.maps ):
             f.write( ".global {}\n".format( symbol ) )
+            f.write( ".scope {}\n".format( symbol ) )
+
+            f.write( "    .scope markers\n" )
+            writeMarker( "topLeft", ( 0, 0 ) )
+            for marker in nginMapData.markers:
+                assert marker[0] != "topLeft"
+                writeMarker( marker[0], marker[1] )
+            f.write( "    .endscope\n" )
+
+            f.write( ".endscope\n" )
         f.write( "\n.endif\n" )
 
 def main():

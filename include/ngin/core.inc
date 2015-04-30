@@ -106,6 +106,10 @@ NGIN_CORE_INC_INCLUDED = 1
     ngin_segmentData "BSS", {data}
 .endmacro
 
+.macro __ngin_bss data
+    ngin_segmentData "NGIN_BSS", {data}
+.endmacro
+
 .macro ngin_rodata data
     ngin_segmentData "RODATA", {data}
 .endmacro
@@ -124,6 +128,14 @@ NGIN_CORE_INC_INCLUDED = 1
     ngin_pushSeg "NGIN_RESET_CONSTRUCTORS"
     jsr symbol
     ngin_popSeg
+.endmacro
+
+; This macro can be used to mark unconditional branches in code, and to do
+; a runtime check to verify that the expected condition holds.
+.macro ngin_always branch
+    ; \todo Check what branch is used, and assert that the branch condition
+    ;       is true (e.g. if BCC, assert that carry is 0)
+    branch
 .endmacro
 
 .endif

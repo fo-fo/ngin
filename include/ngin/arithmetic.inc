@@ -1,9 +1,9 @@
 .if .not .defined( NGIN_ARITHMETIC_INC_INCLUDED )
 NGIN_ARITHMETIC_INC_INCLUDED = 1
 
-.macro ngin_add16 to, what1, what2
-    ; If two parameters were given, interpret as to = to + what1
-    .if .paramcount = 2
+.macro __ngin_addSub16 clc_, adc_, to, what1, what2
+    ; If two real parameters were given, interpret as to = to + what1
+    .if .blank( {what2} )
         ngin_add16 {to}, {to}, {what1}
         .exitmac
     .endif
@@ -15,7 +15,7 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
 
     ; \todo Check for hibyte offset.
 
-    clc
+    clc_
     ; \todo Factor out these common portions. Might also want to .definemacroify
     ;       the immediate match and hash-stripping.
     ; \todo Can optimize case where the lobyte of immediate parameter is 0.
@@ -33,11 +33,11 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     .if .match( .left( 1, {what2} ), # )
         .local what2Stripped
         what2Stripped = .right( .tcount( {what2} ) - 1, {what2} )
-        adc #.lobyte( what2Stripped )
+        adc_ #.lobyte( what2Stripped )
     .elseif .match( .left( 1, {what2} ), {(} )
-        adc what2
+        adc_ what2
     .else
-        adc 0+(what2)
+        adc_ 0+(what2)
     .endif
     sta 0+(to)
 
@@ -50,13 +50,21 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
         lda 1+(what1)
     .endif
     .if .match( .left( 1, {what2} ), # )
-        adc #.hibyte( what2Stripped )
+        adc_ #.hibyte( what2Stripped )
     .elseif .match( .left( 1, {what2} ), {(} )
-        adc #0
+        adc_ #0
     .else
-        adc 1+(what2)
+        adc_ 1+(what2)
     .endif
     sta 1+(to)
+.endmacro
+
+.macro ngin_add16 to, what1, what2
+    __ngin_addSub16 clc, adc, {to}, {what1}, {what2}
+.endmacro
+
+.macro ngin_sub16 to, what1, what2
+    __ngin_addSub16 sec, sbc, {to}, {what1}, {what2}
 .endmacro
 
 .macro ngin_sbc8 to, what
@@ -87,6 +95,38 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     bcc noOverflow
         inc 1+(to)
     noOverflow:
+.endmacro
+
+.macro ngin_add16_8s to, what
+    ; \todo Write some tests for this
+    ; \todo Make it possible to specify two sources and a destination.
+    ; \todo Generalize to get sub16_8s(?)
+    ; \todo Some optimization opportunities:
+    ;       1) if "what" is a const immediate, the sign extension can be done
+    ;          at compile time
+    ;       2) if "what" is a constant 0, can optimize to a move
+    clc
+    lda what
+    bmi topBitSet
+        ; Top bit not set, so sign extended hibyte is 0.
+        adc to
+        sta to
+        ; If lowbyte overflowed, increase hibyte.
+        bcc topBitNotSetDone
+            inc 1+(to)
+        ; INC doesn't modify carry, so carry is still set here.
+        ngin_always bcs topBitNotSetDone
+    .local topBitSet
+    topBitSet:
+        ; Top bit set, so sign extended hibyte is $FF.
+        adc to
+        sta to
+        bcs noOverflow
+            dec 1+(to)
+        .local noOverflow
+        noOverflow:
+    .local topBitNotSetDone
+    topBitNotSetDone:
 .endmacro
 
 .macro ngin_cmp8 with, what

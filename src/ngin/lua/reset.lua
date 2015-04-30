@@ -10,3 +10,11 @@ function ngin.signedByte( value )
     end
     return value - 256
 end
+
+-- Reads a 16-bit value from RAM.
+function ngin.read16( addr )
+    return bit32.bor(
+        bit32.lshift( NDX.readMemory( addr+1 ), 8 ),
+        NDX.readMemory( addr+0 )
+    )
+end

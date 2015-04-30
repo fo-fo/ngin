@@ -20,15 +20,17 @@ local MapScroller = {}
 --       pixels would then go to waste. The tile and color attribute view
 --       sizes can also differ.
 -- Note: Using values other than "one screen mirroring" here requires manual
---       changes to attributeCache.
+--       changes to attributeCache handling.
 local kViewWidth, kViewHeight = 256-8, 240-8 -- One screen mirroring (generic)
 local kAttrViewWidth, kAttrViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
 
 local kDirectionVertical, kDirectionHorizontal = 0, 1
+local kEdgeLeft, kEdgeRight, kEdgeTop, kEdgeBottom = 0, 1, 2, 3
 
 local kTile8Width, kTile8Height = 8, 8
 local kTile16Width, kTile16Height = 16, 16
 local kTile32Width, kTile32Height = 32, 32
+local kScreenWidth, kScreenHeight = 256, 256
 
 local kNametableWidth = 256
 local kNametableHeight = 240
@@ -55,37 +57,11 @@ local kAttributeTileUpdateHeightPixels = kAttrViewHeight + kTile16Height
 --       There's also some redundancy in the tile/attribute counters.
 -- \note Map position and PPU position have to be aligned to the color attribute
 --       grid.
-scrollDataTop = {
-    mapPosition = 0,
-    ppuPosition = 0,
-    attrMapPosition = 0,
-    attrPpuPosition = 0,
-    updateDirection = kDirectionHorizontal
-}
-
-scrollDataBottom = {
-    mapPosition = scrollDataTop.mapPosition + kViewHeight-1,
-    ppuPosition = (scrollDataTop.ppuPosition + kViewHeight-1) % kNametableTotalHeight,
-    attrMapPosition = scrollDataTop.mapPosition + kAttrViewHeight-1,
-    attrPpuPosition = (scrollDataTop.ppuPosition + kAttrViewHeight-1) % kNametableTotalHeight,
-    updateDirection = kDirectionHorizontal
-}
-
-scrollDataLeft = {
-    mapPosition = 0,
-    ppuPosition = 0,
-    attrMapPosition = 0,
-    attrPpuPosition = 0,
-    updateDirection = kDirectionVertical
-}
-
-scrollDataRight = {
-    mapPosition = scrollDataLeft.mapPosition + kViewWidth-1,
-    ppuPosition = (scrollDataLeft.ppuPosition + kViewWidth-1) % kNametableTotalWidth,
-    attrMapPosition = scrollDataLeft.mapPosition + kAttrViewWidth-1,
-    attrPpuPosition = (scrollDataLeft.ppuPosition + kAttrViewWidth-1) % kNametableTotalWidth,
-    updateDirection = kDirectionVertical
-}
+-- \note The values of these variables are set in the setPosition() function.
+local scrollDataTop
+local scrollDataBottom
+local scrollDataLeft
+local scrollDataRight
 
 -------------------------------------------------------------------------------
 
@@ -219,6 +195,21 @@ local function update( scrollData, perpScrollData )
         kTileSize = kTile8Width
     end
 
+    -- If the coordinate is aligned to the tile grid, we can update one tile
+    -- less than the maximum. This is actually necessary to avoid reading from
+    -- outside the map boundaries when at the right/bottom edge of the map.
+    -- \todo Explore other solutions:
+    --       1) Could disallow map from scrolling so far that it becomes a
+    --          problem (con: the tiles at the very right/bottom won't show)
+    --       2) Could use a constant tile outside the map, e.g. metatile 0.
+    --       3) Could apply the fix only at the right/bottom corner.
+    --       Disadvantage of the current method is that it'd be technically
+    --       possible to show more tiles (even if they fall into "non-valid"
+    --       area of the viewport).
+    if perpScrollData.mapPosition % kTileSize == 0 then
+        kUpdateLengthPixels = kUpdateLengthPixels - kTileSize
+    end
+
     local previousPpuAddress = nil
 
     -- Loop through the whole section that needs to be updated. Currently the
@@ -292,6 +283,11 @@ local function updateAttributes( scrollData, perpScrollData )
         kAttributeTileSize = kTile16Width
     end
 
+    -- See the comment in update()
+    if perpScrollData.attrMapPosition % kAttributeTileSize == 0 then
+        kUpdateLengthPixels = kUpdateLengthPixels - kAttributeTileSize
+    end
+
     local previousPpuAddress = nil
 
     local mapX = scrollData.attrMapPosition
@@ -358,10 +354,34 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
     local previousPosition = scrollData.mapPosition
     local previousAttrPosition = scrollData.attrMapPosition
 
+    -- Check amount against the map size. On left/top side can never go below 0.
+    -- On right/bottom side can never go above map width/height.
+    -- \todo Could optionally operate in repeating mode by rolling the
+    --       coordinates over (although that would't automatically translate
+    --       to e.g. collision routines working in the same way).
+    if scrollData.edge == kEdgeLeft or scrollData.edge == kEdgeTop then
+        -- Clamp the amount so that we won't go over the edge.
+        -- Note that amount is negative when moving left/up.
+        if scrollData.mapPosition + amount < 0 then
+            amount = -scrollData.mapPosition
+        end
+    elseif scrollData.edge == kEdgeRight or scrollData.edge == kEdgeBottom then
+        local mapSizePixels
+        -- \note updateDirection is the direction of PPU updates, so it's
+        --       opposite of the movement direction.
+        if scrollData.updateDirection == kDirectionVertical then
+            mapSizePixels = MapData.widthScreens() * kScreenWidth
+        elseif scrollData.updateDirection == kDirectionHorizontal then
+            mapSizePixels = MapData.heightScreens() * kScreenHeight
+        end
+        local maxScroll = mapSizePixels - 1
+        if scrollData.mapPosition + amount > maxScroll then
+            amount = maxScroll - scrollData.mapPosition
+        end
+    end
+
     -- Update the position in the map, on the side we're scrolling to, and on
     -- the opposite side.
-    -- \todo If we know the map size, could clamp the value, or roll it over
-    --       for a repeating map.
     scrollData.mapPosition = scrollData.mapPosition + amount
     oppositeScrollData.mapPosition = oppositeScrollData.mapPosition + amount
 
@@ -399,26 +419,111 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
             math.floor( scrollData.attrMapPosition/16 ) then
         updateAttributes( scrollData, perpScrollData )
     end
+
+    -- Return how much was actually scrolled.
+    return amount
+end
+
+local function setPosition( x, y )
+    -- These values need to be added to position to go from world coordinates
+    -- to map coordinates.
+    local adjustX = MapData.adjustX()
+    local adjustY = MapData.adjustY()
+
+    x = x + adjustX
+    y = y + adjustY
+
+    scrollDataTop = {
+        mapPosition = y,
+        -- \note Any PPU position should be fine as long as the color grids of
+        --       map and PPU coordinates are properly aligned.
+        ppuPosition = y % kTile16Height,
+        attrMapPosition = y,
+        attrPpuPosition = y % kTile16Height,
+        updateDirection = kDirectionHorizontal,
+        edge = kEdgeTop
+    }
+
+    -- Bottom coordinates are completely based on the top coordinates.
+    scrollDataBottom = {
+        mapPosition = scrollDataTop.mapPosition + kViewHeight-1,
+        ppuPosition = (scrollDataTop.ppuPosition + kViewHeight-1) % kNametableTotalHeight,
+        attrMapPosition = scrollDataTop.attrMapPosition + kAttrViewHeight-1,
+        attrPpuPosition = (scrollDataTop.attrPpuPosition + kAttrViewHeight-1) % kNametableTotalHeight,
+        updateDirection = kDirectionHorizontal,
+        edge = kEdgeBottom
+    }
+
+    -- Left and right side are handled similarly as top/bottom.
+
+    scrollDataLeft = {
+        mapPosition = x,
+        ppuPosition = x % kTile16Width,
+        attrMapPosition = x,
+        attrPpuPosition = x % kTile16Width,
+        updateDirection = kDirectionVertical,
+        edge = kEdgeLeft
+    }
+
+    scrollDataRight = {
+        mapPosition = scrollDataLeft.mapPosition + kViewWidth-1,
+        ppuPosition = (scrollDataLeft.ppuPosition + kViewWidth-1) % kNametableTotalWidth,
+        attrMapPosition = scrollDataLeft.attrMapPosition + kAttrViewWidth-1,
+        attrPpuPosition = (scrollDataLeft.attrPpuPosition + kAttrViewWidth-1) % kNametableTotalWidth,
+        updateDirection = kDirectionVertical,
+        edge = kEdgeRight
+    }
+end
+
+function MapScroller.setPosition()
+    local positionAddr = SYM.__ngin_MapScroller_setPosition_position[ 1 ]
+    local x = ngin.read16( positionAddr + 0 )
+    local y = ngin.read16( positionAddr + 2 )
+    setPosition( x, y )
 end
 
 function MapScroller.scrollHorizontal()
     local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollHorizontal_amount )
 
+    local actualAmount
     if amount < 0 then
-        scroll( amount, scrollDataLeft, scrollDataRight, scrollDataTop )
+        actualAmount = scroll( amount, scrollDataLeft, scrollDataRight, scrollDataTop )
     elseif amount > 0 then
-        scroll( amount, scrollDataRight, scrollDataLeft, scrollDataTop )
+        actualAmount = scroll( amount, scrollDataRight, scrollDataLeft, scrollDataTop )
     end
+
+    REG.A = actualAmount
 end
 
 function MapScroller.scrollVertical()
     local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollVertical_amount )
 
+    local actualAmount
     if amount < 0 then
-        scroll( amount, scrollDataTop, scrollDataBottom, scrollDataLeft )
+        actualAmount = scroll( amount, scrollDataTop, scrollDataBottom, scrollDataLeft )
     elseif amount > 0 then
-        scroll( amount, scrollDataBottom, scrollDataTop, scrollDataLeft )
+        actualAmount = scroll( amount, scrollDataBottom, scrollDataTop, scrollDataLeft )
     end
+
+    REG.A = actualAmount
+end
+
+function MapScroller.ppuRegisters()
+    local horizontalNametable = math.floor( scrollDataLeft.ppuPosition /
+                                            kNametableWidth )
+    local verticalNametable   = math.floor( scrollDataTop.ppuPosition /
+                                            kNametableHeight )
+
+    assert( horizontalNametable == 0 or horizontalNametable == 1 )
+    assert( verticalNametable   == 0 or verticalNametable   == 1 )
+
+    local scrollX = scrollDataLeft.ppuPosition % kNametableWidth
+    local scrollY = scrollDataTop .ppuPosition % kNametableHeight
+
+    -- Return the results in A/X/Y.
+    REG.A = 2 * verticalNametable + horizontalNametable
+    REG.X = scrollX
+    REG.Y = scrollY
 end
 
 ngin.MapScroller = MapScroller

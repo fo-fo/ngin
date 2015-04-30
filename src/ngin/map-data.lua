@@ -8,14 +8,6 @@ local kTile16Width, kTile16Height = 16, 16
 local kTile32Width, kTile32Height = 32, 32
 local kScreenWidth, kScreenHeight = 256, 256
 
--- Reads a 16-bit value from RAM.
-local function read16( addr )
-    return bit32.bor(
-        bit32.lshift( NDX.readMemory( addr+1 ), 8 ),
-        NDX.readMemory( addr+0 )
-    )
-end
-
 -- Members of ngin_MapData_Pointers struct
 -- \todo If scopes were exposed from NDX, structs could be handled
 --       automatically with a proxy object which would be constructed based
@@ -41,12 +33,29 @@ local ngin_MapData_pointers = SYM.ngin_MapData_pointers[ 1 ]
 
 -- Read a value of a map data pointer.
 local function readPointer( structMember )
-    return read16( ngin_MapData_pointers +
-                   2 * pointersStructMembers[ structMember ] )
+    return ngin.read16( ngin_MapData_pointers +
+                        2 * pointersStructMembers[ structMember ] )
+end
+
+function MapData.widthScreens()
+    local headerAddress = ngin.read16( ngin_MapData_header )
+    return NDX.readMemory( headerAddress + 0 )
+end
+
+function MapData.heightScreens()
+    local headerAddress = ngin.read16( ngin_MapData_header )
+    return NDX.readMemory( headerAddress + 1 )
 end
 
 -- Read a 16x16px metatile from the map. X and Y parameters are in pixels.
 function MapData.readMetatile16( x, y )
+    -- Assert that X and Y coordinates are within map range.
+
+    assert( x >= 0 and x < MapData.widthScreens()  * kScreenWidth,
+        string.format( "readMetatile16: x coordinate out of range: %d", x ) )
+    assert( y >= 0 and y < MapData.heightScreens() * kScreenHeight,
+        string.format( "readMetatile16: y coordinate out of range: %d", y ) )
+
     -- Screen coordinates within the full map
     local screenX, screenY =
         math.floor( x / kScreenWidth ), math.floor( y / kScreenHeight )
@@ -151,14 +160,12 @@ function MapData.readAttribute( x, y )
     return attribute
 end
 
-function MapData.widthScreens()
-    local headerAddress = read16( ngin_MapData_header )
-    return NDX.readMemory( headerAddress + 0 )
+function MapData.adjustX()
+    return -0x8000 + kScreenWidth * math.floor( MapData.widthScreens() / 2 )
 end
 
-function MapData.heightScreens()
-    local headerAddress = read16( ngin_MapData_header )
-    return NDX.readMemory( headerAddress + 1 )
+function MapData.adjustY()
+    return -0x8000 + kScreenHeight * math.floor( MapData.heightScreens() / 2 )
 end
 
 return MapData
