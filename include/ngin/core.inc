@@ -17,12 +17,59 @@ NGIN_CORE_INC_INCLUDED = 1
 .define __ngin_choice( condition, if, else ) \
     ((!!(condition)) * (if) + (!(condition)) * (else))
 
+.enum ngin_Bool
+    kFalse
+    kTrue
+.endenum
+
+__ngin_mov8_baseCount .set 0
+
 .macro ngin_mov8 to, from
     __ngin_requireParameter {to}, "to"
     __ngin_requireParameter {from}, "from"
 
-    lda from
+    .local skipLoad
+    skipLoad .set ngin_Bool::kFalse
+
+    ; If "from" is an immediate value, we might be able to optimize out
+    ; some redundant loads.
+    .if .match( .left( 1, {from} ), # )
+        .local fromStripped
+        fromStripped = .right( .tcount( {from} ) - 1, {from} )
+        ; Must know the value to be able to optimize.
+        .if .const( fromStripped )
+            ; If baseCount is non-zero, a previous ngin_mov8 has occurred.
+            .if ::__ngin_mov8_baseCount <> 0
+                ; Calculate offset to the end of previous ngin_mov8.
+                .local offsetToPrevious
+                offsetToPrevious = * - ::.ident( .sprintf( "__ngin_mov8_base%d", \
+                                                     ::__ngin_mov8_baseCount-1 ) )
+
+                ; If offsetToPrevious is 0, no other instructions have occurred
+                ; between this and the previous instance.
+                ; \note offsetToPrevious can be non-const in case the label
+                ;       is in a different segment.
+                .if .const( offsetToPrevious ) .and offsetToPrevious = 0
+                    ; If the value matches the previous one, skip the load.
+                    .if ::__ngin_mov8_previousValue = fromStripped
+                        skipLoad .set ngin_Bool::kTrue
+                    .endif
+                .endif
+            .endif
+            ; Set a new base, and save the value that is known to be in A.
+            ::.ident( .sprintf( "__ngin_mov8_base%d", ::__ngin_mov8_baseCount ) ) \
+                := staEnd
+            ::__ngin_mov8_baseCount .set ::__ngin_mov8_baseCount + 1
+            ::__ngin_mov8_previousValue .set fromStripped
+        .endif
+    .endif
+
+    .if .not skipLoad
+        lda from
+    .endif
     sta to
+    .local staEnd
+    staEnd:
 .endmacro
 
 .macro ngin_mov16 to, from
