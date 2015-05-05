@@ -33,6 +33,7 @@ __ngin_mov8_baseCount .set 0
 
     ; If "from" is an immediate value, we might be able to optimize out
     ; some redundant loads.
+    ; \todo Make the optimization optional.
     .if .match( .left( 1, {from} ), # )
         .local fromStripped
         fromStripped = .right( .tcount( {from} ) - 1, {from} )
@@ -72,24 +73,47 @@ __ngin_mov8_baseCount .set 0
     staEnd:
 .endmacro
 
+; Special marker embedded into an expression as a multiplier to piggyback
+; the stride information into the expression. "id" has to be an identifier
+; in global scope.
+__ngin_strideSpecifier = 0
+.define __ngin_stride( id ) (::__ngin_strideSpecifier * ::id)
+
+.macro __ngin_getOperandStride operand, stride
+    ; Set the defaults.
+    stride      .set 1
+
+    ; See if the operand matches the special format used for stride specifiers.
+    ; In case multiple stride specifiers are found, the last one is used.
+    ; \todo Allow numeric values (instead of just an identifier) for the stride.
+    ; \note The stride value has to be in the global scope and specified with
+    ;       the global scope prefix.
+    .repeat .tcount( {operand} ), i
+        .if .xmatch( .mid( i, 5, {operand} ), {(::__ngin_strideSpecifier*::} )
+            .if .match( .mid( i+5, 3, {operand} ), {id)+} )
+                stride .set ::.mid( i+5, 1, {operand} )
+            .endif
+        .endif
+    .endrepeat
+.endmacro
+
 .macro ngin_mov16 to, from
     __ngin_requireParameter {to}, "to"
     __ngin_requireParameter {from}, "from"
 
-    ; \todo Optional hibyte offset? Might be sufficient to have a
-    ;       template macro, and use that to generate a couple of specialized
-    ;       macros (e.g. for objects). Although source and destination
-    ;       offsets will often differ...
+    __ngin_getOperandStride {to},   __ngin_mov16_strideTo
+    __ngin_getOperandStride {from}, __ngin_mov16_strideFrom
 
     .if .match( .left( 1, {from} ), # )
         .local fromStripped
         fromStripped = .right( .tcount( {from} ) - 1, {from} )
-        ; \todo Could be optimized if lobyte == hibyte
-        ngin_mov8 0+(to), #.lobyte( fromStripped )
-        ngin_mov8 1+(to), #.hibyte( fromStripped )
+        ngin_mov8 { 0*__ngin_mov16_strideTo+to }, #.lobyte( fromStripped )
+        ngin_mov8 { 1*__ngin_mov16_strideTo+to }, #.hibyte( fromStripped )
     .else
-        ngin_mov8 0+(to), 0+(from)
-        ngin_mov8 1+(to), 1+(from)
+        ngin_mov8 { 0*__ngin_mov16_strideTo+to }, \
+                  { 0*__ngin_mov16_strideFrom+from }
+        ngin_mov8 { 1*__ngin_mov16_strideTo+to }, \
+                  { 1*__ngin_mov16_strideFrom+from }
     .endif
 .endmacro
 
@@ -97,26 +121,51 @@ __ngin_mov8_baseCount .set 0
     __ngin_requireParameter {to}, "to"
     __ngin_requireParameter {from}, "from"
 
-    ; \todo Optional hibyte offset (would need 3 though, so nonsensical)
+    __ngin_getOperandStride {to},   __ngin_mov32_strideTo
+    __ngin_getOperandStride {from}, __ngin_mov32_strideFrom
 
     .if .match( .left( 1, {from} ), # )
         .local fromStripped
         fromStripped = .right( .tcount( {from} ) - 1, {from} )
-        ngin_mov16 0+(to), #.loword( fromStripped )
-        ngin_mov16 2+(to), #.hiword( fromStripped )
+        ngin_mov16 { 0*__ngin_mov32_strideTo+to }, #.loword( fromStripped )
+        ngin_mov16 { 2*__ngin_mov32_strideTo+to }, #.hiword( fromStripped )
     .else
-        ngin_mov16 0+(to), 0+(from)
-        ngin_mov16 2+(to), 2+(from)
+        ngin_mov16 { 0*__ngin_mov32_strideTo+to }, \
+                   { 0*__ngin_mov32_strideFrom+from }
+        ngin_mov16 { 2*__ngin_mov32_strideTo+to }, \
+                   { 2*__ngin_mov32_strideFrom+from }
     .endif
 .endmacro
+
+.struct ngin_Vector2_8
+    x_ .byte
+    y_ .byte
+.endstruct
 
 .struct ngin_Vector2_16
     x_ .word
     y_ .word
 .endstruct
 
+; \todo Maybe better to have these as an union in Vector2_16.
+.union ngin_Vector2_8_8
+    .struct
+        fracX_  .byte
+        intX_   .byte
+        fracY_  .byte
+        intY_   .byte
+    .endstruct
+    .struct
+        x_      .word
+        y_      .word
+    .endstruct
+.endunion
+
 .define ngin_immediateVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
                                               .loword( x_ ) )
+
+.define ngin_Vector2_16_immediateX( vector ) .loword( vector )
+.define ngin_Vector2_16_immediateY( vector ) .hiword( vector )
 
 .struct __ngin_EmptyStruct
 .endstruct

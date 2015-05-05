@@ -40,19 +40,31 @@ NGIN_CAMERA_INC_INCLUDED = 1
 
     ; \todo In real world scenarios it would probably be better to calculate
     ;       the 16-bit displacement once based on camera position of the current
-    ;       frame, and use it for all objects after that.
+    ;       frame, and use it for all objects after that. It could probably
+    ;       be done in ngin_Camera_move, since we don't expect that to be called
+    ;       multiple times per frame.
 
-    ngin_sub16 spritePosition         + ngin_Vector2_16::x_, \
-               worldPosition          + ngin_Vector2_16::x_, \
-               __ngin_Camera_position + ngin_Vector2_16::x_
-    ngin_sub16 spritePosition         + ngin_Vector2_16::y_, \
-               worldPosition          + ngin_Vector2_16::y_, \
-               __ngin_Camera_position + ngin_Vector2_16::y_
+    __ngin_getOperandStride {worldPosition},  __ngin_Camera_strideWorldPosition
+    __ngin_getOperandStride {spritePosition}, __ngin_Camera_strideSpritePosition
 
-    ngin_add16 spritePosition + ngin_Vector2_16::x_, \
-               #ngin_SpriteRenderer_kTopLeftX
-    ngin_add16 spritePosition + ngin_Vector2_16::y_, \
-               #ngin_SpriteRenderer_kTopLeftY
+    ; \todo This function doesn't work with immediate arguments right now,
+    ;       because X/Y offset is always added (fortunately it at least
+    ;       generates an error)
+    ngin_sub16 \
+        { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
+        { ngin_Vector2_16::x_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
+        { ngin_Vector2_16::x_                                      + __ngin_Camera_position }
+    ngin_sub16 \
+        { ngin_Vector2_16::y_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
+        { ngin_Vector2_16::y_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
+        { ngin_Vector2_16::y_                                      + __ngin_Camera_position }
+
+    ngin_add16 \
+        { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
+        #ngin_SpriteRenderer_kTopLeftX
+    ngin_add16 \
+        { ngin_Vector2_16::y_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
+        #ngin_SpriteRenderer_kTopLeftY
 .endmacro
 
 .endif

@@ -26,6 +26,8 @@ add_library( ngin STATIC
     map-collision.s
     camera.s
     lfsr8.s
+    object.s
+    force-segment.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

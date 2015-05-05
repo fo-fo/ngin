@@ -13,7 +13,9 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     __ngin_requireParameter {what1}, "what1"
     __ngin_requireParameter {what2}, "what2"
 
-    ; \todo Check for hibyte offset.
+    __ngin_getOperandStride {to},    __ngin_addSub16_strideTo
+    __ngin_getOperandStride {what1}, __ngin_addSub16_strideWhat1
+    __ngin_getOperandStride {what2}, __ngin_addSub16_strideWhat2
 
     clc_
     ; \todo Factor out these common portions. Might also want to .definemacroify
@@ -28,7 +30,7 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
         ; Indirect -- assume an 8-bit value.
         lda what1
     .else
-        lda 0+(what1)
+        lda 0*__ngin_addSub16_strideWhat1+what1
     .endif
     .if .match( .left( 1, {what2} ), # )
         .local what2Stripped
@@ -37,9 +39,9 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
     .elseif .match( .left( 1, {what2} ), {(} )
         adc_ what2
     .else
-        adc_ 0+(what2)
+        adc_ 0*__ngin_addSub16_strideWhat2+what2
     .endif
-    sta 0+(to)
+    sta 0*__ngin_addSub16_strideTo+to
 
     .if .match( .left( 1, {what1} ), # )
         lda #.hibyte( what1Stripped )
@@ -47,16 +49,16 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
         ; Hibyte is assumed 0 for indirect.
         lda #0
     .else
-        lda 1+(what1)
+        lda 1*__ngin_addSub16_strideWhat1+what1
     .endif
     .if .match( .left( 1, {what2} ), # )
         adc_ #.hibyte( what2Stripped )
     .elseif .match( .left( 1, {what2} ), {(} )
         adc_ #0
     .else
-        adc_ 1+(what2)
+        adc_ 1*__ngin_addSub16_strideWhat2+what2
     .endif
-    sta 1+(to)
+    sta 1*__ngin_addSub16_strideTo+to
 .endmacro
 
 .macro ngin_add16 to, what1, what2

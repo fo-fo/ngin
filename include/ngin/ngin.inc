@@ -22,5 +22,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/camera.inc"
 .include "ngin/log.inc"
 .include "ngin/lfsr8.inc"
+.include "ngin/object.inc"
 
 .endif
