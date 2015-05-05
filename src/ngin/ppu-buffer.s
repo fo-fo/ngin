@@ -94,6 +94,7 @@ ngin_PpuBuffer_pointer: .byte 0
 loopDone:
 
     ; \todo Mark the buffer as processed (terminator in the beginning)?
+    ;       Or assert with Lua that the same buffer is not uploaded twice.
 
     ; Restore stack pointer.
     ldx savedStackPointer

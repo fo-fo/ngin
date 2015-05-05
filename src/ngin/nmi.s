@@ -13,6 +13,7 @@ nmiCount: .byte 0
 .endproc
 
 .proc __ngin_waitVBlank
+    ; \todo Runtime assert to make sure that NMI is on.
     lda nmiCount
 hasntChanged:
     cmp nmiCount

@@ -9,22 +9,22 @@ spriteDefinition:
     .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+0             ; X
     .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 1                                         ; Tile
+    .byte 1                                          ; Tile
 
     .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+0             ; X
     .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte 1                                         ; Tile
+    .byte 1                                          ; Tile
 
     .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+8             ; X
     .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte 1                                         ; Tile
+    .byte 1                                          ; Tile
 
     .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+8             ; X
     .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 1                                         ; Tile
+    .byte 1                                          ; Tile
 
     .byte ngin_SpriteRenderer_kDefinitionTerminator
 

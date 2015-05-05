@@ -38,7 +38,6 @@ ngin_entryPoint start
     ngin_MapData_load #maps_collisionTest
     ngin_Camera_initializeView #maps_collisionTest::markers::camera
 
-    ; \note World coordinate (32768, 32768) maps to ~middle of the map.
     ngin_mov32 position, #maps_collisionTest::markers::player
 
     ; Enable NMI so that we can use ngin_waitVBlank.
