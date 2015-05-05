@@ -34,6 +34,11 @@ local function lineSegmentEjectGeneric(
     adjustX, adjustY,
     readAttribute
 )
+    -- If deltaX is zero, no movement and thus no collision occurs.
+    if deltaX == 0 then
+        return false, x
+    end
+
     -- \todo Move this assert to the assembly side (with inline Lua)
     assert( deltaX ~= 0, "deltaX can't be zero" )
     -- \todo Assert that deltaX isn't too small/big to avoid tunneling.
@@ -51,6 +56,7 @@ local function lineSegmentEjectGeneric(
 
     -- Assume there's no ejection by default.
     local ejectedX = newMapX
+    local hitSolid = false
 
     -- \note Has to match ngin_MapData_Attributes0::kSolid from map-data.inc.
     --       No way to do automatic verification of that currently,
@@ -63,6 +69,7 @@ local function lineSegmentEjectGeneric(
         local pixelY = tileY * kTile16Size
         local attribute = readAttribute( newMapX, pixelY )
         if bit32.btest( attribute, kSolid ) then
+            hitSolid = true
             -- Calculate ejected X. Correct result depends on movement
             -- direction.
             if deltaX > 0 then
@@ -79,7 +86,7 @@ local function lineSegmentEjectGeneric(
         end
     end
 
-    return ejectedX - adjustX
+    return hitSolid, ejectedX - adjustX
 end
 
 function MapCollision.lineSegmentEjectHorizontal()
@@ -90,12 +97,13 @@ function MapCollision.lineSegmentEjectHorizontal()
         RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_deltaX
     )
 
-    local ejectedX = lineSegmentEjectGeneric(
+    local hitSolid, ejectedX = lineSegmentEjectGeneric(
         x, y0, length, deltaX,
         MapData.adjustX(), MapData.adjustY(),
         MapData.readAttribute
     )
 
+    if hitSolid then REG.C = 1 else REG.C = 0 end
     write16Symbol( "ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX",
                    ejectedX )
 end
@@ -108,12 +116,13 @@ function MapCollision.lineSegmentEjectVertical()
         RAM.__ngin_MapCollision_lineSegmentEjectVertical_deltaY
     )
 
-    local ejectedY = lineSegmentEjectGeneric(
+    local hitSolid, ejectedY = lineSegmentEjectGeneric(
         y, x0, length, deltaY,
         MapData.adjustY(), MapData.adjustX(),
         function ( x, y ) return MapData.readAttribute( y, x ) end
     )
 
+    if hitSolid then REG.C = 1 else REG.C = 0 end
     write16Symbol( "ngin_MapCollision_lineSegmentEjectVertical_ejectedY",
                    ejectedY )
 end

@@ -12,6 +12,7 @@ NGIN_MAP_COLLISION_INC_INCLUDED = 1
 ; deltaX:   Horizontal movement amount (added to X)
 ; Return values:
 ; ejectedX: The ejected X coordinate (16-bit)
+; Carry:    1, if a collision occurred.
 .global __ngin_MapCollision_lineSegmentEjectHorizontal
 .global __ngin_MapCollision_lineSegmentEjectHorizontal_x
 .global __ngin_MapCollision_lineSegmentEjectHorizontal_y0
