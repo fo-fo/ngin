@@ -50,10 +50,10 @@ end
 -- Read a 16x16px metatile from the map. X and Y parameters are in pixels.
 function MapData.readMetatile16( x, y )
     -- Assert that X and Y coordinates are within map range.
-
-    assert( x >= 0 and x < MapData.widthScreens()  * kScreenWidth,
+    -- Add 1 to the width and height because of the sentinel row/column.
+    assert( x >= 0 and x < ( MapData.widthScreens()  + 1 )  * kScreenWidth,
         string.format( "readMetatile16: x coordinate out of range: %d", x ) )
-    assert( y >= 0 and y < MapData.heightScreens() * kScreenHeight,
+    assert( y >= 0 and y < ( MapData.heightScreens() + 1 ) * kScreenHeight,
         string.format( "readMetatile16: y coordinate out of range: %d", y ) )
 
     -- Screen coordinates within the full map

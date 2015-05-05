@@ -816,15 +816,25 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             # \todo Add some comment lines to results indicating from what
             #       files the results were generated.
 
-            # Screen rows
-            f.write( "    .scope screenRows\n" )
-            for y in xrange( nginMapData.sizeScreens[ 1 ] ):
+            def writeRow( y, symbolY ):
                 baseOffset = y * nginMapData.sizeScreens[ 0 ]
                 start = baseOffset
                 end = start + nginMapData.sizeScreens[ 0 ]
+                slice = nginMapData.map[ start:end ]
+                # Duplicate the last element to add a sentinel value at the
+                # right side to simplify engine code.
+                slice.append( slice[ -1] )
                 f.write( "        row{}: .byte {}\n".format(
-                    y, listToString( nginMapData.map[ start:end ] )
+                    symbolY, listToString( slice )
                 ) )
+
+            # Screen rows
+            f.write( "    .scope screenRows\n" )
+            for y in xrange( nginMapData.sizeScreens[ 1 ] ):
+                writeRow( y, y )
+            # Add a sentinel row.
+            writeRow( nginMapData.sizeScreens[ 1 ]-1,
+                      nginMapData.sizeScreens[ 1 ] )
             f.write( "    .endscope\n\n" )
 
             # Screen row pointers
@@ -838,7 +848,8 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
 """
             f.write( kScreenRowPointersTemplate.format( listToString(
                 map( lambda x: "screenRows::row{}".format( x ),
-                     range( nginMapData.sizeScreens[ 1 ] ) )
+                     # 1 is added because of the sentinel row.
+                     range( nginMapData.sizeScreens[ 1 ]+1 ) )
             ) ) )
 
             # Map header

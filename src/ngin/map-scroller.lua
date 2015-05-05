@@ -72,7 +72,7 @@ local ngin_PpuBuffer_buffer        = SYM.ngin_PpuBuffer_buffer[ 1 ]
 -- The required size depends on the view size. 9x9 bytes should be enough for
 -- all uses (although addressing the cache might be a bit tricky).
 local attributeCache = {}
--- for i = 0, 255 do
+-- for i = 0, 255 do -- 4-screen
 for i = 0, 63 do
     attributeCache[ i ] = 0
 end
@@ -153,7 +153,7 @@ local function updateAttributeCache( x, y, attributeBits )
     attributeAddress = bit32.bor(
         bit32.band( attributeAddress, 0x3F ),
         -- Add the attribute bits to expand to 8-bit range.
-        -- bit32.rshift( bit32.band( attributeAddress, 0xC00 ), 4 )
+        -- bit32.rshift( bit32.band( attributeAddress, 0xC00 ), 4 ) -- 4-screen
         0
     )
 
@@ -195,20 +195,9 @@ local function update( scrollData, perpScrollData )
         kTileSize = kTile8Width
     end
 
-    -- If the coordinate is aligned to the tile grid, we can update one tile
-    -- less than the maximum. This is actually necessary to avoid reading from
-    -- outside the map boundaries when at the right/bottom edge of the map.
-    -- \todo Explore other solutions:
-    --       1) Could disallow map from scrolling so far that it becomes a
-    --          problem (con: the tiles at the very right/bottom won't show)
-    --       2) Could use a constant tile outside the map, e.g. metatile 0.
-    --       3) Could apply the fix only at the right/bottom corner.
-    --       Disadvantage of the current method is that it'd be technically
-    --       possible to show more tiles (even if they fall into "non-valid"
-    --       area of the viewport).
-    if perpScrollData.mapPosition % kTileSize == 0 then
-        kUpdateLengthPixels = kUpdateLengthPixels - kTileSize
-    end
+    -- \note Even though the update length is a constant, this will never read
+    --       from outside the map data boundaries even at the edges, because
+    --       sentinel screens are added to the map edges when importing.
 
     local previousPpuAddress = nil
 
@@ -283,11 +272,6 @@ local function updateAttributes( scrollData, perpScrollData )
         kAttributeTileSize = kTile16Width
     end
 
-    -- See the comment in update()
-    if perpScrollData.attrMapPosition % kAttributeTileSize == 0 then
-        kUpdateLengthPixels = kUpdateLengthPixels - kAttributeTileSize
-    end
-
     local previousPpuAddress = nil
 
     local mapX = scrollData.attrMapPosition
@@ -356,14 +340,16 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
 
     -- Check amount against the map size. On left/top side can never go below 0.
     -- On right/bottom side can never go above map width/height.
+    -- Attribute window is used for reference because it's smaller than the
+    -- tile window (or equal in size).
     -- \todo Could optionally operate in repeating mode by rolling the
     --       coordinates over (although that would't automatically translate
     --       to e.g. collision routines working in the same way).
     if scrollData.edge == kEdgeLeft or scrollData.edge == kEdgeTop then
         -- Clamp the amount so that we won't go over the edge.
         -- Note that amount is negative when moving left/up.
-        if scrollData.mapPosition + amount < 0 then
-            amount = -scrollData.mapPosition
+        if scrollData.attrMapPosition + amount < 0 then
+            amount = -scrollData.attrMapPosition
         end
     elseif scrollData.edge == kEdgeRight or scrollData.edge == kEdgeBottom then
         local mapSizePixels
@@ -375,8 +361,8 @@ local function scroll( amount, scrollData, oppositeScrollData, perpScrollData )
             mapSizePixels = MapData.heightScreens() * kScreenHeight
         end
         local maxScroll = mapSizePixels - 1
-        if scrollData.mapPosition + amount > maxScroll then
-            amount = maxScroll - scrollData.mapPosition
+        if scrollData.attrMapPosition + amount > maxScroll then
+            amount = maxScroll - scrollData.attrMapPosition
         end
     end
 
