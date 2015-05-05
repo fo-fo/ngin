@@ -2,7 +2,7 @@
     <UserLang name="ngin-6502" ext="s inc" udlVersion="2.1">
         <Settings>
             <Global caseIgnored="yes" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
-            <Prefix Keywords1="no" Keywords2="no" Keywords3="yes" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="yes" Keywords4="no" Keywords5="yes" Keywords6="yes" Keywords7="no" Keywords8="no" />
         </Settings>
         <KeywordLists>
             <Keywords name="Comments">03/* 04*/ 00; 01 02</Keywords>
@@ -15,21 +15,21 @@
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">- &amp; ( ) * , / : ^ | ~ + &lt; = &gt;</Keywords>
             <Keywords name="Operators2"></Keywords>
-            <Keywords name="Folders in code1, open">.enum .ifblank .ifconst .ifdef .ifnblank .ifndef .ifnref .ifp02 .ifp816 .ifpc02 .ifpsc02 .ifref .if .macro .mac .proc .repeat .scope .struct</Keywords>
+            <Keywords name="Folders in code1, open"></Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
-            <Keywords name="Folders in code1, close">.endenum .endif .endmacro .endmac .endproc .endrepeat .endrep .endscope .endstruct .repend</Keywords>
-            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code2, open">.enum .ifblank .ifconst .ifdef .ifnblank .ifndef .ifnref .ifp02 .ifp816 .ifpc02 .ifpsc02 .ifref .if .macro .mac .proc .repeat .scope .struct ngin_Object_define ngin_Object_declare .union</Keywords>
             <Keywords name="Folders in code2, middle"></Keywords>
-            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in code2, close">.endenum .endif .endmacro .endmac .endproc .endrepeat .endrep .endscope .endstruct .repend ngin_Object_endDefine ngin_Object_endDeclare .endunion</Keywords>
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">.bankbyte .blank .concat .const .hibyte .hiword .ident .left .lobyte .loword .match .mid .not .ref .referenced .right .sizeof .strat .sprintf .string .strlen .tcount .xmatch .a16 .a8 .addr .align .asciiz .assert .autoimport .bss .byt .byte .case .charmap .code .condes .constructor .data .dbyt .debuginfo .define .def .defined .destructor .dword .else .elseif .end .error .exitmac .exitmacro .export .exportzp .faraddr .feature .fileopt .fopt .forceimport .global .globalzp .i16 .i8 .import .importzp .incbin .include .interruptor .linecont .list .listbytes .local .localchar .macpack .org .out .p02 .p816 .pagelen .pagelength .pc02 .popseg .psc02 .pushseg .reloc .res .rodata .segment .setcpu .smart .sunplus .tag .warning .word .zeropage .processor dc.b dc.w</Keywords>
-            <Keywords name="Keywords2">adc and asl bit clc cld cli clv cmp cpx cpy dec dex dey eor inc inx iny lda ldx ldy lsr nop ora pha php pla plp rol ror sbc sec sed sei sta stx sty tax tay tsx txa txs tya bpl bmi bvc bvs bcc bcs bne beq jmp jsr rts rti brk</Keywords>
+            <Keywords name="Keywords1">.bankbyte .blank .concat .const .hibyte .hiword .ident .left .lobyte .loword .match .mid .not .ref .referenced .right .sizeof .strat .sprintf .string .strlen .tcount .xmatch .a16 .a8 .addr .align .asciiz .assert .autoimport .bss .byt .byte .case .charmap .code .condes .constructor .data .dbyt .debuginfo .define .def .defined .destructor .dword .else .elseif .end .error .exitmac .exitmacro .export .exportzp .faraddr .feature .fileopt .fopt .forceimport .global .globalzp .i16 .i8 .import .importzp .incbin .include .interruptor .linecont .list .listbytes .local .localchar .macpack .org .out .p02 .p816 .pagelen .pagelength .pc02 .popseg .psc02 .pushseg .reloc .res .rodata .segment .setcpu .smart .sunplus .tag .warning .word .zeropage .processor dc.b dc.w .and .or .paramcount .lobytes .hibytes .undefine .set .mod</Keywords>
+            <Keywords name="Keywords2">adc and asl bit clc cld cli clv cmp cpx cpy dec dex dey eor inc inx iny lda ldx ldy lsr nop ora pha php pla plp rol ror sbc sec sed sei sta stx sty tax tay tsx txa txs tya bpl bmi bvc bvs bcc bcs bne beq jmp jsr rts rti brk axs</Keywords>
             <Keywords name="Keywords3">$ % #</Keywords>
             <Keywords name="Keywords4">x y</Keywords>
-            <Keywords name="Keywords5"></Keywords>
-            <Keywords name="Keywords6"></Keywords>
+            <Keywords name="Keywords5">ngin_</Keywords>
+            <Keywords name="Keywords6">__ngin_</Keywords>
             <Keywords name="Keywords7"></Keywords>
             <Keywords name="Keywords8"></Keywords>
             <Keywords name="Delimiters">00&quot; 01 02&quot; 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
@@ -43,13 +43,13 @@
             <WordsStyle name="KEYWORDS2" fgColor="0000C0" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
             <WordsStyle name="KEYWORDS3" fgColor="800000" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
             <WordsStyle name="KEYWORDS4" fgColor="0000C0" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
-            <WordsStyle name="KEYWORDS5" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
-            <WordsStyle name="KEYWORDS6" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="0560CD" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="939393" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
             <WordsStyle name="KEYWORDS7" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
             <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
             <WordsStyle name="OPERATORS" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
             <WordsStyle name="FOLDER IN CODE1" fgColor="004080" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
-            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="004080" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
             <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
             <WordsStyle name="DELIMITERS1" fgColor="804000" bgColor="FFFFFF" fontName="Dina" fontStyle="1" fontSize="10" nesting="0" />
             <WordsStyle name="DELIMITERS2" fgColor="000000" bgColor="FFFF80" fontName="Dina" fontStyle="0" fontSize="10" nesting="0" />
