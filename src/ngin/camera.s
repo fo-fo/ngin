@@ -19,7 +19,7 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
 
 .segment "NGIN_CODE"
 
-.proc __ngin_Camera_initializeView
+ .proc __ngin_Camera_initializeView
     __ngin_bss scrollCounter:  .byte 0
 
     ; \note __ngin_Camera_initializeView_position is an alias for "position",
@@ -30,25 +30,23 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
     ; \todo Make sure this whole thing works correctly if the position isn't
     ;       aligned to tiles.
 
-    ; Adjust the position so that it's one screenful to the left from the
+    ; Adjust the position so that it's one screenful to the right from the
     ; desired position. As the desired view is scrolled in later, the position
     ; will get adjusted to the correct value.
-    ; \todo This value MUST match kViewWidth from the map-scroller Lua --
-    ;       use a common symbolic constant for both.
-    kScreenWidth = 256-8
+    kScreenWidth = 256
     ngin_add16 __ngin_Camera_position + ngin_Vector2_16::x_, \
-               #ngin_signedWord -kScreenWidth
+               #ngin_signedWord kScreenWidth
 
     ; Set the map scroll position based on the adjusted position.
     ngin_MapScroller_setPosition __ngin_Camera_position
 
-    ; Scroll the view in by scrolling 256 pixels to the right.
+    ; Scroll the view in by scrolling 256 pixels to the left.
     kScrollPerUpload = 8
     lda #kScreenWidth / kScrollPerUpload
     sta scrollCounter
     loop:
         ngin_PpuBuffer_startFrame
-        ngin_Camera_move #ngin_signedByte kScrollPerUpload, #0
+        ngin_Camera_move #ngin_signedByte -kScrollPerUpload, #0
         ; \todo Runtime assert that A (scrolled amount) is kScrollPerUpload.
         ngin_PpuBuffer_endFrame
         ngin_PpuBuffer_upload
