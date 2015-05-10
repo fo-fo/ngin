@@ -28,6 +28,7 @@ add_library( ngin STATIC
     lfsr8.s
     object.s
     force-segment.s
+    object-spawner.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

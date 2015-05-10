@@ -23,5 +23,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/log.inc"
 .include "ngin/lfsr8.inc"
 .include "ngin/object.inc"
+.include "ngin/object-spawner.inc"
 
 .endif

@@ -42,17 +42,32 @@ class NginMapData( object ):
         self.map = map
         # Size of the map in screen units
         self.sizeScreens = None
+        # Markers placed in the map to indicate positions
+        self.markers = []
+        # Objects placed in the map. Not sorted in any way.
+        self.objects = []
+
+    def adjustXY( self ):
+        adjustX = -0x8000 + kScreenSizeX * ( self.sizeScreens[0] // 2 )
+        adjustY = -0x8000 + kScreenSizeY * ( self.sizeScreens[1] // 2 )
+        return adjustX, adjustY
 
     # This function converts a point from the map's coordinate system
     # (with origin at the top left corner) to the world coordinate system of
     # Ngin (unsigned coordinates, origin at about the middle of the map).
     def mapPixelToNginWorldPoint( self, mapPixelPoint ):
         # \note This logic is duplicated in map-data.lua in the engine code.
-        adjustX = -0x8000 + kScreenSizeX * ( self.sizeScreens[0] // 2 )
-        adjustY = -0x8000 + kScreenSizeY * ( self.sizeScreens[1] // 2 )
+        adjustX, adjustY = self.adjustXY()
         return (
             mapPixelPoint[0] - adjustX,
             mapPixelPoint[1] - adjustY
+        )
+
+    def nginWorldPointToMapPixel( self, nginWorldPoint ):
+        adjustX, adjustY = self.adjustXY()
+        return (
+            nginWorldPoint[0] + adjustX,
+            nginWorldPoint[1] + adjustY
         )
 
 class NginCommonMapData( object ):
@@ -355,7 +370,7 @@ def parseTmx( infile ):
     def parseObject( objectElem, iterator ):
         for event, elem in iterator:
             if event == "end" and elem.tag == "object":
-                name = elem.attrib[ "name" ]
+                name = elem.attrib.get( "name" )
                 type = elem.attrib[ "type" ]
                 position = (
                     float( elem.attrib[ "x" ] ),
@@ -638,7 +653,7 @@ def processFlattenedMap( flatMap, flatProperties, nginCommonMapData ):
 
     return processMap()
 
-def processMap( map, nginCommonMapData, produceDebugImage ):
+def processMap( map_, nginCommonMapData, produceDebugImage ):
     # \note Since tile sizes in tile sets may not be the same as the base
     #       tile size of the map, the render order of the map matters (tile on
     #       a layer can overlap tiles on the same layer).
@@ -646,41 +661,41 @@ def processMap( map, nginCommonMapData, produceDebugImage ):
 
     # Attributes don't behave very well if the map tile size is not 16px,
     # even though it could be technically supported.
-    assert map.tileSize.width  == 16
-    assert map.tileSize.height == 16
+    assert map_.tileSize.width  == 16
+    assert map_.tileSize.height == 16
 
     if produceDebugImage:
-        debugImage = Image.new( "RGB", map.pixelSize() )
-    flatImage = Image.new( "P", map.pixelSize() )
+        debugImage = Image.new( "RGB", map_.pixelSize() )
+    flatImage = Image.new( "P", map_.pixelSize() )
     # Flattened attributes. One list for each tile, containing references to
     # tile Properties.
     flatProperties = []
-    for i in xrange( map.size.width * map.size.height ):
+    for i in xrange( map_.size.width * map_.size.height ):
         flatProperties.append( [] )
 
-    for layer in map.layers:
+    for layer in map_.layers:
         if layer.properties.getBool( "IgnoreGraphics" ) and \
            layer.properties.getBool( "IgnoreAttributes" ):
             continue
 
-        for y in xrange( map.size.height ):
-            baseOffset = y * map.size.width
-            for x in xrange( map.size.width ):
+        for y in xrange( map_.size.height ):
+            baseOffset = y * map_.size.width
+            for x in xrange( map_.size.width ):
                 offset = baseOffset + x
                 gid = layer.data[ offset ]
                 if gid == kEmptyGid:
                     continue
 
-                tileset = map.tilesetFromGid( gid )
+                tileset = map_.tilesetFromGid( gid )
 
                 if not layer.properties.getBool( "IgnoreGraphics" ):
                     tile, tileTransparency = tileset.getTilePilImage( gid )
 
-                    destX = x * map.tileSize.width
+                    destX = x * map_.tileSize.width
                     # Adjust Y position because Tiled draws tiles at the
                     # bottom left corner of the tile.
-                    destY = y * map.tileSize.height - \
-                        ( tile.size[ 1 ] - map.tileSize.height )
+                    destY = y * map_.tileSize.height - \
+                        ( tile.size[ 1 ] - map_.tileSize.height )
                     flatImage.paste( tile, ( destX, destY ), tileTransparency )
                     if produceDebugImage:
                         debugImage.paste( tile, ( destX, destY ), tileTransparency )
@@ -693,7 +708,7 @@ def processMap( map, nginCommonMapData, produceDebugImage ):
                     #       of the map tile size.
                     tile = tileset.getTile( gid )
                     if tile is not None:
-                        allProperties = flatProperties[ y * map.size.width + x ]
+                        allProperties = flatProperties[ y * map_.size.width + x ]
                         if tile.properties is not None:
                             allProperties.append( tile.properties )
 
@@ -709,24 +724,27 @@ def processMap( map, nginCommonMapData, produceDebugImage ):
     #       or pad with empty space accordingly.
     kMt16PerScreenX, kMt16PerScreenY = 256/16, 256/16
     mapData.sizeScreens = (
-        ( map.size.width  + kMt16PerScreenX - 1 ) / kMt16PerScreenX,
-        ( map.size.height + kMt16PerScreenY - 1 ) / kMt16PerScreenY
+        ( map_.size.width  + kMt16PerScreenX - 1 ) / kMt16PerScreenX,
+        ( map_.size.height + kMt16PerScreenY - 1 ) / kMt16PerScreenY
     )
 
-    # Gather markers from the object layers.
+    # Gather objects/markers from the object layers.
     mapData.markers = []
-    for objectLayer in map.objectLayers:
+    mapData.objects = []
+    for objectLayer in map_.objectLayers:
         for object in objectLayer.objects:
-            if object.type.lower() == "marker":
+            if object.type.lower() == "ngin_marker":
                 # Round the position to an integer.
                 mapData.markers.append( (
                     object.name,
                     ( int( round( object.position[0] ) ),
                       int( round( object.position[1] ) ) )
                 ) )
+            else:
+                mapData.objects.append( object )
 
-def listToString( list ):
-    return ", ".join( map( "{:3}".format, list ) )
+def listToString( list, width=3 ):
+    return ", ".join( map( lambda x: "{:{width}}".format( x, width=width ), list ) )
 
 def writeByteArray( f, indentText, list ):
     kBytesPerLine = 8
@@ -852,6 +870,70 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
                      range( nginMapData.sizeScreens[ 1 ]+1 ) )
             ) ) )
 
+            # Objects
+            kObjectsTemplate = """    .scope objects
+        ; Object names: {}
+        .define objectX {}
+        .define objectY {}
+        {}
+        xLo:     .lobytes objectX
+        xHi:     .hibytes objectX
+        yLo:     .lobytes objectY
+        yHi:     .hibytes objectY
+        type:    .byte    {}
+        ySorted: .byte    {}
+        .undefine objectX
+        .undefine objectY
+    .endscope
+
+"""
+            objects = nginMapData.objects
+
+            # \todo Should we handle object size here?
+
+            # Add a sentinel object at the top-left and bottom-right corners.
+            # Both positions are outside the map boundaries.
+            #       (Use (0,0) for top-left, and $FFFF, $FFFF for bottom right)
+            objects.append( Object(
+                "sentinelTopLeft", "ngin_Object_kInvalidTypeId",
+                nginMapData.nginWorldPointToMapPixel( ( 0, 0 ) ), size=None
+            ) )
+            objects.append( Object(
+                "sentinelBottomRight", "ngin_Object_kInvalidTypeId",
+                nginMapData.nginWorldPointToMapPixel( ( 0xFFFF, 0xFFFF ) ), size=None
+            ) )
+
+            # Sort the object list based on the X coordinate.
+            objects.sort( key=lambda object: object.position[0] )
+
+            # Create a list of indices into the X list, then sort that based on the
+            # Y coordinate.
+            ySortedObjects = list( enumerate( objects ) )
+            ySortedObjects.sort( key=lambda x: x[1].position[1] )
+
+            objectTypes = map( lambda x: x.type, objects )
+            # Get the unique object types for import.
+            uniqueObjectTypes = set( objectTypes )
+            uniqueObjectTypes.remove( "ngin_Object_kInvalidTypeId" )
+
+            objectNginWorldPoints = map(
+                lambda x: nginMapData.mapPixelToNginWorldPoint( x.position ),
+                objects
+            )
+            importZp = ".importzp "
+            if len( uniqueObjectTypes ) == 0:
+                importZp = "; No imports"
+            f.write( kObjectsTemplate.format(
+                listToString( map( lambda x: x.name, objects ), width=1 ),
+                listToString( map( lambda x: int( round( x[0] ) ),
+                                   objectNginWorldPoints ) ),
+                listToString( map( lambda x: int( round( x[1] ) ),
+                                   objectNginWorldPoints ) ),
+                importZp + listToString( uniqueObjectTypes ),
+                listToString( objectTypes ),
+                listToString( map( lambda x: x[0], ySortedObjects ) ),
+            ) )
+
             # Map header
             # \todo Should probably add a level of indirection for the metatile
             #       set.
@@ -860,6 +942,8 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
         ; widthScreens
         .byte {}
         ; heightScreens
+        .byte {}
+        ; numObjects
         .byte {}
         ; ngin_MapData_Pointers
         .addr screenRowPointers::lo
@@ -875,11 +959,18 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
         .addr _32x32Metatiles::topRight
         .addr _32x32Metatiles::bottomLeft
         .addr _32x32Metatiles::bottomRight
+        .addr objects::xLo
+        .addr objects::xHi
+        .addr objects::yLo
+        .addr objects::yHi
+        .addr objects::type
+        .addr objects::ySorted
     .endproc
 """
             f.write( kHeaderTemplate.format(
                 nginMapData.sizeScreens[ 0 ],
-                nginMapData.sizeScreens[ 1 ]
+                nginMapData.sizeScreens[ 1 ],
+                len( objects )
             ) )
 
             f.write( ".endscope\n\n" )
@@ -945,6 +1036,7 @@ def main():
     print "Number of maps: {}".format( len( nginCommonMapData.maps ) )
 
     # \todo Check whether the resulting MT amounts etc are within set limits.
+    #       Also check object amounts for each map.
 
     writeNginData( nginCommonMapData, args.outprefix, args.symbol )
 

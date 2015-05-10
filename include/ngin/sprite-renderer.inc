@@ -30,6 +30,14 @@ ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY - \
 ; non-zero (since 0 is used as a terminator).
 ngin_SpriteRenderer_kAttribute = %000_001_00
 
+; Helper macro for defining hardware sprites within a metasprite
+.macro ngin_SpriteRenderer_sprite x_, y_, tile, attribute
+    .byte ngin_SpriteRenderer_kAttribute|(attribute) ; Attributes
+    .byte ngin_SpriteRenderer_kAdjustX+(x_)          ; X
+    .byte ngin_SpriteRenderer_kAdjustY+(y_)          ; Y
+    .byte (tile)                                     ; Tile
+.endmacro
+
 .global   __ngin_SpriteRenderer_render
 .globalzp __ngin_SpriteRenderer_render_spriteDefinition
 .global   __ngin_SpriteRenderer_render_position

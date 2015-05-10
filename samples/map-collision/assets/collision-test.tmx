@@ -14,7 +14,7 @@
   </data>
  </layer>
  <objectgroup name="Markers">
-  <object id="4" name="camera" type="Marker" x="0" y="0" width="256" height="256"/>
-  <object id="5" name="player" type="Marker" x="181" y="147.667" width="20" height="20"/>
+  <object id="4" name="camera" type="ngin_Marker" x="0" y="0" width="256" height="256"/>
+  <object id="5" name="player" type="ngin_Marker" x="181" y="147.667" width="20" height="20"/>
  </objectgroup>
 </map>

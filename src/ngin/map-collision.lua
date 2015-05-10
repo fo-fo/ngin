@@ -1,4 +1,4 @@
-MapData = require( "map-data" )
+local MapData = require( "map-data" )
 
 local MapCollision = {}
 

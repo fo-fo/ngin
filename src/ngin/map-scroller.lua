@@ -1,28 +1,10 @@
--- This file contains a prototype Lua model of the ngin map scroller module.
+-- This file contains a prototype Lua model of the Ngin map scroller module.
 -- The implementation details don't represent the final 6502 implementation,
 -- but the functionality should be the same.
 
-MapData = require( "map-data" )
+local MapData = require( "map-data" )
 
 local MapScroller = {}
-
--- Width of the scrollable area view that should be valid at any given time.
--- Maximum possible value depends on the used mirroring mode:
---   * One screen mirroring: 256-8, 240-8; 256-16, 240-16
---     * Can also be used with other mirroring modes, but produces needless
---       artifacts.
---   * Horizontal mirroring: 256-8, 240; 256-16, 240
---   * Vertical mirroring: 256, 240-8; 256, 240-16
---   * Four-screen mirroring: 256, 240; 256, 240
--- Custom sizes (e.g. 64x64) could be used as well.
--- Note: The "maximum" is the maximum sensible value. E.g. with horizontal
---       mirroring the view height could be 384 pixels, but most of the updated
---       pixels would then go to waste. The tile and color attribute view
---       sizes can also differ.
--- Note: Using values other than "one screen mirroring" here requires manual
---       changes to attributeCache handling.
-local kViewWidth, kViewHeight = 256-8, 240-8 -- One screen mirroring (generic)
-local kAttrViewWidth, kAttrViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
 
 local kDirectionVertical, kDirectionHorizontal = 0, 1
 local kEdgeLeft, kEdgeRight, kEdgeTop, kEdgeBottom = 0, 1, 2, 3
@@ -42,10 +24,10 @@ local kNametableTotalHeight = 2*kNametableHeight
 -- that when the subtile offset is non-zero, one more tile of map is overlapped
 -- by the view window. These values are the worst case scenario -- if subtile
 -- offset is 0, only kViewWidth/kViewHeight pixels would need to be updated.
-local kTileUpdateWidthPixels = kViewWidth + kTile8Width
-local kTileUpdateHeightPixels = kViewHeight + kTile8Height
-local kAttributeTileUpdateWidthPixels = kAttrViewWidth + kTile16Width
-local kAttributeTileUpdateHeightPixels = kAttrViewHeight + kTile16Height
+local kTileUpdateWidthPixels = MapData.kViewWidth + kTile8Width
+local kTileUpdateHeightPixels = MapData.kViewHeight + kTile8Height
+local kAttributeTileUpdateWidthPixels = MapData.kAttrViewWidth + kTile16Width
+local kAttributeTileUpdateHeightPixels = MapData.kAttrViewHeight + kTile16Height
 
 -------------------------------------------------------------------------------
 
@@ -65,7 +47,7 @@ local scrollDataRight
 
 -------------------------------------------------------------------------------
 
--- Retrieve values of some of the symbols defined by ngin.
+-- Retrieve values of some of the symbols defined by Ngin.
 local ngin_PpuBuffer_buffer        = SYM.ngin_PpuBuffer_buffer[ 1 ]
 
 -- Attribute cache keeps a copy of the PPU color attributes in CPU memory.
@@ -432,10 +414,10 @@ local function setPosition( x, y )
 
     -- Bottom coordinates are completely based on the top coordinates.
     scrollDataBottom = {
-        mapPosition = scrollDataTop.mapPosition + kViewHeight-1,
-        ppuPosition = (scrollDataTop.ppuPosition + kViewHeight-1) % kNametableTotalHeight,
-        attrMapPosition = scrollDataTop.attrMapPosition + kAttrViewHeight-1,
-        attrPpuPosition = (scrollDataTop.attrPpuPosition + kAttrViewHeight-1) % kNametableTotalHeight,
+        mapPosition = scrollDataTop.mapPosition + MapData.kViewHeight-1,
+        ppuPosition = (scrollDataTop.ppuPosition + MapData.kViewHeight-1) % kNametableTotalHeight,
+        attrMapPosition = scrollDataTop.attrMapPosition + MapData.kAttrViewHeight-1,
+        attrPpuPosition = (scrollDataTop.attrPpuPosition +MapData.kAttrViewHeight-1) % kNametableTotalHeight,
         updateDirection = kDirectionHorizontal,
         edge = kEdgeBottom
     }
@@ -452,10 +434,10 @@ local function setPosition( x, y )
     }
 
     scrollDataRight = {
-        mapPosition = scrollDataLeft.mapPosition + kViewWidth-1,
-        ppuPosition = (scrollDataLeft.ppuPosition + kViewWidth-1) % kNametableTotalWidth,
-        attrMapPosition = scrollDataLeft.attrMapPosition + kAttrViewWidth-1,
-        attrPpuPosition = (scrollDataLeft.attrPpuPosition + kAttrViewWidth-1) % kNametableTotalWidth,
+        mapPosition = scrollDataLeft.mapPosition + MapData.kViewWidth-1,
+        ppuPosition = (scrollDataLeft.ppuPosition + MapData.kViewWidth-1) % kNametableTotalWidth,
+        attrMapPosition = scrollDataLeft.attrMapPosition + MapData.kAttrViewWidth-1,
+        attrPpuPosition = (scrollDataLeft.attrPpuPosition + MapData.kAttrViewWidth-1) % kNametableTotalWidth,
         updateDirection = kDirectionVertical,
         edge = kEdgeRight
     }

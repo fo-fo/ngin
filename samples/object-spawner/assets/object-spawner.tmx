@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="16" tileheight="16" nextobjectid="15">
+ <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16">
+  <image source="tileset.png" width="48" height="16"/>
+  <tile id="2">
+   <properties>
+    <property name="Solid" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="Background" width="32" height="32">
+  <data encoding="base64" compression="zlib">
+   eJztz7ERACAAAjFw/6F1CmlScF9yaZLz1lGX3x1/8/Pz8/Pz8/Pz8/Pz8/P/6gUe0AYB
+  </data>
+ </layer>
+ <layer name="Solids" width="32" height="32">
+  <data encoding="base64" compression="zlib">
+   eJztzbEJAAAMw7BA/v+5XzSLDJ7VJB2/is/n8/l8Pp/P5/P5/E9/+QGzjQF1
+  </data>
+ </layer>
+ <objectgroup name="Object Layer 1">
+  <object id="7" name="a" type="object_ball" x="283" y="92" width="8" height="8"/>
+  <object id="8" name="visualView" type="ngin_Marker" x="0" y="0" width="248" height="232"/>
+  <object id="9" name="b" type="object_ball" x="40.5" y="149.5" width="8" height="8"/>
+  <object id="10" name="c" type="object_ball" x="178.667" y="320" width="8" height="8"/>
+  <object id="11" name="d" type="object_snake" x="208" y="112" width="8" height="8"/>
+  <object id="12" name="e" type="object_snake" x="109.5" y="205.5" width="8" height="8"/>
+  <object id="14" name="spawnView" type="ngin_Marker" x="320" y="-64" width="376" height="360"/>
+ </objectgroup>
+</map>

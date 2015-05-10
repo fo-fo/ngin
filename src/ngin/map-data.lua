@@ -3,6 +3,28 @@
 
 local MapData = {}
 
+-- Width of the scrollable area view that should be valid at any given time.
+-- Maximum possible value depends on the used mirroring mode:
+--   * One screen mirroring: 256-8, 240-8; 256-16, 240-16
+--     * Can also be used with other mirroring modes, but produces needless
+--       artifacts.
+--   * Horizontal mirroring: 256-8, 240; 256-16, 240
+--   * Vertical mirroring: 256, 240-8; 256, 240-16
+--   * Four-screen mirroring: 256, 240; 256, 240
+-- Custom sizes (e.g. 64x64) could be used as well.
+-- Note: The "maximum" is the maximum sensible value. E.g. with horizontal
+--       mirroring the view height could be 384 pixels, but most of the updated
+--       pixels would then go to waste. The tile and color attribute view
+--       sizes can also differ.
+-- Note: Using values other than "one screen mirroring" here requires manual
+--       changes to attributeCache handling.
+local kViewWidth, kViewHeight = 256-8, 240-8 -- One screen mirroring (generic)
+local kAttrViewWidth, kAttrViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
+MapData.kViewWidth      = kViewWidth
+MapData.kViewHeight     = kViewHeight
+MapData.kAttrViewWidth  = kAttrViewWidth
+MapData.kAttrViewHeight = kAttrViewHeight
+
 local kTile8Width, kTile8Height = 8, 8
 local kTile16Width, kTile16Height = 16, 16
 local kTile32Width, kTile32Height = 32, 32
@@ -13,19 +35,25 @@ local kScreenWidth, kScreenHeight = 256, 256
 --       automatically with a proxy object which would be constructed based
 --       on a struct scope name.
 local pointersStructMembers = {
-    screenRowPointersLo=0,
-    screenRowPointersHi=1,
-    screenPointersLo=2,
-    screenPointersHi=3,
-    _16x16MetatileTopLeft=4,
-    _16x16MetatileTopRight=5,
-    _16x16MetatileBottomLeft=6,
-    _16x16MetatileBottomRight=7,
-    _16x16MetatileAttributes0=8,
-    _32x32MetatileTopLeft=9,
-    _32x32MetatileTopRight=10,
-    _32x32MetatileBottomLeft=11,
-    _32x32MetatileBottomRight=12
+    screenRowPointersLo         = 0,
+    screenRowPointersHi         = 1,
+    screenPointersLo            = 2,
+    screenPointersHi            = 3,
+    _16x16MetatileTopLeft       = 4,
+    _16x16MetatileTopRight      = 5,
+    _16x16MetatileBottomLeft    = 6,
+    _16x16MetatileBottomRight   = 7,
+    _16x16MetatileAttributes0   = 8,
+    _32x32MetatileTopLeft       = 9,
+    _32x32MetatileTopRight      = 10,
+    _32x32MetatileBottomLeft    = 11,
+    _32x32MetatileBottomRight   = 12,
+    objectsXLo                  = 13,
+    objectsXHi                  = 14,
+    objectsYLo                  = 15,
+    objectsYHi                  = 16,
+    objectsType                 = 17,
+    objectsYSortedIndex         = 18
 }
 
 local ngin_MapData_header   = SYM.ngin_MapData_header[ 1 ]
@@ -45,6 +73,11 @@ end
 function MapData.heightScreens()
     local headerAddress = ngin.read16( ngin_MapData_header )
     return NDX.readMemory( headerAddress + 1 )
+end
+
+function MapData.numObjects()
+    local headerAddress = ngin.read16( ngin_MapData_header )
+    return NDX.readMemory( headerAddress + 2 )
 end
 
 -- Read a 16x16px metatile from the map. X and Y parameters are in pixels.
@@ -158,6 +191,45 @@ function MapData.readAttribute( x, y )
     local attribute = NDX.readMemory( _16x16MetatileAttributes0 + metatile16 )
 
     return attribute
+end
+
+-- Read an object based on an X sorted index.
+function MapData.readObjectXSorted( index )
+    assert( index >= 0 and index < MapData.numObjects(), string.format(
+            "readObjectXSorted: index out of range: %d", index ) )
+
+    local objectsXLo  = readPointer( "objectsXLo" )
+    local objectsXHi  = readPointer( "objectsXHi" )
+    local objectsYLo  = readPointer( "objectsYLo" )
+    local objectsYHi  = readPointer( "objectsYHi" )
+    local objectsType = readPointer( "objectsType" )
+
+    local xLo  = NDX.readMemory( objectsXLo  + index )
+    local xHi  = NDX.readMemory( objectsXHi  + index )
+    local yLo  = NDX.readMemory( objectsYLo  + index )
+    local yHi  = NDX.readMemory( objectsYHi  + index )
+    local type = NDX.readMemory( objectsType + index )
+
+    local x = bit32.bor( bit32.lshift( xHi, 8 ), xLo )
+    local y = bit32.bor( bit32.lshift( yHi, 8 ), yLo )
+
+    return {
+        x       = x,
+        y       = y,
+        type    = type
+    }
+end
+
+-- Read an object based on an Y sorted index.
+function MapData.readObjectYSorted( index )
+    assert( index >= 0 and index < MapData.numObjects(), string.format(
+            "readObjectYSorted: index out of range: %d", index ) )
+
+    -- Get the index to the X list from another list.
+    local objectsYSortedIndex = readPointer( "objectsYSortedIndex" )
+    local index = NDX.readMemory( objectsYSortedIndex + index )
+
+    return MapData.readObjectXSorted( index )
 end
 
 function MapData.adjustX()

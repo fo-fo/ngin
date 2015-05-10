@@ -25,11 +25,18 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
     _32x32MetatileTopRight      .addr
     _32x32MetatileBottomLeft    .addr
     _32x32MetatileBottomRight   .addr
+    objectsXLo                  .addr
+    objectsXHi                  .addr
+    objectsYLo                  .addr
+    objectsYHi                  .addr
+    objectsType                 .addr
+    objectsYSortedIndex         .addr
 .endstruct
 
 .struct ngin_MapData_Header
     widthScreens    .byte
     heightScreens   .byte
+    numObjects      .byte
     pointers        .tag ngin_MapData_Pointers
 .endstruct
 

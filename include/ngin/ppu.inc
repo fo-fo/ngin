@@ -62,6 +62,8 @@ NGIN_PPU_INC_INCLUDED = 1
         kEmphasizeBlue      = %1000_0000
     .endscope
 
+    ; \todo Define bitmasks of OAM attributes(?)
+
     ; -------------------------------------------------------------------------
     ; Addresses in PPU memory space:
     leftPatternTable    = 0

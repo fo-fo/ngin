@@ -18,3 +18,9 @@ function ngin.read16( addr )
         NDX.readMemory( addr+0 )
     )
 end
+
+-- Write a 16-bit value to RAM.
+function ngin.write16( addr, value )
+    RAM[ addr+0 ] = bit32.band( value, 0xFF )
+    RAM[ addr+1 ] = bit32.band( bit32.rshift( value, 8 ), 0xFF )
+end
