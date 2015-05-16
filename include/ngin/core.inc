@@ -117,6 +117,26 @@ __ngin_strideSpecifier = 0
     .endif
 .endmacro
 
+.macro ngin_mov24 to, from
+    __ngin_requireParameter {to}, "to"
+    __ngin_requireParameter {from}, "from"
+
+    __ngin_getOperandStride {to},   __ngin_mov24_strideTo
+    __ngin_getOperandStride {from}, __ngin_mov24_strideFrom
+
+    .if .match( .left( 1, {from} ), # )
+        .local fromStripped
+        fromStripped = .right( .tcount( {from} ) - 1, {from} )
+        ngin_mov16 { 0*__ngin_mov24_strideTo+to }, #.loword( fromStripped )
+        ngin_mov8  { 2*__ngin_mov24_strideTo+to }, #.lobyte( .hiword( fromStripped ) )
+    .else
+        ngin_mov16 { 0*__ngin_mov24_strideTo+to }, \
+                   { 0*__ngin_mov24_strideFrom+from }
+        ngin_mov8  { 2*__ngin_mov24_strideTo+to }, \
+                   { 2*__ngin_mov24_strideFrom+from }
+    .endif
+.endmacro
+
 .macro ngin_mov32 to, from
     __ngin_requireParameter {to}, "to"
     __ngin_requireParameter {from}, "from"
@@ -202,6 +222,10 @@ __ngin_strideSpecifier = 0
     .segment segment
     data
     .popseg
+.endmacro
+
+.macro ngin_zp data
+    ngin_segmentData "ZEROPAGE", {data}
 .endmacro
 
 .macro ngin_bss data
