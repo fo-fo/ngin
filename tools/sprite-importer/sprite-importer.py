@@ -7,7 +7,7 @@
 # \todo Import from Aseprite JSON. Can convert ASE->JSON+PNG with Aseprite
 #       CLI tools.
 # \todo Have an option for adjusting the cropping. Might produce better results
-#       in some cases because the sprite allocation depepends on the crop.
+#       in some cases because the sprite allocation depends on the crop.
 
 import argparse
 import Image
@@ -96,8 +96,8 @@ def importSprites( infile, gridSize, hardwareSpriteSize ):
 
         # Origin at the center of the image. This allows easy adjustment of the
         # origin in an image editor by moving the image.
-        offsetX = -( pilImageLayer.size[ 0 ] / 2 )
-        offsetY = -( pilImageLayer.size[ 1 ] / 2 )
+        offsetX = -( pilImageLayer.size[ 0 ] // 2 )
+        offsetY = -( pilImageLayer.size[ 1 ] // 2 )
 
         # \todo Might want to treat the transparent index from the image in a
         #       special way (currently every 4th is transparent)
