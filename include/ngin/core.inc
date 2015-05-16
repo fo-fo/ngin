@@ -14,6 +14,12 @@ NGIN_CORE_INC_INCLUDED = 1
     .endif
 .endmacro
 
+.macro __ngin_requireImmediate ident, identString
+    .if .not .match( .left( 1, {ident} ), # )
+        .error .sprintf( "parameter '%s' has to be an immediate", identString )
+    .endif
+.endmacro
+
 .define __ngin_choice( condition, if, else ) \
     ((!!(condition)) * (if) + (!(condition)) * (else))
 

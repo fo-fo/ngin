@@ -30,6 +30,7 @@ add_library( ngin STATIC
     force-segment.s
     object-spawner.s
     debug/upload-debug-palette.s
+    sprite-animator.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
