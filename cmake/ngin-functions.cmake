@@ -4,9 +4,11 @@ set( __ngin_toolsRoot ${__ngin_rootDir}/tools )
 
 # \todo Make it possible to specify the segment for the common data and each
 #       map separately.
+# \todo If SYMBOLS are left empty, use the MAPS filenames with extension stripped
+#       (and underscore placement) as the symbol.
 # OUTFILE:  Prefix for the output filenames
-# MAPS:     List of TMX maps that should be imported.
-# SYMBOLS:  List of symbols corresponding to each map listed in MAPS.
+# MAPS:     List of TMX maps that should be imported
+# SYMBOLS:  List of symbols corresponding to each map listed in MAPS
 # DEPENDS:  Additional dependencies (e.g. tileset images/files)
 function( ngin_addMapAssets target )
     cmake_parse_arguments(
@@ -43,11 +45,11 @@ function( ngin_addMapAssets target )
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT
-            "Running tiled-map-importer.py"
+            "tiled-map-importer.py: Importing ${TOOLARGS_MAPS}"
         VERBATIM
     )
 
-    add_library( ${target} OBJECT
+    add_library( ${target}
         ${TOOLARGS_OUTFILE}.s
     )
 

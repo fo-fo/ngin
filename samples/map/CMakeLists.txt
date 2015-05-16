@@ -2,7 +2,9 @@ add_subdirectory( assets )
 
 ngin_addSample( ngin-sample-map
     map.s
+)
 
+target_link_libraries( ngin-sample-map
     # From assets:
-    $<TARGET_OBJECTS:ngin-sample-map-maps>
+    ngin-sample-map-maps
 )
