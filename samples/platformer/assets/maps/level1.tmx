@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" nextobjectid="21">
+ <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16">
+  <image source="tileset.png" width="48" height="16"/>
+  <tile id="2">
+   <properties>
+    <property name="Solid" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="Background" width="64" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt0bEJADAMA0E5+w9t75AihlwhvhVcJTmz+rQbPrzshg/8+fPnz58/f/78+fPnz58/f/78+fPnz58/f/78+fPnz/++DUNADAE=
+  </data>
+ </layer>
+ <layer name="Solids" width="64" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt1sEJwDAQA8ED999zSjAmDyXWLPh/87LWzKzy1xo/P39v/Of+m/4P/n/f/7b07kpvu/Rt/N/wt8bPz98bPz9/bzt/erulN2L6Lv6s//b4+fl74/cerRoGOg==
+  </data>
+ </layer>
+ <objectgroup name="Objects">
+  <properties>
+   <property name="Origin" value="Bottom Center"/>
+  </properties>
+  <object id="15" name="camera" type="ngin_Marker" x="0" y="0" width="256" height="208" visible="0"/>
+  <object id="18" name="player" type="object_Player" x="48" y="128" width="16" height="32"/>
+  <object id="20" name="player" type="object_Player" x="134" y="71" width="16" height="32"/>
+ </objectgroup>
+</map>
