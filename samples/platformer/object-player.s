@@ -41,7 +41,7 @@ ngin_Object_define object_Player
 
         ngin_SpriteRenderer_render \
             { ngin_Object_this animationState + \
-              ngin_SpriteAnimator_State::spriteDefinition, x }, \
+              ngin_SpriteAnimator_State::metasprite, x }, \
               spritePosition
 
         ldx ngin_Object_current

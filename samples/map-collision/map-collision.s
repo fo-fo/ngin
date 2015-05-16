@@ -6,7 +6,7 @@
 
 .segment "RODATA"
 
-.proc spriteDefinition
+.proc metasprite
     ngin_SpriteRenderer_metasprite
 
     ; \todo Use ngin_SpriteRenderer_sprite here.
@@ -209,7 +209,7 @@ ngin_entryPoint start
     ; of ngin_SpriteRenderer_render.
     ngin_Camera_worldToSpritePosition position, spritePosition
 
-    ngin_SpriteRenderer_render #spriteDefinition, spritePosition
+    ngin_SpriteRenderer_render #metasprite, spritePosition
 
     ngin_ShadowOam_endFrame
 

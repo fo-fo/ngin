@@ -10,7 +10,7 @@ kMaxVisibleY = 238
 
 .segment "NGIN_ZEROPAGE" : zeropage
 
-__ngin_SpriteRenderer_render_spriteDefinition:  .addr 0
+__ngin_SpriteRenderer_render_metasprite:        .addr 0
 
 .segment "NGIN_BSS"
 
@@ -19,8 +19,8 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 .segment "NGIN_CODE"
 
 .proc __ngin_SpriteRenderer_render
-    spriteDefinition := __ngin_SpriteRenderer_render_spriteDefinition
-    position         := __ngin_SpriteRenderer_render_position
+    metasprite := __ngin_SpriteRenderer_render_metasprite
+    position   := __ngin_SpriteRenderer_render_position
 
     ; Load shadow OAM pointer.
     ldx ngin_ShadowOam_pointer
@@ -30,15 +30,15 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
     beq oamFullOnEntry
 
     ; Skip the header.
-    ldy #ngin_SpriteRenderer_Header::spriteDefinition
+    ldy #ngin_SpriteRenderer_Header::metasprite
 
     loop:
         ; Read the attributes (also doubles as a possible terminator byte).
-        lda ( spriteDefinition ), y
+        lda ( metasprite ), y
 
         ; Terminator must be zero or this fails (need to add cmp in that case).
-        .assert ngin_SpriteRenderer_kDefinitionTerminator = 0, error
-        ngin_branchIfZero endOfSpriteDefinition
+        .assert ngin_SpriteRenderer_kMetaspriteTerminator = 0, error
+        ngin_branchIfZero endOfMetasprite
 
         ; Store the attributes. The value might go unused since we haven't
         ; clipped yet, but no harm done because we know there's space.
@@ -51,7 +51,7 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 
         ; Read the X coordinate.
         iny
-        lda ( spriteDefinition ), y
+        lda ( metasprite ), y
         ; Move to the Y coordinate.
         iny
 
@@ -80,7 +80,7 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         ; Y coordinate handling
 
         ; Read the Y coordinate.
-        lda ( spriteDefinition), y
+        lda ( metasprite), y
         ; Move to the tile.
         iny
 
@@ -103,9 +103,9 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
             ; Sprite is visible, display it.
             ; Read the tile and store to OAM.
             ngin_mov8 { ngin_ShadowOam_buffer + ppu::oam::Object::tile, x }, \
-                      { ( spriteDefinition ), y }
+                      { ( metasprite ), y }
 
-            ; Move to the next sprite in sprite definition.
+            ; Move to the next sprite in metasprite.
             iny
 
             ; Move to the next sprite in OAM.
@@ -121,7 +121,7 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         iny
 
         notVisibleY:
-        ; Move to the next sprite in sprite definition.
+        ; Move to the next sprite in metasprite.
         iny
     jmp loop
 
@@ -131,8 +131,8 @@ oamFull:
     ; OAM is full. Set the OAM pointer to a magic value to indicate that.
     ldx #ngin_ShadowOam_kFull
 
-endOfSpriteDefinition:
-    ; End of sprite definition reached.
+endOfMetasprite:
+    ; End of metasprite reached.
     stx ngin_ShadowOam_pointer
 
 oamFullOnEntry:

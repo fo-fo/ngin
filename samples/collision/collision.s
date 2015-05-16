@@ -44,11 +44,11 @@ kMetaspriteHeight = 24
     ngin_SpriteRenderer_endMetasprite
 .endmacro
 
-.proc spriteDefinition0
+.proc metasprite0
     defineMetasprite 1
 .endproc
 
-.proc spriteDefinition1
+.proc metasprite1
     defineMetasprite 2
 .endproc
 
@@ -239,11 +239,11 @@ ngin_entryPoint start
         ngin_branchIfZero dontDrawFirst
     notActive:
     ngin_SpriteRenderer_render \
-        #spriteDefinition0, positions + 0*.sizeof( ngin_Vector2_16 )
+        #metasprite0, positions + 0*.sizeof( ngin_Vector2_16 )
     dontDrawFirst:
 
     ngin_SpriteRenderer_render \
-        #spriteDefinition1, positions + 1*.sizeof( ngin_Vector2_16 )
+        #metasprite1, positions + 1*.sizeof( ngin_Vector2_16 )
 
     ngin_ShadowOam_endFrame
 

@@ -32,19 +32,19 @@ __ngin_SpriteAnimator_update_state: .tag ngin_SpriteAnimator_State
 
     ; Fetch the next frame by following the link in the current frame.
     ldy #ngin_SpriteRenderer_Header::next
-    lda ( state + ngin_SpriteAnimator_State::spriteDefinition ), y
-    ; Store in a temporary variable, because we can't modify spriteDefinition
+    lda ( state + ngin_SpriteAnimator_State::metasprite ), y
+    ; Store in a temporary variable, because we can't modify "metasprite"
     ; before reading the next byte from there.
     pha
     iny
-    lda ( state + ngin_SpriteAnimator_State::spriteDefinition ), y
-    sta state + ngin_SpriteAnimator_State::spriteDefinition + 1
+    lda ( state + ngin_SpriteAnimator_State::metasprite ), y
+    sta state + ngin_SpriteAnimator_State::metasprite + 1
     pla
-    sta state + ngin_SpriteAnimator_State::spriteDefinition + 0
+    sta state + ngin_SpriteAnimator_State::metasprite + 0
 
-    ; Now read the delay from the *new* sprite definition.
+    ; Now read the delay from the *new* metasprite.
     ldy #ngin_SpriteRenderer_Header::delay
-    lda ( state + ngin_SpriteAnimator_State::spriteDefinition ), y
+    lda ( state + ngin_SpriteAnimator_State::metasprite ), y
     ; Restore Y.
     ldy preservedY
     sta state + ngin_SpriteAnimator_State::delayLeft

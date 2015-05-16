@@ -20,7 +20,7 @@ ngin_entryPoint start
         ngin_ShadowOam_startFrame
 
         ngin_SpriteRenderer_render \
-            animationState + ngin_SpriteAnimator_State::spriteDefinition, \
+            animationState + ngin_SpriteAnimator_State::metasprite, \
             #ngin_immediateVector2_16 ngin_SpriteRenderer_kTopLeftX+256/2, \
                                       ngin_SpriteRenderer_kTopLeftY+240/2
 

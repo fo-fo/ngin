@@ -7,37 +7,37 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
     ; Delay left in the current animation frame
     delayLeft           .byte
 
-    ; Pointer to the current sprite definition
-    spriteDefinition    .addr
+    ; Pointer to the current metasprite
+    metasprite          .addr
 .endstruct
 
-; \note spriteDefinition_ is used as the name to avoid conflicts with the
+; \note metasprite_ is used as the name to avoid conflicts with the
 ;       struct member in ngin_SpriteAnimator_State.
-.macro ngin_SpriteAnimator_initialize state, spriteDefinition_
-    __ngin_requireParameter {state},             "state"
-    __ngin_requireParameter {spriteDefinition_}, "spriteDefinition_"
+.macro ngin_SpriteAnimator_initialize state, metasprite_
+    __ngin_requireParameter {state},       "state"
+    __ngin_requireParameter {metasprite_}, "metasprite_"
 
     __ngin_getOperandStride {state}, __ngin_SpriteAnimator_strideState
 
-    ; Currently spriteDefinition_ is required to be an immediate since fetching
-    ; the sprite definition pointer from memory would complicate things a bit.
+    ; Currently metasprite_ is required to be an immediate since fetching
+    ; the metasprite pointer from memory would complicate things a bit.
     ; \todo Allow non-immediates.
-    __ngin_requireImmediate {spriteDefinition_}, "spriteDefinition_"
+    __ngin_requireImmediate {metasprite_}, "metasprite_"
 
-    .local spriteDefinitionStripped
-    spriteDefinitionStripped = .right( .tcount( {spriteDefinition_} ) - 1, \
-                                                {spriteDefinition_} )
+    .local metaspriteStripped
+    metaspriteStripped = .right( .tcount( {metasprite_} ) - 1, \
+                                                {metasprite_} )
 
-    ; Copy the delay from the sprite definition to the animation state.
+    ; Copy the delay from the metasprite to the animation state.
     ; \note "state" is not allowed to be an immediate
     ngin_mov8 { ngin_SpriteAnimator_State::delayLeft * \
                 __ngin_SpriteAnimator_strideState + state }, \
-              { ngin_SpriteRenderer_Header::delay + spriteDefinitionStripped }
+              { ngin_SpriteRenderer_Header::delay + metaspriteStripped }
 
-    ; Copy the sprite definition pointer to the state data.
-    ngin_mov16 { ngin_SpriteAnimator_State::spriteDefinition * \
+    ; Copy the metasprite pointer to the state data.
+    ngin_mov16 { ngin_SpriteAnimator_State::metasprite * \
                  __ngin_SpriteAnimator_strideState + state }, \
-                #spriteDefinitionStripped
+                #metaspriteStripped
 .endmacro
 
 .global   __ngin_SpriteAnimator_update

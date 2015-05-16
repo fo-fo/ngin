@@ -2,7 +2,7 @@
 
 .segment "RODATA"
 
-.proc spriteDefinitionLit
+.proc metaspriteLit
     ngin_SpriteRenderer_metasprite
 
     ; \todo Use ngin_SpriteRenderer_sprite here.
@@ -15,7 +15,7 @@
     ngin_SpriteRenderer_endMetasprite
 .endproc
 
-.proc spriteDefinitionDim
+.proc metaspriteDim
     ngin_SpriteRenderer_metasprite
 
     ; \todo Use ngin_SpriteRenderer_sprite here.
@@ -89,11 +89,11 @@ ngin_entryPoint start
             lda controllers+controller
             and #1 << i
             ngin_branchIfZero bitNotSet
-                ngin_SpriteRenderer_render #spriteDefinitionLit, \
+                ngin_SpriteRenderer_render #metaspriteLit, \
                                            #ngin_immediateVector2_16 x_, y_
                 jmp next
             bitNotSet:
-                ngin_SpriteRenderer_render #spriteDefinitionDim, \
+                ngin_SpriteRenderer_render #metaspriteDim, \
                                            #ngin_immediateVector2_16 x_, y_
             next:
         .endscope

@@ -3,7 +3,7 @@ NGIN_SPRITE_RENDERER_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
-; The sprite definition header is used to allow animations to be specified.
+; The metasprite header is used to allow animations to be specified.
 ; If the SpriteAnimator module is not used, these fields can be left empty.
 .struct ngin_SpriteRenderer_Header
     ; Delay until the next frame
@@ -12,15 +12,14 @@ NGIN_SPRITE_RENDERER_INC_INCLUDED = 1
     ; Link to the next frame
     next                .word
 
-    ; The sprite definition itself
-    spriteDefinition    .tag __ngin_EmptyStruct
+    ; The metasprite itself
+    metasprite          .tag __ngin_EmptyStruct
 .endstruct
 
-; Terminator byte for sprite definitions
-ngin_SpriteRenderer_kDefinitionTerminator = 0
+; Terminator byte for metasprite
+ngin_SpriteRenderer_kMetaspriteTerminator = 0
 
-; These adjustments need to be added to X and Y coordinates in sprite
-; definitions.
+; These adjustments need to be added to X and Y coordinates in metasprites.
 ngin_SpriteRenderer_kAdjustX = 128+4
 ngin_SpriteRenderer_kAdjustY = 128+4
 
@@ -38,12 +37,12 @@ ngin_SpriteRenderer_kTopLeftX = ngin_SpriteRenderer_kOriginX - \
 ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY - \
                                 ngin_SpriteRenderer_kAdjustY - 1
 
-; This bitmask must be ORed in to the attributes of each sprite defined in a
-; sprite definition. Its purpose is to force all used attribute bytes to be
+; This bitmask must be ORed in to the attributes of each hardware sprite defined
+; in a metasprite. Its purpose is to force all used attribute bytes to be
 ; non-zero (since 0 is used as a terminator).
 ngin_SpriteRenderer_kAttribute = %000_001_00
 
-; Helper macro for defining a sprite definition header
+; Helper macro for defining metasprite header
 .macro ngin_SpriteRenderer_metasprite delay, next
     .local thisMetasprite
     thisMetasprite:
@@ -72,17 +71,17 @@ ngin_SpriteRenderer_kAttribute = %000_001_00
 .endmacro
 
 .macro ngin_SpriteRenderer_endMetasprite
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    .byte ngin_SpriteRenderer_kMetaspriteTerminator
 .endmacro
 
 .global   __ngin_SpriteRenderer_render
-.globalzp __ngin_SpriteRenderer_render_spriteDefinition
+.globalzp __ngin_SpriteRenderer_render_metasprite
 .global   __ngin_SpriteRenderer_render_position
-.macro ngin_SpriteRenderer_render spriteDefinition, position
-    __ngin_requireParameter {spriteDefinition}, "spriteDefinition"
+.macro ngin_SpriteRenderer_render metasprite, position
+    __ngin_requireParameter {metasprite}, "metasprite"
     __ngin_requireParameter {position}, "position"
 
-    ngin_mov16 __ngin_SpriteRenderer_render_spriteDefinition, {spriteDefinition}
+    ngin_mov16 __ngin_SpriteRenderer_render_metasprite, {metasprite}
     ngin_mov32 __ngin_SpriteRenderer_render_position, {position}
 
     jsr __ngin_SpriteRenderer_render

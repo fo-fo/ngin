@@ -5,13 +5,13 @@
 
 .segment "RODATA"
 
-.proc spriteDefinition
+.proc metasprite
     ngin_SpriteRenderer_metasprite
         ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_01
     ngin_SpriteRenderer_endMetasprite
 .endproc
 
-.proc spriteDefinition2
+.proc metasprite2
     ngin_SpriteRenderer_metasprite
         ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_10
     ngin_SpriteRenderer_endMetasprite
@@ -46,7 +46,7 @@ ngin_Object_define object_ball
 
         ; \note X may be trashed here.
 
-        ngin_SpriteRenderer_render #spriteDefinition, spritePosition
+        ngin_SpriteRenderer_render #metasprite, spritePosition
 
         ; \note X may be trashed here.
 
@@ -76,7 +76,7 @@ ngin_Object_define object_snake
 
         ; \note X may be trashed here.
 
-        ngin_SpriteRenderer_render #spriteDefinition2, spritePosition
+        ngin_SpriteRenderer_render #metasprite2, spritePosition
 
         ; \note X may be trashed here.
 

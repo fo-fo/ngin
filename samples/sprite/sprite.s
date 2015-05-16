@@ -2,10 +2,7 @@
 
 .segment "RODATA"
 
-spriteDefinition:
-    ; \note Sprite coordinate origin is close to the center of the screen
-    ;       because of the adjustments.
-
+.proc metasprite
     kTile = 1
     ngin_SpriteRenderer_metasprite
         ngin_SpriteRenderer_sprite 0, 0, kTile, %000_000_00
@@ -13,6 +10,7 @@ spriteDefinition:
         ngin_SpriteRenderer_sprite 8, 8, kTile, %000_000_00
         ngin_SpriteRenderer_sprite 8, 0, kTile, %000_000_01
     ngin_SpriteRenderer_endMetasprite
+.endproc
 
 .proc spritePalette
     ; \todo Symbolic constants for color hues? (separate hue and brightness)
@@ -59,11 +57,11 @@ ngin_entryPoint start
 .proc renderSprites
     ngin_ShadowOam_startFrame
 
-    ngin_SpriteRenderer_render #spriteDefinition, \
+    ngin_SpriteRenderer_render #metasprite, \
         #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX, \
                                   ngin_SpriteRenderer_kOriginY
 
-    ngin_SpriteRenderer_render #spriteDefinition, \
+    ngin_SpriteRenderer_render #metasprite, \
         #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX-65, \
                                   ngin_SpriteRenderer_kOriginY+50
 

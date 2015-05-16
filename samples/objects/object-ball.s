@@ -7,7 +7,7 @@
 
 .segment "RODATA"
 
-.proc spriteDefinition
+.proc metasprite
     ngin_SpriteRenderer_metasprite
 
     ; \todo Use ngin_SpriteRenderer_sprite here.
@@ -187,7 +187,7 @@ ngin_Object_define object_ball
 
         ; \note X may be trashed here.
 
-        ngin_SpriteRenderer_render #spriteDefinition, spritePosition
+        ngin_SpriteRenderer_render #metasprite, spritePosition
 
         ; \note X may be trashed here.
 
