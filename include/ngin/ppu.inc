@@ -66,8 +66,8 @@ NGIN_PPU_INC_INCLUDED = 1
 
     ; -------------------------------------------------------------------------
     ; Addresses in PPU memory space:
-    leftPatternTable    = 0
-    rightPatternTable   = $1000
+    patternTable0       = 0
+    patternTable1       = $1000
 
     nametable0          = $2000
     attributeTable0     = nametable0 + $3C0
@@ -83,6 +83,11 @@ NGIN_PPU_INC_INCLUDED = 1
 
     backgroundPalette   = $3F00
     spritePalette       = backgroundPalette + $10
+
+    ; -------------------------------------------------------------------------
+
+    kBytesPer8x8Sprite  = 16
+    kBytesPer8x16Sprite = 2*kBytesPer8x8Sprite
 .endscope
 
 .global __ngin_pollVBlank
