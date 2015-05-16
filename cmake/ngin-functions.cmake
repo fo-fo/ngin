@@ -58,7 +58,72 @@ function( ngin_addMapAssets target )
 
     set_target_properties( ${target}
         PROPERTIES
-            COMPILE_FLAGS "${__ngin_compileFlags} \
+            COMPILE_FLAGS "\
+${__ngin_compileFlags} \
+--asm-include-dir ${currentBinaryDirRelative} \
+--bin-include-dir ${currentBinaryDirRelative}"
+    )
+endfunction()
+
+# OUTFILE:  Prefix for the output filenames
+# IMAGE:    Sprite image to import
+# SYMBOL:   Symbol to use for IMAGE in code
+# DEPENDS:  Additional dependencies
+# \todo Accept multiple inputs at once. Put all in the same library, but in
+#       separate compilation units (possibly)
+function( ngin_addSpriteAsset target )
+    cmake_parse_arguments(
+        TOOLARGS
+        "8X16"                          # Options
+        "OUTFILE;IMAGE;SYMBOL"          # One-value arguments
+        "DEPENDS"                       # Multi-value arguments
+        ${ARGN}
+    )
+
+    set( spriteImporter
+        ${__ngin_toolsRoot}/sprite-importer/sprite-importer.py
+    )
+
+    set( extraArgs "" )
+    if ( TOOLARGS_8X16 )
+        list( APPEND extraArgs --8x16 )
+    endif()
+
+    # \todo Check that TOOLARGS_OUTFILE is not empty, etc
+    add_custom_command(
+        OUTPUT
+            ${TOOLARGS_OUTFILE}.s
+            ${TOOLARGS_OUTFILE}.inc
+            ${TOOLARGS_OUTFILE}.chr
+        COMMAND
+            python ${spriteImporter}
+            -i ${TOOLARGS_IMAGE}
+            -s ${TOOLARGS_SYMBOL}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${TOOLARGS_OUTFILE}
+            ${extraArgs}
+        DEPENDS
+            ${spriteImporter}
+            # \todo May need to expand to full path to avoid UB?
+            ${TOOLARGS_IMAGE}
+            ${TOOLARGS_DEPENDS}
+        WORKING_DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT
+            "sprite-importer.py: Importing ${TOOLARGS_IMAGE}"
+        VERBATIM
+    )
+
+    add_library( ${target}
+        ${TOOLARGS_OUTFILE}.s
+    )
+
+    file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR} )
+
+    set_target_properties( ${target}
+        PROPERTIES
+            COMPILE_FLAGS "\
+${__ngin_compileFlags} \
 --asm-include-dir ${currentBinaryDirRelative} \
 --bin-include-dir ${currentBinaryDirRelative}"
     )
