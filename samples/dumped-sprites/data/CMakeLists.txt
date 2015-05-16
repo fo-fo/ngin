@@ -17,6 +17,7 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/${dumpFilename}
     DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/${dumpFilename}
+        ${__ngin_rootDir}/extras/ppu-dump-sprite-extractor/ppu-dump-sprite-extractor.py
     COMMENT
         "Extracting sprites from ${dumpFilename}"
     VERBATIM

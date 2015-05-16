@@ -3,21 +3,29 @@
 .segment "RODATA"
 
 .proc spriteDefinitionLit
+    ngin_SpriteRenderer_metasprite
+
+    ; \todo Use ngin_SpriteRenderer_sprite here.
+
     .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+0             ; X
     .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 1                                         ; Tile
 
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 .proc spriteDefinitionDim
+    ngin_SpriteRenderer_metasprite
+
+    ; \todo Use ngin_SpriteRenderer_sprite here.
+
     .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+0             ; X
     .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
     .byte 2                                         ; Tile
 
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 .segment "BSS"

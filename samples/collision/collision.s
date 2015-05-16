@@ -7,6 +7,10 @@ kMetaspriteWidth  = 16
 kMetaspriteHeight = 24
 
 .macro defineMetasprite tile
+    ngin_SpriteRenderer_metasprite
+
+    ; \todo Use ngin_SpriteRenderer_sprite here.
+
     .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+0             ; X
     .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
@@ -37,7 +41,7 @@ kMetaspriteHeight = 24
     .byte ngin_SpriteRenderer_kAdjustY+16            ; Y
     .byte tile                                      ; Tile
 
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_endMetasprite
 .endmacro
 
 .proc spriteDefinition0

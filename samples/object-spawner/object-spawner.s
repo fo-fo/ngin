@@ -6,13 +6,15 @@
 .segment "RODATA"
 
 .proc spriteDefinition
-    ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_01
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_metasprite
+        ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_01
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 .proc spriteDefinition2
-    ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_10
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_metasprite
+        ngin_SpriteRenderer_sprite 0, 0, objectTilesFirstIndex+0, %000_000_10
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 ; -----------------------------------------------------------------------------
@@ -153,7 +155,7 @@ ngin_entryPoint start
 
 .segment "CHR_ROM"
 
-objectTilesFirstIndex = .lobyte( */16 )
+objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Sprite )
     ngin_tile "########" \
               "########" \
               "########" \

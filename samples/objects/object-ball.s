@@ -8,6 +8,10 @@
 .segment "RODATA"
 
 .proc spriteDefinition
+    ngin_SpriteRenderer_metasprite
+
+    ; \todo Use ngin_SpriteRenderer_sprite here.
+
     .repeat 9, i
         .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
         .byte ngin_SpriteRenderer_kAdjustX+8*(i .mod 3)  ; X
@@ -15,7 +19,7 @@
         .byte objectTilesFirstIndex+i                    ; Tile
     .endrepeat
 
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 kBoundingBoxWidth   = 20
@@ -195,7 +199,7 @@ ngin_Object_endDefine
 
 .segment "CHR_ROM"
 
-objectTilesFirstIndex = .lobyte( */16 )
+objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Sprite )
     ngin_tile " ##################     " \
               "####################    " \
               "####################    " \

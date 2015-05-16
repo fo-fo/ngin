@@ -3,6 +3,19 @@ NGIN_SPRITE_RENDERER_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
+; The sprite definition header is used to allow animations to be specified.
+; If the SpriteAnimator module is not used, these fields can be left empty.
+.struct ngin_SpriteRenderer_Header
+    ; Delay until the next frame
+    delay               .byte
+
+    ; Link to the next frame
+    next                .word
+
+    ; The sprite definition itself
+    spriteDefinition    .tag __ngin_EmptyStruct
+.endstruct
+
 ; Terminator byte for sprite definitions
 ngin_SpriteRenderer_kDefinitionTerminator = 0
 
@@ -30,12 +43,36 @@ ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY - \
 ; non-zero (since 0 is used as a terminator).
 ngin_SpriteRenderer_kAttribute = %000_001_00
 
+; Helper macro for defining a sprite definition header
+.macro ngin_SpriteRenderer_metasprite delay, next
+    .local thisMetasprite
+    thisMetasprite:
+
+    .if .not .blank( {delay} )
+        .byte (delay)
+    .else
+        ; By default, use a delay of 256.
+        .byte 0
+    .endif
+
+    ; By default, point the next pointer at the current metasprite.
+    .if .not .blank( {next} )
+        .addr (next)
+    .else
+        .addr thisMetasprite
+    .endif
+.endmacro
+
 ; Helper macro for defining hardware sprites within a metasprite
 .macro ngin_SpriteRenderer_sprite x_, y_, tile, attribute
     .byte ngin_SpriteRenderer_kAttribute|(attribute) ; Attributes
     .byte ngin_SpriteRenderer_kAdjustX+(x_)          ; X
     .byte ngin_SpriteRenderer_kAdjustY+(y_)          ; Y
     .byte (tile)                                     ; Tile
+.endmacro
+
+.macro ngin_SpriteRenderer_endMetasprite
+    .byte ngin_SpriteRenderer_kDefinitionTerminator
 .endmacro
 
 .global   __ngin_SpriteRenderer_render

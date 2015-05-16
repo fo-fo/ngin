@@ -20,7 +20,7 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 
 .proc __ngin_SpriteRenderer_render
     spriteDefinition := __ngin_SpriteRenderer_render_spriteDefinition
-    position := __ngin_SpriteRenderer_render_position
+    position         := __ngin_SpriteRenderer_render_position
 
     ; Load shadow OAM pointer.
     ldx ngin_ShadowOam_pointer
@@ -29,7 +29,9 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
     cpx #ngin_ShadowOam_kFull
     beq oamFullOnEntry
 
-    ldy #0
+    ; Skip the header.
+    ldy #ngin_SpriteRenderer_Header::spriteDefinition
+
     loop:
         ; Read the attributes (also doubles as a possible terminator byte).
         lda ( spriteDefinition ), y

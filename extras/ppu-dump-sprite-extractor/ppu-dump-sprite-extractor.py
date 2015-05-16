@@ -12,14 +12,12 @@
 # - Sprites: 256 bytes
 # - Palette: 32 bytes
 
-kSpriteTemplate = """    .byte ngin_SpriteRenderer_kAttribute|{}
-    .byte ngin_SpriteRenderer_kAdjustX+{}
-    .byte ngin_SpriteRenderer_kAdjustY+{}
-    .byte {}
-
+kSpriteTemplate = """\
+        ngin_SpriteRenderer_sprite {:4}, {:4}, {:4}, {}
 """
 
-kTerminatorTemplate = """    .byte ngin_SpriteRenderer_kDefinitionTerminator
+kTerminatorTemplate = """\
+    ngin_SpriteRenderer_endMetasprite
 .endproc
 
 """
@@ -114,6 +112,8 @@ def main( filename, outputFilenamePrefix, spriteSize, extrude ):
     for groupIndex, group in enumerate( groups ):
         metaspriteText = ".proc metasprite{}\n".format( groupIndex )
 
+        metaspriteText += "    ngin_SpriteRenderer_metasprite\n"
+
         boundingRect = boundingRectForGroup( group )
         adjustX = -( boundingRect[ "x1" ] + boundingRect[ "x2" ] ) / 2
         adjustY = -( boundingRect[ "y1" ] + boundingRect[ "y2" ] ) / 2
@@ -123,8 +123,9 @@ def main( filename, outputFilenamePrefix, spriteSize, extrude ):
             y = sprite[ "position" ][ 1 ]
             x += adjustX
             y += adjustY
-            spriteText = kSpriteTemplate.format( sprite[ "attributes" ], x, y,
-                                                 sprite[ "tile" ] )
+            spriteText = kSpriteTemplate.format( x, y,
+                                                 sprite[ "tile" ],
+                                                 sprite[ "attributes" ] )
             metaspriteText += spriteText
 
         metaspriteText += kTerminatorTemplate

@@ -6,27 +6,13 @@ spriteDefinition:
     ; \note Sprite coordinate origin is close to the center of the screen
     ;       because of the adjustments.
 
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 1                                          ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte 1                                          ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte 1                                          ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 1                                          ; Tile
-
-    .byte ngin_SpriteRenderer_kDefinitionTerminator
+    kTile = 1
+    ngin_SpriteRenderer_metasprite
+        ngin_SpriteRenderer_sprite 0, 0, kTile, %000_000_00
+        ngin_SpriteRenderer_sprite 0, 8, kTile, %000_000_01
+        ngin_SpriteRenderer_sprite 8, 8, kTile, %000_000_00
+        ngin_SpriteRenderer_sprite 8, 0, kTile, %000_000_01
+    ngin_SpriteRenderer_endMetasprite
 
 .proc spritePalette
     ; \todo Symbolic constants for color hues? (separate hue and brightness)
