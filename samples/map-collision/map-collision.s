@@ -8,16 +8,11 @@
 
 .proc metasprite
     ngin_SpriteRenderer_metasprite
-
-    ; \todo Use ngin_SpriteRenderer_sprite here.
-
-    .repeat 9, i
-        .byte ngin_SpriteRenderer_kAttribute|%000_000_01 ; Attributes
-        .byte ngin_SpriteRenderer_kAdjustX+8*(i .mod 3)  ; X
-        .byte ngin_SpriteRenderer_kAdjustY+8*(i   /  3)  ; Y
-        .byte objectTilesFirstIndex+i                    ; Tile
-    .endrepeat
-
+        .repeat 9, i
+            ngin_SpriteRenderer_sprite 8*(i .mod 3), 8*(i / 3), \
+                                       objectTilesFirstIndex+i, \
+                                       %000_000_01
+        .endrepeat
     ngin_SpriteRenderer_endMetasprite
 .endproc
 
@@ -250,7 +245,7 @@ ngin_entryPoint start
 
 .segment "CHR_ROM"
 
-objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Sprite )
+objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Tile )
     ngin_tile "####################    " \
               "####################    " \
               "####################    " \

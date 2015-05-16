@@ -224,7 +224,7 @@ def writeData( symbol, outPrefix, allFrames, tiles, hardwareSpriteSize ):
 
         # Need to align to two tiles for 8x16
         if hardwareSpriteSize == kHardwareSpriteSize8x16:
-            f.write( "    .align ppu::kBytesPer8x16Sprite\n" )
+            f.write( "    .align ppu::kBytesPer8x16Tile\n" )
 
         f.write( '    .incbin "{}.chr"\n'.format( outPrefixBase ) )
         f.write( ".endproc\n" )
@@ -245,9 +245,9 @@ def writeData( symbol, outPrefix, allFrames, tiles, hardwareSpriteSize ):
             f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
 
             if hardwareSpriteSize == kHardwareSpriteSize8x16:
-                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x16Sprite )\n" )
+                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x16Tile )\n" )
             else:
-                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Sprite )\n" )
+                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Tile )\n" )
 
             # \todo Allow loop point to be specified.
             nextFrameIndex = ( frameIndex + 1 ) % len( allFrames )

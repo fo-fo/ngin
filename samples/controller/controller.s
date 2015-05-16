@@ -4,27 +4,13 @@
 
 .proc metaspriteLit
     ngin_SpriteRenderer_metasprite
-
-    ; \todo Use ngin_SpriteRenderer_sprite here.
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 1                                         ; Tile
-
+        ngin_SpriteRenderer_sprite 0, 0, whiteTile, %000_000_00
     ngin_SpriteRenderer_endMetasprite
 .endproc
 
 .proc metaspriteDim
     ngin_SpriteRenderer_metasprite
-
-    ; \todo Use ngin_SpriteRenderer_sprite here.
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte 2                                         ; Tile
-
+        ngin_SpriteRenderer_sprite 0, 0, grayTile, %000_000_00
     ngin_SpriteRenderer_endMetasprite
 .endproc
 
@@ -109,17 +95,32 @@ ngin_entryPoint start
 
 .segment "CHR_ROM"
 
-.repeat 16
-    .byte 0
-.endrepeat
+blackTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        "
 
-.repeat 16
-    .byte $FF
-.endrepeat
+whiteTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########"
 
-.repeat 8
-    .byte $00
-.endrepeat
-.repeat 8
-    .byte $FF
-.endrepeat
+grayTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::"

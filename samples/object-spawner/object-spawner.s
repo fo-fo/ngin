@@ -155,7 +155,7 @@ ngin_entryPoint start
 
 .segment "CHR_ROM"
 
-objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Sprite )
+objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Tile )
     ngin_tile "########" \
               "########" \
               "########" \

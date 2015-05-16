@@ -8,48 +8,21 @@ kMetaspriteHeight = 24
 
 .macro defineMetasprite tile
     ngin_SpriteRenderer_metasprite
-
-    ; \todo Use ngin_SpriteRenderer_sprite here.
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte tile                                      ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+0             ; Y
-    .byte tile                                      ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte tile                                      ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+8             ; Y
-    .byte tile                                      ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+0             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+16            ; Y
-    .byte tile                                      ; Tile
-
-    .byte ngin_SpriteRenderer_kAttribute|%000_000_00 ; Attributes
-    .byte ngin_SpriteRenderer_kAdjustX+8             ; X
-    .byte ngin_SpriteRenderer_kAdjustY+16            ; Y
-    .byte tile                                      ; Tile
-
+        ngin_SpriteRenderer_sprite 0, 0,  tile, %000_000_00
+        ngin_SpriteRenderer_sprite 8, 0,  tile, %000_000_00
+        ngin_SpriteRenderer_sprite 0, 8,  tile, %000_000_00
+        ngin_SpriteRenderer_sprite 8, 8,  tile, %000_000_00
+        ngin_SpriteRenderer_sprite 0, 16, tile, %000_000_00
+        ngin_SpriteRenderer_sprite 8, 16, tile, %000_000_00
     ngin_SpriteRenderer_endMetasprite
 .endmacro
 
 .proc metasprite0
-    defineMetasprite 1
+    defineMetasprite whiteTile
 .endproc
 
 .proc metasprite1
-    defineMetasprite 2
+    defineMetasprite grayTile
 .endproc
 
 .define controllerDeltaX_ 0,  0, 0, -1, 1
@@ -254,17 +227,32 @@ ngin_entryPoint start
 
 .segment "CHR_ROM"
 
-.repeat 16
-    .byte 0
-.endrepeat
+blackTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        " \
+              "        "
 
-.repeat 16
-    .byte $FF
-.endrepeat
+whiteTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########" \
+              "########"
 
-.repeat 8
-    .byte $00
-.endrepeat
-.repeat 8
-    .byte $FF
-.endrepeat
+grayTile = .lobyte( */ppu::kBytesPer8x8Tile )
+    ngin_tile "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::" \
+              "::::::::"

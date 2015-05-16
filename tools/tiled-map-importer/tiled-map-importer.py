@@ -800,7 +800,7 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             return lambda x: "B+{}".format( x[ index ] )
 
         f.write( ".scope _16x16Metatiles\n" )
-        f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Sprite )\n" )
+        f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Tile )\n" )
         writeByteArray( f, "    topLeft:     ",
             map( withBase( 0 ), nginCommonMapData.uniqueMt16 ) )
         writeByteArray( f, "    topRight:    ",
