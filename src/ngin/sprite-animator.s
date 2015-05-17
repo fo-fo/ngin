@@ -1,7 +1,6 @@
 .include "ngin/sprite-animator.inc"
 .include "ngin/sprite-renderer.inc"
 .include "ngin/branch.inc"
-.include "ngin/lua/lua.inc" ; \todo Remove!
 
 .segment "NGIN_ZEROPAGE" : zeropage
 

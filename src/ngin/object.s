@@ -76,6 +76,9 @@ ngin_constructor __ngin_Object_construct
         lda typeId
         sta objectType, x
 
+        ; Set the current object ID for constructor.
+        stx ngin_Object_current
+
         ; Call the constructor for the object (depends on type) by using RTS.
         ; \note This "call" will not return here (it will return to the call
         ;       site of __ngin_Object_new)
@@ -123,6 +126,12 @@ ngin_constructor __ngin_Object_construct
 .proc __ngin_Object_updateAll
     ; Update all objects. We don't keep a list of allocated objects, so
     ; this just loops over all objects and checks if their type is valid.
+
+    ; \todo If "new" is called in constructor, or the update routine,
+    ;       ngin_Object_current will get replaced with the ID of the new
+    ;       object. Should save them in a stack. This is actually a serious
+    ;       problem right now because updateAll depends on
+    ;       ngin_Object_current staying unchanged.
 
     __ngin_bss loopCount: .byte 0
     ngin_mov8 loopCount, #ngin_Object_kMaxActiveObjects
