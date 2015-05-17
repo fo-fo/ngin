@@ -29,7 +29,7 @@ ngin_entryPoint start
         ngin_ShadowOam_endFrame
 
         ngin_waitVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
+        ngin_ShadowOam_upload
         ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                                 ppu::mask::kShowSpritesLeft )
     jmp loop

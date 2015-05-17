@@ -32,8 +32,9 @@ ngin_entryPoint start
         ngin_ShadowOam_startFrame
         ngin_Object_updateAll
         ngin_ShadowOam_endFrame
+
         ngin_waitVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
+        ngin_ShadowOam_upload
         ngin_MapScroller_ppuRegisters
         stx ppu::scroll
         sty ppu::scroll

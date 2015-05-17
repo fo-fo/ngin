@@ -11,7 +11,7 @@ ngin_entryPoint start
     jsr renderSprites
 
     ngin_pollVBlank
-    ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
+    ngin_ShadowOam_upload
     ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                             ppu::mask::kShowSpritesLeft )
 

@@ -45,7 +45,7 @@ ngin_entryPoint start
     loop:
         jsr update
         ngin_waitVBlank
-        ngin_mov8 ppu::oam::dma, #.hibyte( ngin_ShadowOam_buffer )
+        ngin_ShadowOam_upload
         ngin_PpuBuffer_upload
         ngin_MapScroller_ppuRegisters
         stx ppu::scroll
