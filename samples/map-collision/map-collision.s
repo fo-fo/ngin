@@ -39,12 +39,12 @@ ngin_entryPoint start
 
     ngin_mov32 position, #maps_collisionTest::markers::player
 
-    ; Enable NMI so that we can use ngin_waitVBlank.
+    ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     loop:
         jsr update
-        ngin_waitVBlank
+        ngin_Nmi_waitVBlank
         ngin_ShadowOam_upload
         ngin_PpuBuffer_upload
         ngin_MapScroller_ppuRegisters
@@ -212,10 +212,10 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
     ; Set all palettes to black.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
     ngin_pushSeg "RODATA"
@@ -227,7 +227,7 @@ ngin_entryPoint start
     .endproc
     ngin_popSeg
 
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
@@ -235,7 +235,7 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadNametable
-    ngin_setPpuAddress #ppu::nametable0
+    ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #4*1024
 
     rts

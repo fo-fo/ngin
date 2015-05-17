@@ -20,9 +20,9 @@
     ngin_popSeg
 
     ; Avoid palette artifacts by polling for vblank.
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
     rts

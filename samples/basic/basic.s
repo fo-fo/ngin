@@ -13,7 +13,7 @@ ngin_entryPoint start
     loop:
         ldx #15
         wait:
-            ngin_pollVBlank
+            ngin_Ppu_pollVBlank
             dex
         ngin_branchIfNotZero wait
 

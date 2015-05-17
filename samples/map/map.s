@@ -24,7 +24,7 @@ ngin_entryPoint start
 .endproc
 
 .proc interactiveTest
-    ; Enable NMI so that we can use ngin_waitVBlank.
+    ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     loop:
@@ -33,7 +33,7 @@ ngin_entryPoint start
         jsr interactiveLogic
         ngin_PpuBuffer_endFrame
 
-        ngin_waitVBlank
+        ngin_Nmi_waitVBlank
         ngin_PpuBuffer_upload
         ngin_MapScroller_ppuRegisters
         stx ppu::scroll
@@ -92,10 +92,10 @@ out:
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
     ; Set all palettes to black.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
     .pushseg
@@ -107,14 +107,14 @@ out:
         .byte $0F, $04, $14, $24
     .endproc
     .popseg
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
     rts
 .endproc
 
 .proc uploadNametable
-    ngin_setPpuAddress #ppu::nametable0
+    ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #4*1024
 
     rts

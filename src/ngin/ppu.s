@@ -2,7 +2,7 @@
 
 .segment "NGIN_CODE"
 
-.proc __ngin_pollVBlank
+.proc __ngin_Ppu_pollVBlank
     bit ppu::status
 
     loop:

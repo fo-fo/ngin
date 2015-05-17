@@ -30,7 +30,7 @@ ngin_entryPoint start
         jsr readControllers
         jsr renderSprites
 
-        ngin_pollVBlank
+        ngin_Ppu_pollVBlank
         ngin_ShadowOam_upload
         ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                                 ppu::mask::kShowSpritesLeft )
@@ -38,14 +38,14 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
     ; Set all palettes to black.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
     ; Set some sprite colors.
-    ngin_setPpuAddress #ppu::spritePalette+2
+    ngin_Ppu_setAddress #ppu::spritePalette+2
     ngin_mov8 ppu::data, #$10
     ngin_mov8 ppu::data, #$30
 

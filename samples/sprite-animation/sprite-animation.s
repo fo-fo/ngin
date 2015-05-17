@@ -11,7 +11,7 @@ ngin_entryPoint start
 .proc start
     ngin_Debug_uploadDebugPalette
 
-    ; Enable NMI so that we can use ngin_waitVBlank.
+    ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     ngin_SpriteAnimator_initialize animationState, #animation_ryu
@@ -28,7 +28,7 @@ ngin_entryPoint start
 
         ngin_ShadowOam_endFrame
 
-        ngin_waitVBlank
+        ngin_Nmi_waitVBlank
         ngin_ShadowOam_upload
         ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                                 ppu::mask::kShowSpritesLeft )

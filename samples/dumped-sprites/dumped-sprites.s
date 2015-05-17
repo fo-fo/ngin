@@ -17,7 +17,7 @@ ngin_entryPoint start
     jsr uploadPalette
     jsr renderSprites
 
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
     ngin_ShadowOam_upload
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kSpriteSize8x16
     ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
@@ -27,13 +27,13 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
     ; Change the background color.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_mov8 ppu::data, #$21
 
     rts

@@ -33,7 +33,7 @@ ngin_entryPoint start
         jsr constructPpuBuffer2
         ngin_PpuBuffer_endFrame
 
-        ngin_pollVBlank
+        ngin_Ppu_pollVBlank
         ngin_PpuBuffer_upload
         ngin_mov8 ppu::scroll, #0
         ngin_mov8 ppu::scroll, #0
@@ -43,14 +43,14 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
     ; Set all palettes to black.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
     ; Upload sprite palette.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #backgroundPalette, \
                           #.sizeof( backgroundPalette )
 
@@ -58,7 +58,7 @@ ngin_entryPoint start
 .endproc
 
 .proc initializeNametable
-    ngin_setPpuAddress #ppu::nametable0
+    ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #1024
 
     rts

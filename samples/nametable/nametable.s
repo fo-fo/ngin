@@ -19,7 +19,7 @@ ngin_entryPoint start
     jsr uploadPalette
     jsr uploadNametable
 
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
     ngin_mov8 ppu::scroll, #0
     ngin_mov8 ppu::scroll, #0
     ngin_mov8 ppu::ctrl, #0
@@ -29,16 +29,16 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
 
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
     rts
 .endproc
 
 .proc uploadNametable
-    ngin_setPpuAddress #ppu::nametable0
+    ngin_Ppu_setAddress #ppu::nametable0
     ngin_copyMemoryToPort #ppu::data, #nametable, #.sizeof( nametable )
 
     rts

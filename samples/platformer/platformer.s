@@ -10,13 +10,13 @@ ngin_entryPoint start
     ngin_MapData_load #maps_level1
     ngin_Camera_initializeView #maps_level1::markers::topLeft
 
-    ; Enable NMI so that we can use ngin_waitVBlank.
+    ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     loop:
         jsr update
 
-        ngin_waitVBlank
+        ngin_Nmi_waitVBlank
         ngin_ShadowOam_upload
         ngin_PpuBuffer_upload
         ngin_MapScroller_ppuRegisters

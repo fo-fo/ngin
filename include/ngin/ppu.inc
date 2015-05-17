@@ -90,12 +90,12 @@ NGIN_PPU_INC_INCLUDED = 1
     kBytesPer8x16Tile = 2*kBytesPer8x8Tile
 .endscope
 
-.global __ngin_pollVBlank
-.macro ngin_pollVBlank
-    jsr __ngin_pollVBlank
+.global __ngin_Ppu_pollVBlank
+.macro ngin_Ppu_pollVBlank
+    jsr __ngin_Ppu_pollVBlank
 .endmacro
 
-.macro ngin_setPpuAddress address
+.macro ngin_Ppu_setAddress address
     ; \note Big endian write order
     .if .match( .left( 1, {address} ), # )
         .local addressStripped

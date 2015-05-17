@@ -33,7 +33,7 @@ ngin_entryPoint start
         ngin_Object_updateAll
         ngin_ShadowOam_endFrame
 
-        ngin_waitVBlank
+        ngin_Nmi_waitVBlank
         ngin_ShadowOam_upload
         ngin_MapScroller_ppuRegisters
         stx ppu::scroll
@@ -101,10 +101,10 @@ ngin_entryPoint start
 .endproc
 
 .proc uploadPalette
-    ngin_waitVBlank
+    ngin_Nmi_waitVBlank
 
     ; Set all palettes to black.
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_fillPort #ppu::data, #$F, #32
 
     ngin_pushSeg "RODATA"
@@ -116,7 +116,7 @@ ngin_entryPoint start
     .endproc
     ngin_popSeg
 
-    ngin_setPpuAddress #ppu::backgroundPalette
+    ngin_Ppu_setAddress #ppu::backgroundPalette
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
     ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
 
@@ -124,7 +124,7 @@ ngin_entryPoint start
 .endproc
 
 .proc initializeNametable
-    ngin_setPpuAddress #ppu::nametable0
+    ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #4*1024
 
     rts

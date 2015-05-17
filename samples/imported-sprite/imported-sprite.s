@@ -10,7 +10,7 @@ ngin_entryPoint start
     ngin_Debug_uploadDebugPalette
     jsr renderSprites
 
-    ngin_pollVBlank
+    ngin_Ppu_pollVBlank
     ngin_ShadowOam_upload
     ngin_mov8 ppu::mask, #( ppu::mask::kShowSprites | \
                             ppu::mask::kShowSpritesLeft )
