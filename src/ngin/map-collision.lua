@@ -61,7 +61,7 @@ local function lineSegmentEjectGeneric(
     -- \note Has to match ngin_MapData_Attributes0::kSolid from map-data.inc.
     --       No way to do automatic verification of that currently,
     --       unfortunately, because scopes can't be accessed from Lua.
-    kSolid = 0x4
+    local kSolid = 0x4
 
     local mapTileY0 = math.floor( mapY0 / kTile16Size )
     local mapTileY1 = math.floor( ( mapY0 + length - 1 ) / kTile16Size )
