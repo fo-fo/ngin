@@ -4,6 +4,10 @@ NGIN_CAMERA_INC_INCLUDED = 1
 .include "ngin/core.inc"
 .include "ngin/arithmetic.inc"
 
+; Camera position in world space
+; Type: ngin_Vector2_16
+.global ngin_Camera_position
+
 .global __ngin_Camera_initializeView
 .global __ngin_Camera_initializeView_position
 .macro ngin_Camera_initializeView position
@@ -27,7 +31,6 @@ NGIN_CAMERA_INC_INCLUDED = 1
     jsr __ngin_Camera_move
 .endmacro
 
-.global __ngin_Camera_position
 .macro ngin_Camera_worldToSpritePosition worldPosition, spritePosition
     ; Convert world position to sprite position:
     ;   1) adjust the camera position to (0, 0) by subtracting $8000
@@ -53,11 +56,11 @@ NGIN_CAMERA_INC_INCLUDED = 1
     ngin_sub16 \
         { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
         { ngin_Vector2_16::x_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
-        { ngin_Vector2_16::x_                                      + __ngin_Camera_position }
+        { ngin_Vector2_16::x_                                      + ngin_Camera_position }
     ngin_sub16 \
         { ngin_Vector2_16::y_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
         { ngin_Vector2_16::y_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
-        { ngin_Vector2_16::y_                                      + __ngin_Camera_position }
+        { ngin_Vector2_16::y_                                      + ngin_Camera_position }
 
     ngin_add16 \
         { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \

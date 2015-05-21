@@ -10,13 +10,13 @@
 
 ; We don't need a separate variable for passing the position, since
 ; initializeView would copy it to "position" anyways on entry.
-__ngin_Camera_initializeView_position   := __ngin_Camera_position
+__ngin_Camera_initializeView_position   := ngin_Camera_position
 
 __ngin_Camera_move_amountX:             .byte 0
 __ngin_Camera_move_amountY:             .byte 0
 
 ; Camera position in world space
-__ngin_Camera_position:                 .tag ngin_Vector2_16
+ngin_Camera_position:                   .tag ngin_Vector2_16
 
 .segment "NGIN_CODE"
 
@@ -40,15 +40,15 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
     ; Initialize the object spawner position to kScreenWidth+kSlackX. Then
     ; scroll the spawner left kScreenWidth+2*kSlackX pixels, which will align
     ; it properly with the map scroller (at -kSlackX).
-    ; Use __ngin_Camera_position as a temporary.
+    ; Use ngin_Camera_position as a temporary.
     ; \todo Put result directly to parameter area of ObjectSpawner_setPosition.
     ; Scroll in 8 pixel increments, although it's not strictly necessary
     ; for object spawner.
-    ngin_add16 __ngin_Camera_position + ngin_Vector2_16::x_, \
+    ngin_add16 ngin_Camera_position + ngin_Vector2_16::x_, \
                #ngin_signedWord kScreenWidth + ngin_ObjectSpawner_kViewSlackX
-    ngin_add16 __ngin_Camera_position + ngin_Vector2_16::y_, \
+    ngin_add16 ngin_Camera_position + ngin_Vector2_16::y_, \
                #ngin_signedWord -ngin_ObjectSpawner_kViewSlackY
-    ngin_ObjectSpawner_setPosition __ngin_Camera_position
+    ngin_ObjectSpawner_setPosition ngin_Camera_position
     kSpawnerScrollAmountTotal = kScreenWidth + 2*ngin_ObjectSpawner_kViewSlackX
     .assert kSpawnerScrollAmountTotal .mod kScrollPerUpload = 0, error
     lda #kSpawnerScrollAmountTotal / kScrollPerUpload
@@ -61,14 +61,14 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
     ; Adjust the position so that it's one screenful to the right from the
     ; desired position. As the desired view is scrolled in later, the position
     ; will get adjusted to the correct value.
-    ; Note that __ngin_Camera_position was already wrecked for the object
+    ; Note that ngin_Camera_position was already wrecked for the object
     ; spawner before, so need to take that into account.
-    ngin_add16 __ngin_Camera_position + ngin_Vector2_16::x_, \
+    ngin_add16 ngin_Camera_position + ngin_Vector2_16::x_, \
                #ngin_signedWord -ngin_ObjectSpawner_kViewSlackX
-    ngin_add16 __ngin_Camera_position + ngin_Vector2_16::y_, \
+    ngin_add16 ngin_Camera_position + ngin_Vector2_16::y_, \
                #ngin_signedWord ngin_ObjectSpawner_kViewSlackY
     ; Set the map scroll position based on the adjusted position.
-    ngin_MapScroller_setPosition   __ngin_Camera_position
+    ngin_MapScroller_setPosition   ngin_Camera_position
     ; Scroll the view in by scrolling 256 pixels to the left.
     lda #kScreenWidth / kScrollPerUpload
     sta scrollCounter
@@ -85,7 +85,7 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
     ; the current position. This actually adjusts the position to the value
     ; it had at function entry, so it's a bit lame (but needed, because it's
     ; used as a temporary currently.)
-    ngin_add16 __ngin_Camera_position + ngin_Vector2_16::x_, \
+    ngin_add16 ngin_Camera_position + ngin_Vector2_16::x_, \
                #ngin_signedWord -kScreenWidth
 
     rts
@@ -107,9 +107,9 @@ __ngin_Camera_position:                 .tag ngin_Vector2_16
 
     ; Apply scroll amounts to camera position. Need to sign extend the 8-bit
     ; scroll amounts.
-    ngin_add16_8s __ngin_Camera_position + ngin_Vector2_16::x_, \
+    ngin_add16_8s ngin_Camera_position + ngin_Vector2_16::x_, \
                   __ngin_Camera_move_amountX
-    ngin_add16_8s __ngin_Camera_position + ngin_Vector2_16::y_, \
+    ngin_add16_8s ngin_Camera_position + ngin_Vector2_16::y_, \
                   __ngin_Camera_move_amountY
 
     rts
