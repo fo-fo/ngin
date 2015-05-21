@@ -1,10 +1,10 @@
 .if .not .defined( NGIN_ARITHMETIC_INC_INCLUDED )
 NGIN_ARITHMETIC_INC_INCLUDED = 1
 
-.macro __ngin_addSub16 clc_, adc_, to, what1, what2
+.macro __ngin_addSub16 self, clc_, adc_, to, what1, what2
     ; If two real parameters were given, interpret as to = to + what1
     .if .blank( {what2} )
-        ngin_add16 {to}, {to}, {what1}
+        self {to}, {to}, {what1}
         .exitmac
     .endif
 
@@ -62,11 +62,11 @@ NGIN_ARITHMETIC_INC_INCLUDED = 1
 .endmacro
 
 .macro ngin_add16 to, what1, what2
-    __ngin_addSub16 clc, adc, {to}, {what1}, {what2}
+    __ngin_addSub16 ngin_add16, clc, adc, {to}, {what1}, {what2}
 .endmacro
 
 .macro ngin_sub16 to, what1, what2
-    __ngin_addSub16 sec, sbc, {to}, {what1}, {what2}
+    __ngin_addSub16 ngin_sub16, sec, sbc, {to}, {what1}, {what2}
 .endmacro
 
 .macro ngin_sbc8 to, what
