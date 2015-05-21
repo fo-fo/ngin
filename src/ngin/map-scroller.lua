@@ -29,6 +29,9 @@ local kTileUpdateHeightPixels = MapData.kViewHeight + kTile8Height
 local kAttributeTileUpdateWidthPixels = MapData.kAttrViewWidth + kTile16Width
 local kAttributeTileUpdateHeightPixels = MapData.kAttrViewHeight + kTile16Height
 
+-- Maximum amount that can be scrolled per a single scroll call.
+local kMaxScrollPerCall = 8
+
 -------------------------------------------------------------------------------
 
 -- Position of the edge of scroll (the first/last visible pixel row/column)
@@ -453,6 +456,10 @@ end
 function MapScroller.scrollHorizontal()
     local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollHorizontal_amount )
 
+    assert( math.abs( amount ) <= kMaxScrollPerCall,
+            string.format( "absolute scroll amount can't be over %d (was %d)",
+                           kMaxScrollPerCall, amount ) )
+
     local actualAmount
     if amount < 0 then
         actualAmount = scroll( amount, scrollDataLeft, scrollDataRight, scrollDataTop )
@@ -465,6 +472,10 @@ end
 
 function MapScroller.scrollVertical()
     local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollVertical_amount )
+
+    assert( math.abs( amount ) <= kMaxScrollPerCall,
+            string.format( "absolute scroll amount can't be over %d (was %d)",
+                           kMaxScrollPerCall, amount ) )
 
     local actualAmount
     if amount < 0 then
