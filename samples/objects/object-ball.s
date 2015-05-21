@@ -160,18 +160,7 @@ ngin_Object_define object_ball
         rts
     .endproc
 
-    .proc onUpdate
-        ; \todo Provide a simple "interface" for moving an object, and applying
-        ;       physics, and collisions(?)
-
-        ; Apply gravity to velocity Y.
-        ngin_add16 { ngin_Object_this velocity+ngin_Vector2_16::y_, x }, \
-                     #kGravity
-
-        ; Move the object horizontally/vertically and check for collisions.
-        jsr moveVertical
-        jsr moveHorizontal
-
+    .proc onRender
         ; Render the sprite.
         ; \todo Might want to provide an overload of ngin_SpriteRender_render
         ;       that reads position directly from current object? The macro
@@ -187,6 +176,21 @@ ngin_Object_define object_ball
         ngin_SpriteRenderer_render #metasprite, spritePosition
 
         ; \note X may be trashed here.
+
+        rts
+    .endproc
+
+    .proc onUpdate
+        ; \todo Provide a simple "interface" for moving an object, and applying
+        ;       physics, and collisions(?)
+
+        ; Apply gravity to velocity Y.
+        ngin_add16 { ngin_Object_this velocity+ngin_Vector2_16::y_, x }, \
+                     #kGravity
+
+        ; Move the object horizontally/vertically and check for collisions.
+        jsr moveVertical
+        jsr moveHorizontal
 
         rts
     .endproc

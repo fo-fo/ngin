@@ -38,9 +38,7 @@ ngin_Object_define object_ball
         rts
     .endproc
 
-    .proc onUpdate
-        ; ngin_log debug, "object_ball.update()"
-
+    .proc onRender
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \
                                             spritePosition
 
@@ -50,6 +48,11 @@ ngin_Object_define object_ball
 
         ; \note X may be trashed here.
 
+        rts
+    .endproc
+
+    .proc onUpdate
+        ; ngin_log debug, "object_ball.update()"
         rts
     .endproc
 ngin_Object_endDefine
@@ -68,9 +71,7 @@ ngin_Object_define object_snake
         rts
     .endproc
 
-    .proc onUpdate
-        ; ngin_log debug, "object_snake.update()"
-
+    .proc onRender
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \
                                             spritePosition
 
@@ -80,6 +81,11 @@ ngin_Object_define object_snake
 
         ; \note X may be trashed here.
 
+        rts
+    .endproc
+
+    .proc onUpdate
+        ; ngin_log debug, "object_snake.update()"
         rts
     .endproc
 ngin_Object_endDefine
