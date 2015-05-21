@@ -1,6 +1,6 @@
 ngin_addSpriteAsset( ngin-sample-platformer-sprites
     8X16
     OUTFILE sprites
-    IMAGE   ryu.gif
-    SYMBOL  animation_player
+    IMAGES  ryu.gif             ball.png
+    SYMBOLS animation_player    animation_ball
 )

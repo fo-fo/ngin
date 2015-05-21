@@ -29,7 +29,7 @@ ngin_Object_declare object_ball
 ngin_Object_endDeclare
 
 ngin_Object_define object_ball
-    .proc construct
+    .proc onConstruct
         ngin_log debug, "object_ball.construct()"
 
         ngin_mov32 { ngin_Object_this position, x }, \
@@ -38,7 +38,7 @@ ngin_Object_define object_ball
         rts
     .endproc
 
-    .proc update
+    .proc onUpdate
         ; ngin_log debug, "object_ball.update()"
 
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \
@@ -59,7 +59,7 @@ ngin_Object_declare object_snake
 ngin_Object_endDeclare
 
 ngin_Object_define object_snake
-    .proc construct
+    .proc onConstruct
         ngin_log debug, "object_snake.construct()"
 
         ngin_mov32 { ngin_Object_this position, x }, \
@@ -68,7 +68,7 @@ ngin_Object_define object_snake
         rts
     .endproc
 
-    .proc update
+    .proc onUpdate
         ; ngin_log debug, "object_snake.update()"
 
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \

@@ -51,14 +51,14 @@ ngin_bss bound: .word 0
     ; Calculate the side of the bounding box of the object.
     bmi movingUp
         ; Moving down.
-        ngin_add16   bound, \
-                   { ngin_Object_this position+ngin_Vector2_16::y_, x }, \
-                     #boundingBoxY
+        ngin_add16 bound, \
+                 { ngin_Object_this position+ngin_Vector2_16::y_, x }, \
+                   #boundingBoxY
         jmp doneMovingDown
     .local movingUp
     movingUp:
         ngin_mov16 bound, \
-                   { ngin_Object_this position+ngin_Vector2_16::y_, x }
+                 { ngin_Object_this position+ngin_Vector2_16::y_, x }
     doneMovingDown:
 
     collisionRoutine bound, \
@@ -131,11 +131,13 @@ ngin_Object_define object_ball
                           ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
     .endproc
 
-    .proc construct
+    .proc onConstruct
         ngin_log debug, "object_ball.construct()"
 
         ngin_mov32 { ngin_Object_this position, x }, \
                      ngin_Object_constructorParameter position
+        ngin_mov16 { ngin_Object_this fracPosition, x }, \
+                     #0
 
         ; Randomize velocity.
         ngin_Lfsr8_random
@@ -158,7 +160,7 @@ ngin_Object_define object_ball
         rts
     .endproc
 
-    .proc update
+    .proc onUpdate
         ; \todo Provide a simple "interface" for moving an object, and applying
         ;       physics, and collisions(?)
 

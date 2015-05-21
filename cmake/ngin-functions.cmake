@@ -75,8 +75,8 @@ function( ngin_addSpriteAsset target )
     cmake_parse_arguments(
         TOOLARGS
         "8X16"                          # Options
-        "OUTFILE;IMAGE;SYMBOL"          # One-value arguments
-        "DEPENDS"                       # Multi-value arguments
+        "OUTFILE"                       # One-value arguments
+        "IMAGES;SYMBOLS;DEPENDS"        # Multi-value arguments
         ${ARGN}
     )
 
@@ -97,19 +97,19 @@ function( ngin_addSpriteAsset target )
             ${TOOLARGS_OUTFILE}.chr
         COMMAND
             python ${spriteImporter}
-            -i ${TOOLARGS_IMAGE}
-            -s ${TOOLARGS_SYMBOL}
+            -i ${TOOLARGS_IMAGES}
+            -s ${TOOLARGS_SYMBOLS}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${TOOLARGS_OUTFILE}
             ${extraArgs}
         DEPENDS
             ${spriteImporter}
             # \todo May need to expand to full path to avoid UB?
-            ${TOOLARGS_IMAGE}
+            ${TOOLARGS_IMAGES}
             ${TOOLARGS_DEPENDS}
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT
-            "sprite-importer.py: Importing ${TOOLARGS_IMAGE}"
+            "sprite-importer.py: Importing ${TOOLARGS_IMAGES}"
         VERBATIM
     )
 

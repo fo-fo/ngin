@@ -4,8 +4,8 @@ ngin_addSample( ngin-sample-imported-sprite
 
 ngin_addSpriteAsset( ngin-sample-imported-sprite-sprites
     OUTFILE sprites
-    IMAGE   sprite.png
-    SYMBOL  sprite
+    IMAGES  sprite.png
+    SYMBOLS sprite
 )
 
 target_link_libraries( ngin-sample-imported-sprite

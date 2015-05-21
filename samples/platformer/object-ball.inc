@@ -1,11 +1,9 @@
-.if .not .defined( NGIN_SAMPLE_PLATFORMER_OBJECT_PLAYER_INC_INCLUDED )
-NGIN_SAMPLE_PLATFORMER_OBJECT_PLAYER_INC_INCLUDED = 1
+.if .not .defined( NGIN_SAMPLE_PLATFORMER_OBJECT_BALL_INC_INCLUDED )
+NGIN_SAMPLE_PLATFORMER_OBJECT_BALL_INC_INCLUDED = 1
 
 .include "ngin/ngin.inc"
 
-.global playerId
-
-ngin_Object_declare object_Player
+ngin_Object_declare object_Ball
     ; 16.8 fixed point position
     position        .tag ngin_Vector2_16
     fracPosition    .tag ngin_Vector2_8

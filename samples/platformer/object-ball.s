@@ -1,4 +1,4 @@
-.include "object-player.inc"
+.include "object-ball.inc"
 .include "common.inc"
 .include "assets/sprites/sprites.inc"
 
@@ -10,21 +10,15 @@ kBoundingBoxBottom = 0
 kBoundingBoxLeft   = -8
 kBoundingBoxRight  = 8
 
-; 8.8 fixed point
-kHorizontalMoveVelocity = 256+128
-kJumpVelocity           = 600
-
 ; -----------------------------------------------------------------------------
 
 .segment "CODE"
 
 ngin_bss playerId: .byte 0
 
-ngin_Object_define object_Player
+ngin_Object_define object_Ball
     .proc onConstruct
-        ngin_log debug, "object_Player.construct()"
-
-        stx playerId
+        ngin_log debug, "object_Ball.construct()"
 
         ; Initialize position from constructor parameters. Initialize fractional
         ; position to 0.
@@ -37,7 +31,7 @@ ngin_Object_define object_Player
 
         ; Initialize animation.
         ngin_SpriteAnimator_initialize { ngin_Object_this animationState, x }, \
-                                         #animation_player
+                                         #animation_ball
 
         rts
     .endproc
@@ -69,8 +63,10 @@ ngin_Object_define object_Player
     .endproc
 
     .macro collisionResponse y_, fracY_
-        ; Clear velocity on collision.
-        ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, #0
+        ; Invert velocity on collision.
+        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }, \
+                     #0, \
+                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }
 
         ; Also clear the subpixel part of position.
         ngin_mov8 { ngin_Object_this fracPosition+ngin_Vector2_8::y_, x }, \
@@ -85,56 +81,10 @@ ngin_Object_define object_Player
                           collisionResponse
     .endproc
 
-    .proc moveHorizontal
-        movement_template x_, y_, fracX_, intX_, kBoundingBoxLeft, \
-                          kBoundingBoxRight, kBoundingBoxTop, kBoundingBoxBottom, \
-                          ngin_MapCollision_lineSegmentEjectHorizontal, \
-                          ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
-                          collisionResponse
-    .endproc
-
-    .proc applyControlsToVelocity
-        ; \todo Read controllers in a centralized place once per frame?
-        ngin_Controller_read1
-        ngin_bss controller: .byte 0
-        sta controller
-
-        ; Default to 0.
-        ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, #0
-
-        lda controller
-        and #ngin_Controller::kLeft
-        ngin_branchIfZero notLeft
-            ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
-                #ngin_signedWord -kHorizontalMoveVelocity
-        notLeft:
-
-        lda controller
-        and #ngin_Controller::kRight
-        ngin_branchIfZero notRight
-            ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
-                #ngin_signedWord kHorizontalMoveVelocity
-        notRight:
-
-        ; \todo Trigger on edge, only when grounded. For now this is more
-        ;       like a jetpack.
-        lda controller
-        and #ngin_Controller::kA
-        ngin_branchIfZero notA
-            ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
-                #ngin_signedWord -kJumpVelocity
-        notA:
-
-        rts
-    .endproc
-
     .proc move
         ngin_add16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
                      #kGravity
 
-        jsr applyControlsToVelocity
-
-        jsr moveHorizontal
         jsr moveVertical
 
         rts

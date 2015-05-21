@@ -65,153 +65,165 @@ def croppedRect( pilImage ):
 
     return ( cropLeft, cropTop ), ( cropRight+1, cropBottom+1 )
 
-def importSprites( infile, gridSize, hardwareSpriteSize ):
-    pilImage = Image.open( infile )
-
-    # If grid size (width/height) hasn't been specified, use the image size.
-    # Either of the width/height can be omitted.
-    if gridSize[0] is None:
-        gridSize = ( pilImage.size[0], gridSize[1] )
-    if gridSize[1] is None:
-        gridSize = ( gridSize[0], pilImage.size[1] )
-
-    # Make sure that the image size is a multiple of the grid size.
-    assert pilImage.size[0] % gridSize[0] == 0
-    assert pilImage.size[1] % gridSize[1] == 0
-
-    if hardwareSpriteSize == kHardwareSpriteSize8x8:
-        spriteSize = ( 8, 8 )
-    elif hardwareSpriteSize == kHardwareSpriteSize8x16:
-        spriteSize = ( 8, 16 )
-    else:
-        assert False
-
+def importSprites( infiles, gridSize, hardwareSpriteSize ):
     resultTiles = []
     uniqueResultTiles = {}
-    resultSprites = []
+    allAnimationFrames = []
 
-    def importSpriteLayer( image, layer ):
-        # Create a copy of the image, because we will be modifying it.
-        pilImageLayer = image.copy()
+    def importImage( infile, gridSize, hardwareSpriteSize ):
+        pilImage = Image.open( infile )
 
-        # Origin at the center of the image. This allows easy adjustment of the
-        # origin in an image editor by moving the image.
-        offsetX = -( pilImageLayer.size[ 0 ] // 2 )
-        offsetY = -( pilImageLayer.size[ 1 ] // 2 )
+        # If grid size (width/height) hasn't been specified, use the image size.
+        # Either of the width/height can be omitted.
+        if gridSize[0] is None:
+            gridSize = ( pilImage.size[0], gridSize[1] )
+        if gridSize[1] is None:
+            gridSize = ( gridSize[0], pilImage.size[1] )
 
-        # \todo Might want to treat the transparent index from the image in a
-        #       special way (currently every 4th is transparent)
+        # Make sure that the image size is a multiple of the grid size.
+        assert pilImage.size[0] % gridSize[0] == 0
+        assert pilImage.size[1] % gridSize[1] == 0
 
-        # Split the image into palette layers based on indexed colors.
-        # First 4 colors are palette 0, the next 4 form palette 1, and so on.
-        # Every 4th color is considered transparent.
-        pixels = pilImageLayer.load()
+        if hardwareSpriteSize == kHardwareSpriteSize8x8:
+            spriteSize = ( 8, 8 )
+        elif hardwareSpriteSize == kHardwareSpriteSize8x16:
+            spriteSize = ( 8, 16 )
+        else:
+            assert False
 
-        # Mask out (to 0) the colors that don't belong to the current layer.
-        # \todo There are other options for the replacement color in case two
-        #       sprite layers have overlapping non-transparent colors. To
-        #       minimize flicker, it might be better to fill with the closest
-        #       matching color from the current palette (make it configurable?).
-        #       It also affects tile uniqueness optimization.
-        for y in xrange( pilImageLayer.size[ 1 ] ):
-            for x in xrange( pilImageLayer.size[ 0 ] ):
-                pixelLayer = ( pixels[ x, y ] & 0b1100 ) >> 2
-                if pixelLayer != layer:
-                    # Clear to transparent if layer doesn't match.
-                    pixels[ x, y ] = 0
-                else:
-                    # Clear the palette set index if layer does match.
-                    pixels[ x, y ] &= 0b11
+        resultSprites = []
+        animationFrames = []
 
-        # Crop the image vertically only. Each 8/16 rows will get individually
-        # cropped horizontally later on.
-        cropLeftTop, cropRightBottom = croppedRect( pilImageLayer )
-        pilImageLayer = pilImageLayer.crop( (
-            # Left, Top, Right, Bottom
-            0, cropLeftTop[ 1 ],
-            pilImageLayer.size[ 0 ], cropRightBottom[ 1 ]
-        ) )
+        def importSpriteLayer( image, layer ):
+            # Create a copy of the image, because we will be modifying it.
+            pilImageLayer = image.copy()
 
+            # Origin at the center of the image. This allows easy adjustment of the
+            # origin in an image editor by moving the image.
+            # If the size is an odd number, origin is at the center line.
+            # E.g. if size is 3, origin is at line 1 (out of 0, 1, 2).
+            # For even sizes, origin is at the topmost even scanline.
+            # E.g. if size is 4, origin is also at line 1 (out of 0, 1, 2, 3).
+            offsetX = -( ( pilImageLayer.size[ 0 ] - 1 ) // 2 )
+            offsetY = -( ( pilImageLayer.size[ 1 ] - 1 ) // 2 )
 
-        # If cropped to empty, skip the layer.
-        if pilImageLayer.size[ 0 ] == 0 or pilImageLayer.size[ 1 ] == 0:
-            return
+            # \todo Might want to treat the transparent index from the image in a
+            #       special way (currently every 4th is transparent)
 
-        kEmptyTile = chr( 0 ) * spriteSize[ 0 ] * spriteSize[ 1 ]
+            # Split the image into palette layers based on indexed colors.
+            # First 4 colors are palette 0, the next 4 form palette 1, and so on.
+            # Every 4th color is considered transparent.
+            pixels = pilImageLayer.load()
 
-        for y in xrange( 0, pilImageLayer.size[ 1 ], spriteSize[ 1 ] ):
-            # Grab the slice of the image.
-            slice = pilImageLayer.crop( (
-                0, y,
-                pilImageLayer.size[ 0 ], y + spriteSize[ 1 ]
+            # Mask out (to 0) the colors that don't belong to the current layer.
+            # \todo There are other options for the replacement color in case two
+            #       sprite layers have overlapping non-transparent colors. To
+            #       minimize flicker, it might be better to fill with the closest
+            #       matching color from the current palette (make it configurable?).
+            #       It also affects tile uniqueness optimization.
+            for y in xrange( pilImageLayer.size[ 1 ] ):
+                for x in xrange( pilImageLayer.size[ 0 ] ):
+                    pixelLayer = ( pixels[ x, y ] & 0b1100 ) >> 2
+                    if pixelLayer != layer:
+                        # Clear to transparent if layer doesn't match.
+                        pixels[ x, y ] = 0
+                    else:
+                        # Clear the palette set index if layer does match.
+                        pixels[ x, y ] &= 0b11
+
+            # Crop the image vertically only. Each 8/16 rows will get individually
+            # cropped horizontally later on.
+            cropLeftTop, cropRightBottom = croppedRect( pilImageLayer )
+            pilImageLayer = pilImageLayer.crop( (
+                # Left, Top, Right, Bottom
+                0, cropLeftTop[ 1 ],
+                pilImageLayer.size[ 0 ], cropRightBottom[ 1 ]
             ) )
-            sliceCropLeftTop, sliceCropRightBottom = croppedRect( slice )
 
-            # Crop the sliced image.
-            slice = slice.crop( (
-                sliceCropLeftTop[0],     sliceCropLeftTop[1],
-                sliceCropRightBottom[0], sliceCropRightBottom[1]
-            ) )
 
-            # Iterate horizontally over the sliced image.
-            for x in xrange( 0, slice.size[ 0 ], spriteSize[ 0 ] ):
-                spriteTile = slice.crop( (
-                    x, 0,
-                    x + spriteSize[ 0 ], spriteSize[ 1 ]
+            # If cropped to empty, skip the layer.
+            if pilImageLayer.size[ 0 ] == 0 or pilImageLayer.size[ 1 ] == 0:
+                return
+
+            kEmptyTile = chr( 0 ) * spriteSize[ 0 ] * spriteSize[ 1 ]
+
+            for y in xrange( 0, pilImageLayer.size[ 1 ], spriteSize[ 1 ] ):
+                # Grab the slice of the image.
+                slice = pilImageLayer.crop( (
+                    0, y,
+                    pilImageLayer.size[ 0 ], y + spriteSize[ 1 ]
                 ) )
-                rawTile = spriteTile.tostring()
-                # Shouldn't be able to be empty at this point.
-                # (If it can, we could skip it.)
-                assert rawTile != kEmptyTile
+                sliceCropLeftTop, sliceCropRightBottom = croppedRect( slice )
 
-                # Add the tile (remove duplicates)
-                # \todo Can remove duplicates in case of horizontal/vertical
-                #       mirrors as well.
-                if rawTile not in uniqueResultTiles:
-                    uniqueResultTiles[ rawTile ] = len( uniqueResultTiles )
-                    resultTiles.append( rawTile )
-
-                sx = sliceCropLeftTop[ 0 ] + x + offsetX
-                sy = cropLeftTop[ 1 ] + sliceCropLeftTop[ 1 ] + y + offsetY
-                resultSprites.append( Sprite(
-                    sx, sy, uniqueResultTiles[ rawTile ], layer
+                # Crop the sliced image.
+                slice = slice.crop( (
+                    sliceCropLeftTop[0],     sliceCropLeftTop[1],
+                    sliceCropRightBottom[0], sliceCropRightBottom[1]
                 ) )
 
-    allFrames = []
+                # Iterate horizontally over the sliced image.
+                for x in xrange( 0, slice.size[ 0 ], spriteSize[ 0 ] ):
+                    spriteTile = slice.crop( (
+                        x, 0,
+                        x + spriteSize[ 0 ], spriteSize[ 1 ]
+                    ) )
+                    rawTile = spriteTile.tostring()
+                    # Shouldn't be able to be empty at this point.
+                    # (If it can, we could skip it.)
+                    assert rawTile != kEmptyTile
 
-    while True:
-        # \note Should be optional whether the animation frame tiles are
-        #       optimized globally, or per frame. For now it's global.
-        for y in xrange( 0, pilImage.size[ 1 ], gridSize[ 1 ] ):
-            for x in xrange( 0, pilImage.size[ 0 ], gridSize[ 0 ] ):
-                animationFrame = pilImage.crop( (
-                    x, y,
-                    x + gridSize[ 0 ], y + gridSize[ 1 ]
-                ) )
+                    # Add the tile (remove duplicates)
+                    # \todo Can remove duplicates in case of horizontal/vertical
+                    #       mirrors as well.
+                    if rawTile not in uniqueResultTiles:
+                        uniqueResultTiles[ rawTile ] = len( uniqueResultTiles )
+                        resultTiles.append( rawTile )
 
-                # A new set of sprites is generated for each frame.
-                resultSprites = []
+                    sx = sliceCropLeftTop[ 0 ] + x + offsetX
+                    sy = cropLeftTop[ 1 ] + sliceCropLeftTop[ 1 ] + y + offsetY
+                    resultSprites.append( Sprite(
+                        sx, sy, uniqueResultTiles[ rawTile ], layer
+                    ) )
 
-                # 4 layers, one for each 4-color sprite palette
-                kNumSpritePalettes = 4
-                for layer in range( kNumSpritePalettes ):
-                    importSpriteLayer( animationFrame, layer )
+        while True:
+            # \note Should be optional whether the animation frame tiles are
+            #       optimized globally, or per frame. For now it's global.
+            for y in xrange( 0, pilImage.size[ 1 ], gridSize[ 1 ] ):
+                for x in xrange( 0, pilImage.size[ 0 ], gridSize[ 0 ] ):
+                    animationFrame = pilImage.crop( (
+                        x, y,
+                        x + gridSize[ 0 ], y + gridSize[ 1 ]
+                    ) )
 
-                allFrames.append( resultSprites )
+                    # A new set of sprites is generated for each frame.
+                    resultSprites = []
 
-        # Try to seek to the next frame (for GIF, etc). EOFError is raised when
-        # there are no more frames. This will also work for PNG -- EOFError is
-        # raised on the first frame.
-        # \note Depending on grid size, multiple frames may be extracted from
-        #       a single animation frame.
-        try:
-            pilImage.seek( pilImage.tell() + 1 )
-        except EOFError:
-            break
+                    # 4 layers, one for each 4-color sprite palette
+                    kNumSpritePalettes = 4
+                    for layer in range( kNumSpritePalettes ):
+                        importSpriteLayer( animationFrame, layer )
 
-    return allFrames, resultTiles
+                    animationFrames.append( resultSprites )
 
-def writeData( symbol, outPrefix, allFrames, tiles, hardwareSpriteSize ):
+            # Try to seek to the next frame (for GIF, etc). EOFError is raised when
+            # there are no more frames. This will also work for PNG -- EOFError is
+            # raised on the first frame.
+            # \note Depending on grid size, multiple frames may be extracted from
+            #       a single animation frame.
+            try:
+                pilImage.seek( pilImage.tell() + 1 )
+            except EOFError:
+                break
+
+        return animationFrames
+
+    for infile in infiles:
+        animationFrames = importImage( infile, gridSize, hardwareSpriteSize )
+        allAnimationFrames.append( animationFrames )
+
+    return allAnimationFrames, resultTiles
+
+def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
     with open( outPrefix + ".s", "w" ) as f:
         f.write( "; Data generated by Ngin sprite-importer.py\n\n" )
 
@@ -238,40 +250,40 @@ def writeData( symbol, outPrefix, allFrames, tiles, hardwareSpriteSize ):
         #       arg (can also be specified per frame, if coming from JSON)
         kDelay = 5
 
-        # \todo Have ways for defining multiple animations (JSON from Aseprite,
-        #       something else?)
+        for animationIndex, animationFrames in enumerate( allAnimationFrames ):
+            for frameIndex, frame in enumerate( animationFrames ):
+                symbol = symbols[ animationIndex ]
+                f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
 
-        for frameIndex, frame in enumerate( allFrames ):
-            f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
-
-            if hardwareSpriteSize == kHardwareSpriteSize8x16:
-                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x16Tile )\n" )
-            else:
-                f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Tile )\n" )
-
-            # \todo Allow loop point to be specified.
-            nextFrameIndex = ( frameIndex + 1 ) % len( allFrames )
-            f.write( "    ngin_SpriteRenderer_metasprite {:4}, {}_{}\n".format(
-                kDelay, symbol, nextFrameIndex
-            ) )
-
-            for sprite in frame:
-                tile = None
                 if hardwareSpriteSize == kHardwareSpriteSize8x16:
-                    tile = "_8x16Tile B+{}".format( sprite.tile )
+                    f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x16Tile )\n" )
                 else:
-                    tile = "B+{}".format( sprite.tile )
+                    f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Tile )\n" )
 
-                f.write( ( "        ngin_SpriteRenderer_sprite " + \
-                    "{:4}, {:4}, {}, {:3}\n" ).format( sprite.x, sprite.y, tile,
-                                                       sprite.attributes
+                # \todo Allow loop point to be specified.
+                nextFrameIndex = ( frameIndex + 1 ) % len( animationFrames )
+                f.write( "    ngin_SpriteRenderer_metasprite {:4}, {}_{}\n".format(
+                    kDelay, symbol, nextFrameIndex
                 ) )
 
-            f.write( "    ngin_SpriteRenderer_endMetasprite\n" )
-            f.write( ".endproc\n\n" )
+                for sprite in frame:
+                    tile = None
+                    if hardwareSpriteSize == kHardwareSpriteSize8x16:
+                        tile = "_8x16Tile B+{}".format( sprite.tile )
+                    else:
+                        tile = "B+{}".format( sprite.tile )
 
-        # Duplicate symbol to point to the first frame.
-        f.write( "{} := {}_{}\n".format( symbol, symbol, 0 ) )
+                    f.write( ( "        ngin_SpriteRenderer_sprite " + \
+                        "{:4}, {:4}, {}, {:3}\n" ).format( sprite.x, sprite.y,
+                                                           tile,
+                                                           sprite.attributes
+                    ) )
+
+                f.write( "    ngin_SpriteRenderer_endMetasprite\n" )
+                f.write( ".endproc\n\n" )
+
+            # Duplicate symbol to point to the first frame.
+            f.write( "{} := {}_{}\n\n".format( symbol, symbol, 0 ) )
 
     with open( outPrefix + ".chr", "wb" ) as f:
         for tile in tiles:
@@ -284,16 +296,20 @@ def writeData( symbol, outPrefix, allFrames, tiles, hardwareSpriteSize ):
         f.write( ".if .not .defined( {} )\n".format( uniqueSymbol ) )
         f.write( "{} = 1\n\n".format( uniqueSymbol ) )
         f.write( '.include "ngin/ngin.inc"\n\n' )
-        for frameIndex, frame in enumerate( allFrames ):
-            f.write( ".global {}_{}\n".format( symbol, frameIndex ) )
-        f.write( ".global {}\n".format( symbol ) )
+
+        for animationIndex, animationFrames in enumerate( allAnimationFrames ):
+            symbol = symbols[ animationIndex ]
+            for frameIndex, frame in enumerate( animationFrames ):
+                f.write( ".global {}_{}\n".format( symbol, frameIndex ) )
+            f.write( ".global {}\n".format( symbol ) )
+
         f.write( "\n.endif\n" )
 
 def main():
     argParser = argparse.ArgumentParser(
         description="Import sprites from images into Ngin" )
-    argParser.add_argument( "-i", "--infile", required=True )
-    argParser.add_argument( "-s", "--symbol", required=True )
+    argParser.add_argument( "-i", "--infile", nargs="+", required=True )
+    argParser.add_argument( "-s", "--symbol", nargs="+", required=True )
     argParser.add_argument( "-o", "--outprefix", required=True,
         help="prefix for output files" )
     argParser.add_argument( "-x", "--gridwidth", type=int,
@@ -308,9 +324,10 @@ def main():
 
     hardwareSpriteSize = getattr( args, "8x16" )
 
-    allFrames, tiles = importSprites( args.infile,
+    allAnimationFrames, tiles = importSprites( args.infile,
         ( args.gridwidth, args.gridheight ), hardwareSpriteSize )
 
-    writeData( args.symbol, args.outprefix, allFrames, tiles, hardwareSpriteSize )
+    writeData( args.symbol, args.outprefix, allAnimationFrames, tiles,
+               hardwareSpriteSize )
 
 main()

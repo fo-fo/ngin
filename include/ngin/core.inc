@@ -270,4 +270,10 @@ __ngin_strideSpecifier = 0
     branch
 .endmacro
 
+; This macro can be used for documentation when JSR+RTS is replaced with
+; a JMP.
+.macro ngin_jsrRts operand
+    jmp operand
+.endmacro
+
 .endif

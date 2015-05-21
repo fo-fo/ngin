@@ -21,7 +21,7 @@ ngin_Object_kMaxActiveObjects               = 8
 
 ; Maximum data size that is allocated for each object
 ; \todo Should be configurable.
-ngin_Object_kMaxObjectDataSize              = 11
+ngin_Object_kMaxObjectDataSize              = 13
 
 ; How many bytes need to be advanced to get to the next byte of an object
 ngin_Object_kDataStride                     = ngin_Object_kMaxActiveObjects
@@ -81,32 +81,34 @@ ngin_Object_kInvalidId                      = 255
     .scope identifier
 
     ; Object handlers are called with RTS, so the addresses need to be adjusted.
-    .local updateRtsAdjusted
-    updateRtsAdjusted = update-1
-    .local constructRtsAdjusted
-    constructRtsAdjusted = construct-1
+    ; The update routine is called via a trampoline because it's split into
+    ; two parts: rendering and the actual update.
+    .local onUpdateRtsAdjusted
+    onUpdateRtsAdjusted = __ngin_update-1
+    .local onConstructRtsAdjusted
+    onConstructRtsAdjusted = onConstruct-1
 
     ; Add the addresses to the correct segments. The object type ID is
     ; determined based on the address in the segment.
 
     ngin_pushSeg "OBJECT_UPDATE_LO"
     .local updateLo
-    updateLo: .byte .lobyte( updateRtsAdjusted )
+    updateLo: .byte .lobyte( onUpdateRtsAdjusted )
     ngin_popSeg
 
     ngin_pushSeg "OBJECT_UPDATE_HI"
     .local updateHi
-    updateHi: .byte .hibyte( updateRtsAdjusted )
+    updateHi: .byte .hibyte( onUpdateRtsAdjusted )
     ngin_popSeg
 
     ngin_pushSeg "OBJECT_CONSTRUCT_LO"
     .local constructLo
-    constructLo: .byte .lobyte( constructRtsAdjusted )
+    constructLo: .byte .lobyte( onConstructRtsAdjusted )
     ngin_popSeg
 
     ngin_pushSeg "OBJECT_CONSTRUCT_HI"
     .local constructHi
-    constructHi: .byte .hibyte( constructRtsAdjusted )
+    constructHi: .byte .hibyte( onConstructRtsAdjusted )
     ngin_popSeg
 
     ; Sanity check -- make sure each segment is tracking at the same address.
@@ -129,6 +131,14 @@ ngin_Object_kInvalidId                      = 255
 
     ; Set the object type ID symbol.
     ::identifier = .lobyte( relativeUpdateLo )
+
+    ; Add a trampoline for update.
+    .proc __ngin_update
+        jsr         onRender
+        ; Object ID may have been trashed by onRender.
+        ldx         ngin_Object_current
+        ngin_jsrRts onUpdate
+    .endproc
 .endmacro
 
 .macro ngin_Object_endDefine
