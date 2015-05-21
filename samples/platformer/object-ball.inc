@@ -12,6 +12,8 @@ ngin_Object_declare object_Ball
     velocity        .tag ngin_Vector2_8_8
 
     animationState  .tag ngin_SpriteAnimator_State
+
+    spawnIndex      .byte
 ngin_Object_endDeclare
 
 .endif

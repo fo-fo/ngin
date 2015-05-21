@@ -17,10 +17,48 @@ local kEdgeLeft, kEdgeRight, kEdgeTop, kEdgeBottom = 0, 1, 2, 3
 
 local kViewSlackX = SYM.ngin_ObjectSpawner_kViewSlackX[ 1 ]
 local kViewSlackY = SYM.ngin_ObjectSpawner_kViewSlackY[ 1 ]
+local kInvalidSpawnIndex = SYM.ngin_ObjectSpawner_kInvalidSpawnIndex[ 1 ]
 
-local function spawnObject( object )
-    print( string.format( "spawning object: type=%d, x=%d, y=%d",
-        object.type, object.x, object.y ) )
+local Object_kInvalidId = SYM.ngin_Object_kInvalidId[ 1 ]
+
+local function objectSpawned( objectListIndex )
+    -- Bitfield of spawn states, one for each object in the map list.
+    local spawned = SYM.__ngin_ObjectSpawner_spawned[ 1 ]
+
+    -- Subtract 1 because the first value is a sentinel we don't care about.
+    objectListIndex = objectListIndex - 1
+
+    local byteIndex = math.floor( objectListIndex / 8 )
+    local byteMask  = bit32.lshift( 1, objectListIndex % 8 )
+    local spawnByte = RAM[ spawned + byteIndex ]
+
+    return bit32.btest( spawnByte, byteMask )
+end
+
+local function setObjectSpawned( objectListIndex )
+    local spawned = SYM.__ngin_ObjectSpawner_spawned[ 1 ]
+
+    -- Subtract 1 because the first value is a sentinel we don't care about.
+    objectListIndex = objectListIndex - 1
+
+    local byteIndex = math.floor( objectListIndex / 8 )
+    local byteMask  = bit32.lshift( 1, objectListIndex % 8 )
+    local spawnByte = RAM[ spawned + byteIndex ]
+
+    local newByte = bit32.bor( spawnByte, byteMask )
+    RAM[ spawned + byteIndex ] = newByte
+end
+
+local function spawnObject( object, objectListIndex )
+    print( string.format( "spawning object: type=%d, x=%d, y=%d, index=%d",
+        object.type, object.x, object.y, objectListIndex ) )
+
+    -- Check if the object has already been spawned. If so, don't spawn
+    -- again.
+    if objectSpawned( objectListIndex ) then
+        print( "  object already spawned, skipping" )
+        return
+    end
 
     -- Set the constructor parameters.
     local constructorParameters = SYM.__ngin_Object_constructorParameters[ 1 ]
@@ -30,11 +68,25 @@ local function spawnObject( object )
     ngin.write16( constructorParameters+0, object.x )
     ngin.write16( constructorParameters+2, object.y )
 
+    RAM.ngin_ObjectSpawner_spawnIndex = objectListIndex
+
     -- \todo Pass custom parameters.
 
     RAM.__ngin_Object_new_typeId = object.type
     local ngin_Object_new = SYM.__ngin_Object_new[ 1 ]
     NDX.jsr( ngin_Object_new )
+
+    -- Set the "spawned" flag only after successful object allocation.
+    -- If object allocation fails, we want to retry the next time object comes
+    -- into range.
+    if REG.X ~= Object_kInvalidId then
+        setObjectSpawned( objectListIndex )
+    else
+        print( "ObjectSpawner failed to spawn the object" )
+    end
+
+    -- Set index to invalid after spawn is done.
+    RAM.ngin_ObjectSpawner_spawnIndex = kInvalidSpawnIndex
 end
 
 local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
@@ -89,7 +141,7 @@ local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
             if object[ perpElement ] >= perpEdge.position and
                object[ perpElement ] <= perpOppositeEdge.position then
                 -- Spawn the object. Calls back into 6502 code.
-                spawnObject( object )
+                spawnObject( object, edge.objectIndex )
             else
                 -- \todo Not in range, but for special object types this event
                 --       might be interesting (= crossing a certain horizontal

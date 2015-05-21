@@ -26,6 +26,11 @@ ngin_Object_define object_Player
 
         stx playerId
 
+        ; Take note of the spawn index, because it can be used to reset the
+        ; spawn flag later on if needed.
+        ngin_mov8 { ngin_Object_this spawnIndex, x }, \
+                    ngin_ObjectSpawner_spawnIndex
+
         ; Initialize position from constructor parameters. Initialize fractional
         ; position to 0.
         ngin_mov32 { ngin_Object_this position, x }, \

@@ -276,4 +276,14 @@ __ngin_strideSpecifier = 0
     jmp operand
 .endmacro
 
+; Divide "i" by "j", round up.
+.define __ngin_divideCeil( i, j ) ( ((i) + (j)-1) / (j) )
+
+__ngin_kBitsPerByte = 8
+
+; Calculates the size (in bytes) of a bitfield (1 bit per element) that can
+; hold numElements values.
+.define ngin_bitFieldSize( numElements ) \
+    (__ngin_divideCeil {numElements}, {__ngin_kBitsPerByte})
+
 .endif

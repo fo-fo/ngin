@@ -21,7 +21,7 @@ ngin_Object_kMaxActiveObjects               = 8
 
 ; Maximum data size that is allocated for each object
 ; \todo Should be configurable.
-ngin_Object_kMaxObjectDataSize              = 13
+ngin_Object_kMaxObjectDataSize              = 14
 
 ; How many bytes need to be advanced to get to the next byte of an object
 ngin_Object_kDataStride                     = ngin_Object_kMaxActiveObjects

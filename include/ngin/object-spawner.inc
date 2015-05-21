@@ -9,6 +9,24 @@ NGIN_OBJECT_SPAWNER_INC_INCLUDED = 1
 ngin_ObjectSpawner_kViewSlackX = 64
 ngin_ObjectSpawner_kViewSlackY = 64
 
+; Maximum number of objects in a map object list (including sentinels)
+; \todo Should be configurable, to avoid waste of bytes for the "spawned" list.
+ngin_ObjectSpawner_kMaxMapObjects = 256
+
+; If currentIndex is set to this value, the object wasn't created by
+; ObjectSpawner. We can use 0 as an invalid index, because there's always a
+; sentinel, non-reachable object at index 0.
+ngin_ObjectSpawner_kInvalidSpawnIndex = 0
+
+; Index, in the map object list, of the object that is currently being
+; spawned. Valid in the object constructor.
+; \todo If an object spawns another object in its constructor, this will not
+;       hold the correct value for the *new* object.
+.global ngin_ObjectSpawner_spawnIndex
+
+; \todo Provide a function for resetting the spawn bit for a given object list
+;       index. Object can use it to make itself respawn after deactivation.
+
 .global __ngin_ObjectSpawner_setPosition
 .global __ngin_ObjectSpawner_setPosition_position
 .macro ngin_ObjectSpawner_setPosition position
