@@ -20,8 +20,14 @@ __ngin_ObjectSpawner_spawned:           .res ngin_bitFieldSize \
 __ngin_ObjectSpawner_setPosition_position:      .tag ngin_Vector2_16
 __ngin_ObjectSpawner_scrollHorizontal_amount:   .byte 0
 __ngin_ObjectSpawner_scrollVertical_amount:     .byte 0
+__ngin_ObjectSpawner_resetSpawn_index:          .byte 0
 
 .segment "NGIN_CODE"
+
+; \todo An initialization function. After a new map is loaded, we should at
+;       least make sure that spawnIndex has a sensible value and that the
+;       "spawned" array has been cleared. Or maybe setPosition should be
+;       modified into an initialization function.
 
 .proc __ngin_ObjectSpawner_setPosition
     ngin_Lua_string "ngin.ObjectSpawner.setPosition()"
@@ -37,6 +43,12 @@ __ngin_ObjectSpawner_scrollVertical_amount:     .byte 0
 
 .proc __ngin_ObjectSpawner_scrollVertical
     ngin_Lua_string "ngin.ObjectSpawner.scrollVertical()"
+
+    rts
+.endproc
+
+.proc __ngin_ObjectSpawner_resetSpawn
+    ngin_Lua_string "ngin.ObjectSpawner.resetSpawn()"
 
     rts
 .endproc

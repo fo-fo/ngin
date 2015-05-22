@@ -21,7 +21,7 @@ local kInvalidSpawnIndex = SYM.ngin_ObjectSpawner_kInvalidSpawnIndex[ 1 ]
 
 local Object_kInvalidId = SYM.ngin_Object_kInvalidId[ 1 ]
 
-local function objectSpawned( objectListIndex )
+local function readSpawnData( objectListIndex )
     -- Bitfield of spawn states, one for each object in the map list.
     local spawned = SYM.__ngin_ObjectSpawner_spawned[ 1 ]
 
@@ -30,23 +30,28 @@ local function objectSpawned( objectListIndex )
 
     local byteIndex = math.floor( objectListIndex / 8 )
     local byteMask  = bit32.lshift( 1, objectListIndex % 8 )
+    local address = spawned + byteIndex
     local spawnByte = RAM[ spawned + byteIndex ]
+
+    return address, byteMask, spawnByte
+end
+
+local function objectSpawned( objectListIndex )
+    local address, byteMask, spawnByte = readSpawnData( objectListIndex )
 
     return bit32.btest( spawnByte, byteMask )
 end
 
 local function setObjectSpawned( objectListIndex )
-    local spawned = SYM.__ngin_ObjectSpawner_spawned[ 1 ]
+    local address, byteMask, spawnByte = readSpawnData( objectListIndex )
 
-    -- Subtract 1 because the first value is a sentinel we don't care about.
-    objectListIndex = objectListIndex - 1
+    RAM[ address ] = bit32.bor( spawnByte, byteMask )
+end
 
-    local byteIndex = math.floor( objectListIndex / 8 )
-    local byteMask  = bit32.lshift( 1, objectListIndex % 8 )
-    local spawnByte = RAM[ spawned + byteIndex ]
+local function setObjectNotSpawned( objectListIndex )
+    local address, byteMask, spawnByte = readSpawnData( objectListIndex )
 
-    local newByte = bit32.bor( spawnByte, byteMask )
-    RAM[ spawned + byteIndex ] = newByte
+    RAM[ address ] = bit32.band( spawnByte, bit32.bnot( byteMask ) )
 end
 
 local function spawnObject( object, objectListIndex )
@@ -140,8 +145,14 @@ local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
             -- scrolling horizontally, check the Y coordinate.
             if object[ perpElement ] >= perpEdge.position and
                object[ perpElement ] <= perpOppositeEdge.position then
+                -- If edge.objectIndex is an index into the Y-sorted list,
+                -- we need to grab the X-sorted list index.
+                local objectIndex = edge.objectIndex
+                if element == "y" then
+                    objectIndex = MapData.objectYToXIndex( edge.objectIndex )
+                end
                 -- Spawn the object. Calls back into 6502 code.
-                spawnObject( object, edge.objectIndex )
+                spawnObject( object, objectIndex )
             else
                 -- \todo Not in range, but for special object types this event
                 --       might be interesting (= crossing a certain horizontal
@@ -255,6 +266,20 @@ function ObjectSpawner.scrollVertical()
     elseif amount > 0 then
         scroll( amount, edgeBottom, edgeTop, edgeLeft, edgeRight )
     end
+end
+
+function ObjectSpawner.resetSpawn()
+    local index = RAM.__ngin_ObjectSpawner_resetSpawn_index
+
+    -- If index is ngin_ObjectSpawner_kInvalidSpawnIndex, this is a no-op.
+    -- Thus, this function can be called without caring about whether the object
+    -- was spawned by ObjectSpawner or manually.
+    -- \todo Test this
+    if index == kInvalidSpawnIndex then
+        return
+    end
+
+    setObjectNotSpawned( index )
 end
 
 ngin.ObjectSpawner = ObjectSpawner

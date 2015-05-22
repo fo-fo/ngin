@@ -24,9 +24,6 @@ ngin_ObjectSpawner_kInvalidSpawnIndex = 0
 ;       hold the correct value for the *new* object.
 .global ngin_ObjectSpawner_spawnIndex
 
-; \todo Provide a function for resetting the spawn bit for a given object list
-;       index. Object can use it to make itself respawn after deactivation.
-
 .global __ngin_ObjectSpawner_setPosition
 .global __ngin_ObjectSpawner_setPosition_position
 .macro ngin_ObjectSpawner_setPosition position
@@ -55,6 +52,16 @@ ngin_ObjectSpawner_kInvalidSpawnIndex = 0
     ngin_mov8 __ngin_ObjectSpawner_scrollVertical_amount, {amount}
 
     jsr __ngin_ObjectSpawner_scrollVertical
+.endmacro
+
+.global __ngin_ObjectSpawner_resetSpawn
+.global __ngin_ObjectSpawner_resetSpawn_index
+.macro ngin_ObjectSpawner_resetSpawn index
+    __ngin_requireParameter {index}, "index"
+
+    ngin_mov8 __ngin_ObjectSpawner_resetSpawn_index, {index}
+
+    jsr __ngin_ObjectSpawner_resetSpawn
 .endmacro
 
 .endif

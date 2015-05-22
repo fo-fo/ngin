@@ -220,16 +220,19 @@ function MapData.readObjectXSorted( index )
     }
 end
 
+-- Converts index in the Y sorted list to an index in the X sorted list.
+function MapData.objectYToXIndex( index )
+    -- Get the index to the X list from another list.
+    local objectsYSortedIndex = readPointer( "objectsYSortedIndex" )
+    return NDX.readMemory( objectsYSortedIndex + index )
+end
+
 -- Read an object based on an Y sorted index.
 function MapData.readObjectYSorted( index )
     assert( index >= 0 and index < MapData.numObjects(), string.format(
             "readObjectYSorted: index out of range: %d", index ) )
 
-    -- Get the index to the X list from another list.
-    local objectsYSortedIndex = readPointer( "objectsYSortedIndex" )
-    local index = NDX.readMemory( objectsYSortedIndex + index )
-
-    return MapData.readObjectXSorted( index )
+    return MapData.readObjectXSorted( MapData.objectYToXIndex( index ) )
 end
 
 function MapData.adjustX()
