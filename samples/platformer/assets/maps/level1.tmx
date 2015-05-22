@@ -22,7 +22,7 @@
   <properties>
    <property name="Origin" value="Bottom Center"/>
   </properties>
-  <object id="15" name="camera" type="ngin_Marker" x="0" y="0" width="256" height="208" visible="0"/>
+  <object id="15" name="camera" type="ngin_Marker" x="0" y="0" width="256" height="208"/>
   <object id="18" name="player" type="object_Player" x="45" y="95" width="16" height="32"/>
   <object id="21" type="object_Ball" x="136" y="68" width="16" height="16"/>
   <object id="22" type="object_Ball" x="508" y="44" width="16" height="16"/>
@@ -32,7 +32,7 @@
   <object id="26" type="object_Ball" x="608" y="60" width="16" height="16"/>
   <object id="27" type="object_Ball" x="640" y="52" width="16" height="16"/>
   <object id="28" type="object_Ball" x="676" y="48" width="16" height="16"/>
-  <object id="29" type="object_Ball" x="53" y="221" width="16" height="16"/>
+  <object id="29" type="object_Ball" x="52" y="232" width="16" height="16"/>
   <object id="30" type="object_Ball" x="380" y="420" width="16" height="16"/>
   <object id="31" type="object_Ball" x="956" y="424" width="16" height="16"/>
  </objectgroup>

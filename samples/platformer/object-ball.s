@@ -49,6 +49,20 @@ ngin_Object_define object_Ball
 
         ldx ngin_Object_current
 
+        ; Check how far the object is from the screen. ($8000, $8000) is roughly
+        ; at the center of the screen, so $7F00..$8100 is offset roughly half
+        ; a screen in both directions.
+        lda spritePosition+ngin_Vector2_16::x_+1
+        cmp #.hibyte( ngin_SpriteRenderer_kOriginX - 256 )
+        ngin_branchIfLess deactivate
+        cmp #.hibyte( ngin_SpriteRenderer_kOriginX + 256 )
+        ngin_branchIfGreaterOrEqual deactivate
+        lda spritePosition+ngin_Vector2_16::y_+1
+        cmp #.hibyte( ngin_SpriteRenderer_kOriginY - 256 )
+        ngin_branchIfLess deactivate
+        cmp #.hibyte( ngin_SpriteRenderer_kOriginY + 256 )
+        ngin_branchIfGreaterOrEqual deactivate
+
         ngin_SpriteRenderer_render \
             { ngin_Object_this animationState + \
               ngin_SpriteAnimator_State::metasprite, x }, \
@@ -58,6 +72,21 @@ ngin_Object_define object_Ball
 
         ngin_SpriteAnimator_update { ngin_Object_this animationState, x }
 
+        rts
+
+    deactivate:
+        ; \todo Should NOT allow onUpdate to be called anymore after this
+        ;       point. Can be done e.g. by combining onRender and onUpdate
+        ;       back again. ;) But no major harm should come from onUpdate
+        ;       operating on the freed object, as long as onUpdate doesn't
+        ;       try to allocate a new object.
+        ngin_log debug, "deactivating object_Ball"
+
+        ; Reset the spawn bit so that it can be respawned.
+        ; \todo Check that spawn point is within the visible area?
+        ngin_ObjectSpawner_resetSpawn { ngin_Object_this spawnIndex, x }
+
+        ngin_Object_free x
         rts
     .endproc
 
