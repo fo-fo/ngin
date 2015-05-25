@@ -43,11 +43,11 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #metasprite0, \
-        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX+32, \
+        #ngin_immVector2_16 ngin_SpriteRenderer_kOriginX+32, \
                                   ngin_SpriteRenderer_kOriginY
 
     ngin_SpriteRenderer_render #metasprite1, \
-        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX-32, \
+        #ngin_immVector2_16 ngin_SpriteRenderer_kOriginX-32, \
                                   ngin_SpriteRenderer_kOriginY
 
     ngin_ShadowOam_endFrame

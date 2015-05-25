@@ -22,7 +22,7 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #sprite, \
-        #ngin_immediateVector2_16 ngin_SpriteRenderer_kTopLeftX+256/2, \
+        #ngin_immVector2_16 ngin_SpriteRenderer_kTopLeftX+256/2, \
                                   ngin_SpriteRenderer_kTopLeftY+240/2
 
     ngin_ShadowOam_endFrame

@@ -76,11 +76,11 @@ ngin_entryPoint start
             and #1 << i
             ngin_branchIfZero bitNotSet
                 ngin_SpriteRenderer_render #metaspriteLit, \
-                                           #ngin_immediateVector2_16 x_, y_
+                                           #ngin_immVector2_16 x_, y_
                 jmp next
             bitNotSet:
                 ngin_SpriteRenderer_render #metaspriteDim, \
-                                           #ngin_immediateVector2_16 x_, y_
+                                           #ngin_immVector2_16 x_, y_
             next:
         .endscope
         .endrepeat

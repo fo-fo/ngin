@@ -81,11 +81,11 @@ ngin_entryPoint start
 
     randomSpawnPosition \
         ngin_Object_constructorParameter position + ngin_Vector2_16::x_, \
-        #ngin_Vector2_16_immediateX maps_objects::markers::topLeft
+        #ngin_Vector2_16_immX maps_objects::markers::topLeft
 
     randomSpawnPosition \
         ngin_Object_constructorParameter position + ngin_Vector2_16::y_, \
-        #ngin_Vector2_16_immediateY maps_objects::markers::topLeft
+        #ngin_Vector2_16_immY maps_objects::markers::topLeft
 
     ; Create the object instance.
     ngin_Object_new #object_ball

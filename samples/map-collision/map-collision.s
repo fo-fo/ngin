@@ -38,9 +38,9 @@ ngin_entryPoint start
     ngin_Camera_initializeView #maps_collisionTest::markers::camera
 
     ngin_mov16 position+ngin_Vector2_16_8::intX, \
-              #ngin_Vector2_16_immediateX maps_collisionTest::markers::player
+              #ngin_Vector2_16_immX maps_collisionTest::markers::player
     ngin_mov16 position+ngin_Vector2_16_8::intY, \
-              #ngin_Vector2_16_immediateY maps_collisionTest::markers::player
+              #ngin_Vector2_16_immY maps_collisionTest::markers::player
     ngin_mov8 position+ngin_Vector2_16_8::fracX, #0
     ngin_mov8 position+ngin_Vector2_16_8::fracY, #0
 

@@ -210,11 +210,11 @@ __ngin_strideSpecifier = 0
     .endstruct
 .endunion
 
-.define ngin_immediateVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
+.define ngin_immVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
                                               .loword( x_ ) )
 
-.define ngin_Vector2_16_immediateX( vector ) .loword( vector )
-.define ngin_Vector2_16_immediateY( vector ) .hiword( vector )
+.define ngin_Vector2_16_immX( vector ) .loword( vector )
+.define ngin_Vector2_16_immY( vector ) .hiword( vector )
 
 .struct __ngin_EmptyStruct
 .endstruct

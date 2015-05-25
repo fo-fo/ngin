@@ -58,11 +58,11 @@ ngin_entryPoint start
     ngin_ShadowOam_startFrame
 
     ngin_SpriteRenderer_render #metasprite, \
-        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX, \
+        #ngin_immVector2_16 ngin_SpriteRenderer_kOriginX, \
                                   ngin_SpriteRenderer_kOriginY
 
     ngin_SpriteRenderer_render #metasprite, \
-        #ngin_immediateVector2_16 ngin_SpriteRenderer_kOriginX-65, \
+        #ngin_immVector2_16 ngin_SpriteRenderer_kOriginX-65, \
                                   ngin_SpriteRenderer_kOriginY+50
 
     ngin_ShadowOam_endFrame

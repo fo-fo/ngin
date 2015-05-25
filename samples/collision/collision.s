@@ -78,9 +78,9 @@ ngin_entryPoint start
 .endproc
 
 .proc initialize
-    kSpriteOrigin0 = ngin_immediateVector2_16 \
+    kSpriteOrigin0 = ngin_immVector2_16 \
         ngin_SpriteRenderer_kOriginX, ngin_SpriteRenderer_kOriginY
-    kSpriteOrigin1 = ngin_immediateVector2_16 \
+    kSpriteOrigin1 = ngin_immVector2_16 \
         ngin_SpriteRenderer_kOriginX+24, ngin_SpriteRenderer_kOriginY+24
 
     ngin_mov32 positions + 0 * .sizeof( ngin_Vector2_16 ), #kSpriteOrigin0

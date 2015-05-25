@@ -1001,7 +1001,7 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
 
         def writeMarker( name, position ):
             worldPoint = nginMapData.mapPixelToNginWorldPoint( position )
-            f.write( "        {} = ngin_immediateVector2_16 {}, {}\n".format(
+            f.write( "        {} = ngin_immVector2_16 {}, {}\n".format(
                 name, worldPoint[0], worldPoint[1] ) )
 
         for symbol, nginMapData in zip( symbols, nginCommonMapData.maps ):
