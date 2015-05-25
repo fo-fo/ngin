@@ -19,6 +19,14 @@ NGIN_BRANCH_INC_INCLUDED = 1
     bcs to
 .endmacro
 
+.macro ngin_branchIfLessSigned to
+    bmi to
+.endmacro
+
+.macro ngin_branchIfGreaterOrEqualSigned to
+    bpl to
+.endmacro
+
 .macro __ngin_longBranch invertedBranchOp, target
     invertedBranchOp over
     jmp target
