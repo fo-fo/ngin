@@ -11,9 +11,6 @@ function ngin.signed8( value )
     return value - 256
 end
 
--- \todo Remove, obsoleted
-ngin.signedByte = ngin.signed8
-
 function ngin.signed16( value )
     if value <= 32767 then
         return value

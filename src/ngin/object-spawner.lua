@@ -249,7 +249,7 @@ function ObjectSpawner.setPosition()
 end
 
 function ObjectSpawner.scrollHorizontal()
-    local amount = ngin.signedByte( RAM.__ngin_ObjectSpawner_scrollHorizontal_amount )
+    local amount = ngin.signed8( RAM.__ngin_ObjectSpawner_scrollHorizontal_amount )
 
     if amount < 0 then
         scroll( amount, edgeLeft, edgeRight, edgeTop, edgeBottom )
@@ -259,7 +259,7 @@ function ObjectSpawner.scrollHorizontal()
 end
 
 function ObjectSpawner.scrollVertical()
-    local amount = ngin.signedByte( RAM.__ngin_ObjectSpawner_scrollVertical_amount )
+    local amount = ngin.signed8( RAM.__ngin_ObjectSpawner_scrollVertical_amount )
 
     if amount < 0 then
         scroll( amount, edgeTop, edgeBottom, edgeLeft, edgeRight )

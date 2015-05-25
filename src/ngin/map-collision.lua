@@ -93,7 +93,7 @@ function MapCollision.lineSegmentEjectHorizontal()
     local x  = read16Symbol( "__ngin_MapCollision_lineSegmentEjectHorizontal_x" )
     local y0 = read16Symbol( "__ngin_MapCollision_lineSegmentEjectHorizontal_y0" )
     local length = RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_length
-    local deltaX = ngin.signedByte(
+    local deltaX = ngin.signed8(
         RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_deltaX
     )
 
@@ -112,7 +112,7 @@ function MapCollision.lineSegmentEjectVertical()
     local y  = read16Symbol( "__ngin_MapCollision_lineSegmentEjectVertical_y" )
     local x0 = read16Symbol( "__ngin_MapCollision_lineSegmentEjectVertical_x0" )
     local length = RAM.__ngin_MapCollision_lineSegmentEjectVertical_length
-    local deltaY = ngin.signedByte(
+    local deltaY = ngin.signed8(
         RAM.__ngin_MapCollision_lineSegmentEjectVertical_deltaY
     )
 

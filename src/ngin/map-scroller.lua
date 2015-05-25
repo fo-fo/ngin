@@ -454,7 +454,7 @@ function MapScroller.setPosition()
 end
 
 function MapScroller.scrollHorizontal()
-    local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollHorizontal_amount )
+    local amount = ngin.signed8( RAM.__ngin_MapScroller_scrollHorizontal_amount )
 
     assert( math.abs( amount ) <= kMaxScrollPerCall,
             string.format( "absolute scroll amount can't be over %d (was %d)",
@@ -471,7 +471,7 @@ function MapScroller.scrollHorizontal()
 end
 
 function MapScroller.scrollVertical()
-    local amount = ngin.signedByte( RAM.__ngin_MapScroller_scrollVertical_amount )
+    local amount = ngin.signed8( RAM.__ngin_MapScroller_scrollVertical_amount )
 
     assert( math.abs( amount ) <= kMaxScrollPerCall,
             string.format( "absolute scroll amount can't be over %d (was %d)",
