@@ -4,11 +4,21 @@ ngin = {}
 
 -- Convert an unsigned byte to a signed number.
 -- \todo Move utility functions to another file, require() it.
-function ngin.signedByte( value )
+function ngin.signed8( value )
     if value <= 127 then
         return value
     end
     return value - 256
+end
+
+-- \todo Remove, obsoleted
+ngin.signedByte = ngin.signed8
+
+function ngin.signed16( value )
+    if value <= 32767 then
+        return value
+    end
+    return value - 65536
 end
 
 -- Reads a 16-bit value from RAM.

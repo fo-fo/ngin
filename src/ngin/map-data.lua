@@ -77,7 +77,7 @@ end
 
 function MapData.numObjects()
     local headerAddress = ngin.read16( ngin_MapData_header )
-    return NDX.readMemory( headerAddress + 2 )
+    return NDX.readMemory( headerAddress + 10 )
 end
 
 -- Read a 16x16px metatile from the map. X and Y parameters are in pixels.

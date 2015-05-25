@@ -25,15 +25,23 @@
 ngin_bss spritePosition: .tag ngin_Vector2_16
 
 ngin_Object_declare object_ball
-    position .tag ngin_Vector2_16
+    position .tag ngin_Vector2_16_8
 ngin_Object_endDeclare
 
 ngin_Object_define object_ball
     .proc onConstruct
         ngin_log debug, "object_ball.construct()"
 
-        ngin_mov32 { ngin_Object_this position, x }, \
-                     ngin_Object_constructorParameter position
+        ; Initialize position from constructor parameters. Have to set X and Y
+        ; separately because the integer parts are not contiguous in memory.
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::x_
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::y_
+
+        ; Set the fractional part to 0.
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracX, x }, #0
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, #0
 
         rts
     .endproc
@@ -58,15 +66,23 @@ ngin_Object_define object_ball
 ngin_Object_endDefine
 
 ngin_Object_declare object_snake
-    position .tag ngin_Vector2_16
+    position .tag ngin_Vector2_16_8
 ngin_Object_endDeclare
 
 ngin_Object_define object_snake
     .proc onConstruct
         ngin_log debug, "object_snake.construct()"
 
-        ngin_mov32 { ngin_Object_this position, x }, \
-                     ngin_Object_constructorParameter position
+        ; Initialize position from constructor parameters. Have to set X and Y
+        ; separately because the integer parts are not contiguous in memory.
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::x_
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::y_
+
+        ; Set the fractional part to 0.
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracX, x }, #0
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, #0
 
         rts
     .endproc

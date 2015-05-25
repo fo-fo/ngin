@@ -25,11 +25,16 @@ ngin_Object_define object_Ball
         ngin_mov8 { ngin_Object_this spawnIndex, x }, \
                     ngin_ObjectSpawner_spawnIndex
 
-        ; Initialize position from constructor parameters. Initialize fractional
-        ; position to 0.
-        ngin_mov32 { ngin_Object_this position, x }, \
-                     ngin_Object_constructorParameter position
-        ngin_mov16 { ngin_Object_this fracPosition, x }, #0
+        ; Initialize position from constructor parameters. Have to set X and Y
+        ; separately because the integer parts are not contiguous in memory.
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::x_
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::y_
+
+        ; Set the fractional part to 0.
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracX, x }, #0
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, #0
 
         ; Initialize velocity to 0.
         ngin_mov32 { ngin_Object_this velocity, x }, #0
@@ -96,19 +101,19 @@ ngin_Object_define object_Ball
         rts
     .endproc
 
-    .macro collisionResponse y_, fracY_
+    .macro collisionResponse y_, fracY
         ; Invert velocity on collision.
-        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }, \
+        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }, \
                      #0, \
-                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }
+                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }
 
         ; Also clear the subpixel part of position.
-        ngin_mov8 { ngin_Object_this fracPosition+ngin_Vector2_8::y_, x }, \
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, \
                     #0
     .endmacro
 
     .proc moveVertical
-        movement_template y_, x_, fracY_, intY_, kBoundingBoxTop, \
+        movement_template y_, x_, fracY, intY, intX, kBoundingBoxTop, \
                           kBoundingBoxBottom, kBoundingBoxLeft, kBoundingBoxRight, \
                           ngin_MapCollision_lineSegmentEjectVertical, \
                           ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \

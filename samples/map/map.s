@@ -55,34 +55,34 @@ ngin_entryPoint start
 .proc interactiveLogic
     ; Scroll the map based on controller input. Currently can only scroll
     ; one pixel at a time.
-    ngin_bss deltaX: .byte 0
-    ngin_bss deltaY: .byte 0
+    ngin_bss deltaX: .tag ngin_FixedPoint8_8
+    ngin_bss deltaY: .tag ngin_FixedPoint8_8
 
-    ngin_mov8 deltaX, #0
-    ngin_mov8 deltaY, #0
+    ngin_mov16 deltaX, #0
+    ngin_mov16 deltaY, #0
 
     lda controller
     and #ngin_Controller::kLeft
     ngin_branchIfZero notLeft
-        ngin_mov8 deltaX, #ngin_signedByte -1
+        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 -1, 0
     notLeft:
 
     lda controller
     and #ngin_Controller::kRight
     ngin_branchIfZero notRight
-        ngin_mov8 deltaX, #ngin_signedByte 1
+        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 1, 0
     notRight:
 
     lda controller
     and #ngin_Controller::kUp
     ngin_branchIfZero notUp
-        ngin_mov8 deltaY, #ngin_signedByte -1
+        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 -1, 0
     notUp:
 
     lda controller
     and #ngin_Controller::kDown
     ngin_branchIfZero notDown
-        ngin_mov8 deltaY, #ngin_signedByte 1
+        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 1, 0
     notDown:
 
     ngin_Camera_move deltaX, deltaY

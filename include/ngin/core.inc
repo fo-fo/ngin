@@ -173,17 +173,40 @@ __ngin_strideSpecifier = 0
     y_ .word
 .endstruct
 
+.struct ngin_FixedPoint8_8
+    frac    .byte
+    int     .byte
+.endstruct
+
+.struct ngin_FixedPoint16_8
+    frac    .byte
+    int     .word
+.endstruct
+
 ; \todo Maybe better to have these as an union in Vector2_16.
 .union ngin_Vector2_8_8
     .struct
-        fracX_  .byte
-        intX_   .byte
-        fracY_  .byte
-        intY_   .byte
+        fracX   .byte
+        intX    .byte
+        fracY   .byte
+        intY    .byte
     .endstruct
     .struct
-        x_      .word
-        y_      .word
+        x_      .tag ngin_FixedPoint8_8
+        y_      .tag ngin_FixedPoint8_8
+    .endstruct
+.endunion
+
+.union ngin_Vector2_16_8
+    .struct
+        fracX   .byte
+        intX    .word
+        fracY   .byte
+        intY    .word
+    .endstruct
+    .struct
+        x_      .tag ngin_FixedPoint16_8
+        y_      .tag ngin_FixedPoint16_8
     .endstruct
 .endunion
 
@@ -196,10 +219,10 @@ __ngin_strideSpecifier = 0
 .struct __ngin_EmptyStruct
 .endstruct
 
-.define __ngin_isSignedByteInRange( value ) \
+.define __ngin_isSigned8InRange( value ) \
     ( (value) >= -128 .and (value) <= 127 )
 
-.define __ngin_isSignedWordInRange( value ) \
+.define __ngin_isSigned16InRange( value ) \
     ( (value) >= -32768 .and (value) <= 32767 )
 
 ; Converts a signed value -128..127 to a corresponding unsigned byte in range
@@ -207,21 +230,27 @@ __ngin_strideSpecifier = 0
 ; stops the compilation. Division by zero is used to stop the compilation so
 ; that it will work even if force_range feature is enabled. The intended usage
 ; is for constants in places which normally only accept unsigned bytes,
-; e.g. lda #ngin_signedByte -66
-.define ngin_signedByte( value ) ( \
+; e.g. lda #ngin_signed8 -66
+.define ngin_signed8( value ) ( \
     __ngin_choice \
-        __ngin_isSignedByteInRange {value}, \
+        __ngin_isSigned8InRange {value}, \
         .lobyte( value ), \
-        1 / ( __ngin_isSignedByteInRange {value} ) \
+        1 / ( __ngin_isSigned8InRange {value} ) \
     )
 
-; Same as ngin_signedByte, except for 16-bit values
-.define ngin_signedWord( value ) ( \
+; Same as ngin_signed8, except for 16-bit values
+.define ngin_signed16( value ) ( \
     __ngin_choice \
-        __ngin_isSignedWordInRange {value}, \
+        __ngin_isSigned16InRange {value}, \
         .loword( value ), \
-        1 / ( __ngin_isSignedWordInRange {value} ) \
+        1 / ( __ngin_isSigned16InRange {value} ) \
     )
+
+; This macro can be used to define a 16.8 fixed point value (24-bit result)
+.define ngin_immFixedPoint16_8( int, frac ) ( (int) << 8 | (frac) )
+
+; This macro can be used to define an 8.8 fixed point value (16-bit result)
+.define ngin_immFixedPoint8_8 ( int, frac ) ( (int) << 8 | (frac) )
 
 .macro ngin_segmentData segment, data
     .pushseg

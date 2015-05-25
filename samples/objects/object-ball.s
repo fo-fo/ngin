@@ -34,17 +34,17 @@ kMaxCollisions      = 64
 ; This is based on the Y movement, but can also be used for X movement.
 ngin_bss delta: .byte 0
 ngin_bss bound: .word 0
-.macro movement_template y_, x_, fracY_, intY_, boundingBoxY, boundingBoxX, \
+.macro movement_template y_, x_, fracY, intY, intX, boundingBoxY, boundingBoxX, \
         collisionRoutine, collisionRoutineReturnValue
     ; Add the fractional part of velocity to the fractional part of
     ; position.
     clc
-    ngin_adc8 { ngin_Object_this fracPosition+ngin_Vector2_8::y_, x }, \
-              { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }
+    ngin_adc8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, \
+              { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }
 
     ; The movement delta is now the integer part of velocity, plus the
     ; carry possibly produced by the fractional add.
-    lda ngin_Object_this velocity+ngin_Vector2_8_8::intY_, x
+    lda ngin_Object_this velocity+ngin_Vector2_8_8::intY, x
     adc #0
     sta delta
 
@@ -52,17 +52,17 @@ ngin_bss bound: .word 0
     bmi movingUp
         ; Moving down.
         ngin_add16 bound, \
-                 { ngin_Object_this position+ngin_Vector2_16::y_, x }, \
+                 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
                    #boundingBoxY
         jmp doneMovingDown
     .local movingUp
     movingUp:
         ngin_mov16 bound, \
-                 { ngin_Object_this position+ngin_Vector2_16::y_, x }
+                 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }
     doneMovingDown:
 
     collisionRoutine bound, \
-                     { ngin_Object_this position+ngin_Vector2_16::x_, x }, \
+                     { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
                        #boundingBoxX, \
                        delta
 
@@ -89,12 +89,12 @@ ngin_bss bound: .word 0
         sta ngin_Object_this numCollisions, x
 
         ; Invert velocity on collision.
-        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }, \
+        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }, \
                      #0, \
-                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x }
+                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }
 
         ; Also clear the subpixel part of position.
-        ngin_mov8 { ngin_Object_this fracPosition+ngin_Vector2_8::y_, x }, \
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, \
                     #0
     noCollision:
 
@@ -103,13 +103,13 @@ ngin_bss bound: .word 0
     bit delta
     bmi movingUp2
         ; Moving down.
-        ngin_add16 { ngin_Object_this position+ngin_Vector2_16::y_, x }, \
+        ngin_add16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
                      collisionRoutineReturnValue, \
-                     #ngin_signedWord -(boundingBoxY)
+                     #ngin_signed16 -(boundingBoxY)
         jmp doneMovingDown2
     .local movingUp2
     movingUp2:
-        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16::y_, x }, \
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
                      collisionRoutineReturnValue
     doneMovingDown2:
 
@@ -118,14 +118,14 @@ ngin_bss bound: .word 0
 
 ngin_Object_define object_ball
     .proc moveVertical
-        movement_template y_, x_, fracY_, intY_, kBoundingBoxHeight-1, \
+        movement_template y_, x_, fracY, intY, intX, kBoundingBoxHeight-1, \
                           kBoundingBoxWidth, \
                           ngin_MapCollision_lineSegmentEjectVertical, \
                           ngin_MapCollision_lineSegmentEjectVertical_ejectedY
     .endproc
 
     .proc moveHorizontal
-        movement_template x_, y_, fracX_, intX_, kBoundingBoxWidth-1, \
+        movement_template x_, y_, fracX, intX, intY, kBoundingBoxWidth-1, \
                           kBoundingBoxHeight, \
                           ngin_MapCollision_lineSegmentEjectHorizontal, \
                           ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
@@ -134,26 +134,32 @@ ngin_Object_define object_ball
     .proc onConstruct
         ngin_log debug, "object_ball.construct()"
 
-        ngin_mov32 { ngin_Object_this position, x }, \
-                     ngin_Object_constructorParameter position
-        ngin_mov16 { ngin_Object_this fracPosition, x }, \
-                     #0
+        ; Initialize position from constructor parameters. Have to set X and Y
+        ; separately because the integer parts are not contiguous in memory.
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::x_
+        ngin_mov16 { ngin_Object_this position+ngin_Vector2_16_8::intY, x }, \
+            ngin_Object_constructorParameter position+ngin_Vector2_16::y_
+
+        ; Set the fractional part to 0.
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracX, x }, #0
+        ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, #0
 
         ; Randomize velocity.
         ngin_Lfsr8_random
-        sta ngin_Object_this velocity+ngin_Vector2_8_8::fracX_, x
+        sta ngin_Object_this velocity+ngin_Vector2_8_8::fracX, x
         ngin_Lfsr8_random
-        sta ngin_Object_this velocity+ngin_Vector2_8_8::fracY_, x
-        ngin_Lfsr8_random
-        and #1
-        clc
-        adc #1
-        sta ngin_Object_this velocity+ngin_Vector2_8_8::intX_, x
+        sta ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x
         ngin_Lfsr8_random
         and #1
         clc
         adc #1
-        sta ngin_Object_this velocity+ngin_Vector2_8_8::intY_, x
+        sta ngin_Object_this velocity+ngin_Vector2_8_8::intX, x
+        ngin_Lfsr8_random
+        and #1
+        clc
+        adc #1
+        sta ngin_Object_this velocity+ngin_Vector2_8_8::intY, x
 
         ngin_mov8 { ngin_Object_this numCollisions, x }, #0
 

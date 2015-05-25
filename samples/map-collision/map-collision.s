@@ -21,7 +21,7 @@ kBoundingBoxHeight = 20
 
 ; -----------------------------------------------------------------------------
 
-ngin_bss position:          .tag ngin_Vector2_16
+ngin_bss position:          .tag ngin_Vector2_16_8
 ngin_bss spritePosition:    .tag ngin_Vector2_16
 ngin_bss controller:        .byte 0
 
@@ -37,7 +37,12 @@ ngin_entryPoint start
     ngin_MapData_load #maps_collisionTest
     ngin_Camera_initializeView #maps_collisionTest::markers::camera
 
-    ngin_mov32 position, #maps_collisionTest::markers::player
+    ngin_mov16 position+ngin_Vector2_16_8::intX, \
+              #ngin_Vector2_16_immediateX maps_collisionTest::markers::player
+    ngin_mov16 position+ngin_Vector2_16_8::intY, \
+              #ngin_Vector2_16_immediateY maps_collisionTest::markers::player
+    ngin_mov8 position+ngin_Vector2_16_8::fracX, #0
+    ngin_mov8 position+ngin_Vector2_16_8::fracY, #0
 
     ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
@@ -72,7 +77,7 @@ ngin_entryPoint start
 .endproc
 
 .proc moveObjectHorizontal
-    ngin_bss deltaX: .byte 0
+    ngin_bss deltaX: .word 0
     ; X coordinate adjusted with the relative bounding box of the object.
     ngin_bss boundX: .word 0
     kMovementAmount = 3
@@ -84,41 +89,42 @@ ngin_entryPoint start
         rts
     leftOrRight:
 
-    ngin_mov8 deltaX, #0
+    ngin_mov16 deltaX, #0
 
     lda controller
     and #ngin_Controller::kLeft
     ngin_branchIfZero notLeft
-        ngin_mov8 deltaX, #ngin_signedByte -kMovementAmount
+        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 -kMovementAmount, 0
         ; No adjustment needed when moving left.
-        ngin_mov16 boundX, position + ngin_Vector2_16::x_
+        ngin_mov16 boundX, position + ngin_Vector2_16_8::intX
     notLeft:
 
     lda controller
     and #ngin_Controller::kRight
     ngin_branchIfZero notRight
-        ngin_mov8 deltaX, #ngin_signedByte kMovementAmount
+        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 kMovementAmount, 0
         ; Adjust when moving right.
         ngin_add16 boundX, \
-                   position + ngin_Vector2_16::x_, \
+                   position + ngin_Vector2_16_8::intX, \
                    #kBoundingBoxWidth-1
     notRight:
 
+    ; Only use the hibyte of delta for collision.
     ngin_MapCollision_lineSegmentEjectHorizontal \
-        boundX, position + ngin_Vector2_16::y_, #kBoundingBoxHeight, deltaX
+        boundX, position + ngin_Vector2_16_8::intY, #kBoundingBoxHeight, 1+deltaX
 
     ; Read the return value, and re-adjust based on the direction of movement.
     ; Need to adjust only if moving right in this case.
-    lda deltaX
+    lda 1+deltaX
     bmi movingLeft
         ; Moving right
-        ngin_add16 position + ngin_Vector2_16::x_, \
+        ngin_add16 position + ngin_Vector2_16_8::intX, \
                    ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
-                   #ngin_signedWord -(kBoundingBoxWidth-1)
+                   #ngin_signed16 -(kBoundingBoxWidth-1)
         jmp doneMovingRight
     movingLeft:
         ; Moving left
-        ngin_mov16 position + ngin_Vector2_16::x_, \
+        ngin_mov16 position + ngin_Vector2_16_8::intX, \
                    ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
     doneMovingRight:
 
@@ -130,7 +136,7 @@ ngin_entryPoint start
 ; Copy-pasta from moveObjectHorizontal with slight modifications.
 ; Should be combined, but can't bother for now.
 .proc moveObjectVertical
-    ngin_bss deltaY: .byte 0
+    ngin_bss deltaY: .word 0
     ngin_bss boundY: .word 0
     kMovementAmount = 3
 
@@ -141,39 +147,39 @@ ngin_entryPoint start
         rts
     upOrDown:
 
-    ngin_mov8 deltaY, #0
+    ngin_mov16 deltaY, #0
 
     lda controller
     and #ngin_Controller::kUp
     ngin_branchIfZero notUp
-        ngin_mov8 deltaY, #ngin_signedByte -kMovementAmount
+        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 -kMovementAmount, 0
         ; No adjustment needed when moving up.
-        ngin_mov16 boundY, position + ngin_Vector2_16::y_
+        ngin_mov16 boundY, position + ngin_Vector2_16_8::intY
     notUp:
 
     lda controller
     and #ngin_Controller::kDown
     ngin_branchIfZero notDown
-        ngin_mov8 deltaY, #ngin_signedByte kMovementAmount
+        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 kMovementAmount, 0
         ; Adjust when moving down.
         ngin_add16 boundY, \
-                   position + ngin_Vector2_16::y_, \
+                   position + ngin_Vector2_16_8::intY, \
                    #kBoundingBoxHeight-1
     notDown:
 
     ngin_MapCollision_lineSegmentEjectVertical \
-        boundY, position + ngin_Vector2_16::x_, #kBoundingBoxWidth, deltaY
+        boundY, position + ngin_Vector2_16_8::intX, #kBoundingBoxWidth, 1+deltaY
 
-    lda deltaY
+    lda 1+deltaY
     bmi movingUp
         ; Moving down
-        ngin_add16 position + ngin_Vector2_16::y_, \
+        ngin_add16 position + ngin_Vector2_16_8::intY, \
                    ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
-                   #ngin_signedWord -(kBoundingBoxHeight-1)
+                   #ngin_signed16 -(kBoundingBoxHeight-1)
         jmp doneMovingDown
     movingUp:
         ; Moving up
-        ngin_mov16 position + ngin_Vector2_16::y_, \
+        ngin_mov16 position + ngin_Vector2_16_8::intY, \
                    ngin_MapCollision_lineSegmentEjectVertical_ejectedY
     doneMovingDown:
 

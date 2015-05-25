@@ -67,61 +67,54 @@ ngin_entryPoint start
     .define playerThis( elem ) ngin_Object_other object_Player, {elem}
 
     ldx playerId
-    ngin_bss vector: .word 0
-    ngin_bss movementX: .byte 0
-    ngin_bss movementY: .byte 0
 
-    kMaxScroll = 8
+    ; \todo Use temporaries.
+    ngin_bss cameraToPlayer:    .tag ngin_FixedPoint16_8
+    ; Camera movement amount
+    ngin_bss movementX:         .tag ngin_FixedPoint8_8
+    ngin_bss movementY:         .tag ngin_FixedPoint8_8
 
     ; Macro to take care of camera movement in horizontal/vertical direction.
     ; "component" has to be x_ or y_.
     .macro moveCamera_template component, outputVariable
         ; Calculate vector from camera to the player (signed result).
-        ngin_sub16 vector, \
-                 { playerThis position+ngin_Vector2_16::component, x }, \
-                   ngin_Camera_position+ngin_Vector2_16::component
+        ; \todo Lowest 16 bits would be enough, because we can't handle
+        ;       scroll speeds over 8 bits anyways (just make sure the
+        ;       additional offset down below works alright)
+        ngin_sub24 cameraToPlayer, \
+                 { playerThis position+ngin_Vector2_16_8::component, x }, \
+                   ngin_Camera_position+ngin_Vector2_16_8::component
 
         ; Additional offset to center the view (somewhat).
         ; \todo Something better.
-        ngin_add16 vector, #ngin_signedWord -128
+        ngin_add24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 -128, 0
 
-        ; Default to 0.
-        ngin_mov8 outputVariable, #0
+        ; By default, assume that the 16.8 value fits in 8.8. If it doesn't,
+        ; it will be clamped by the code below.
+        ngin_mov16 outputVariable, cameraToPlayer
 
-        ; Clamp to the maximum scroll speed. First test for zero.
-        lda vector+0
-        ora vector+1
-        ngin_branchIfZero skip
-            ; Not zero, copy the sign only (for now) and move the camera
-            ; depending on it.
-            bit vector+1
-            bpl positive
-                ; Negative
-                ; \note A is destroyed by ngin_cmp16, so use Y.
-                ldy vector+0
-                ; If less than -8, clamp. Unsigned comparison works fine here
-                ; because we know "vector" is negative.
-                ngin_cmp16 vector, #ngin_signedWord -kMaxScroll
-                ngin_branchIfGreaterOrEqual noClampNegative
-                    ldy #ngin_signedByte -kMaxScroll
-                .local noClampNegative
-                noClampNegative:
-                jmp doneNegative
-            .local positive
-            positive:
-                ; Positive
-                ldy vector+0
-                ; If over 8, clamp.
-                ngin_cmp16 vector, #ngin_signedWord kMaxScroll
-                ngin_branchIfLess noClampPositive
-                    ldy #ngin_signedByte kMaxScroll
-                .local noClampPositive
-                noClampPositive:
-            .local doneNegative
-            doneNegative:
-            sty outputVariable
-        .local skip
-        skip:
+        ; Clamp to byte range. Check the sign so that we can use unsigned
+        ; comparison. The exact amount we clamp to doesn't matter much, because
+        ; Camera can't scroll much over 8 pixels per frame anyways.
+        bit cameraToPlayer+2
+        bpl positive
+            ; Negative
+            ngin_cmp24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 -128, 0
+            ngin_branchIfGreaterOrEqual noClampNegative
+                ngin_mov16 outputVariable, #ngin_immFixedPoint8_8 -128, 0
+            .local noClampNegative
+            noClampNegative:
+            jmp doneNegative
+        .local positive
+        positive:
+            ; Positive
+            ngin_cmp24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 127, 0
+            ngin_branchIfLess noClampPositive
+                ngin_mov16 outputVariable, #ngin_immFixedPoint8_8 127, 0
+            .local noClampPositive
+            noClampPositive:
+        .local doneNegative
+        doneNegative:
     .endmacro
 
     moveCamera_template x_, movementX

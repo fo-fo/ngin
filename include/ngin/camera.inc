@@ -5,7 +5,7 @@ NGIN_CAMERA_INC_INCLUDED = 1
 .include "ngin/arithmetic.inc"
 
 ; Camera position in world space
-; Type: ngin_Vector2_16
+; Type: ngin_Vector2_16_8
 .global ngin_Camera_position
 
 .global __ngin_Camera_initializeView
@@ -25,12 +25,36 @@ NGIN_CAMERA_INC_INCLUDED = 1
     __ngin_requireParameter {amountX}, "amountX"
     __ngin_requireParameter {amountY}, "amountY"
 
-    ngin_mov8 __ngin_Camera_move_amountX, {amountX}
-    ngin_mov8 __ngin_Camera_move_amountY, {amountY}
+    ; 8.8 fixed point
+    ngin_mov16 __ngin_Camera_move_amountX, {amountX}
+    ngin_mov16 __ngin_Camera_move_amountY, {amountY}
 
     jsr __ngin_Camera_move
 .endmacro
 
+.macro __ngin_Camera_worldToSpritePosition_template comp, worldPosition, \
+        spritePosition
+
+    ; Subtract camera position (16.8 fixed point) from world position
+    ; (16.8 fixed point), return a 16-bit result (LSB discarded).
+
+    lda ~~( ngin_Vector2_16_8::comp + 0) * __ngin_Camera_strideWorldPosition + \
+        worldPosition
+    sec
+    sbc ngin_Camera_position + ngin_Vector2_16_8::comp+0
+    ; \note LSB discarded.
+
+    .repeat 2, i
+        lda ~~( ngin_Vector2_16_8::comp + i + 1 ) \
+            * __ngin_Camera_strideWorldPosition + worldPosition
+        sbc ngin_Camera_position + ngin_Vector2_16_8::comp+i+1
+        sta ~~( ngin_Vector2_16::comp + i + 0 ) * \
+            __ngin_Camera_strideSpritePosition + spritePosition
+    .endrepeat
+.endmacro
+
+; Converts 16.8 fixed point coordinates from world to sprite (view) space.
+; The result is ngin_Vector2_16.
 .macro ngin_Camera_worldToSpritePosition worldPosition, spritePosition
     ; Convert world position to sprite position:
     ;   1) adjust the camera position to (0, 0) by subtracting $8000
@@ -53,15 +77,13 @@ NGIN_CAMERA_INC_INCLUDED = 1
     ; \todo This function doesn't work with immediate arguments right now,
     ;       because X/Y offset is always added (fortunately it at least
     ;       generates an error)
-    ngin_sub16 \
-        { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
-        { ngin_Vector2_16::x_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
-        { ngin_Vector2_16::x_                                      + ngin_Camera_position }
-    ngin_sub16 \
-        { ngin_Vector2_16::y_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
-        { ngin_Vector2_16::y_ * __ngin_Camera_strideWorldPosition  + worldPosition }, \
-        { ngin_Vector2_16::y_                                      + ngin_Camera_position }
 
+    __ngin_Camera_worldToSpritePosition_template \
+        x_, {worldPosition}, {spritePosition}
+    __ngin_Camera_worldToSpritePosition_template \
+        y_, {worldPosition}, {spritePosition}
+
+    ; \todo Could round here by using a 24-bit intermediate result.
     ngin_add16 \
         { ngin_Vector2_16::x_ * __ngin_Camera_strideSpritePosition + spritePosition }, \
         #ngin_SpriteRenderer_kTopLeftX

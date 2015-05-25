@@ -923,6 +923,13 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
                 listToString( map( lambda x: x[0], ySortedObjects ) ),
             ) )
 
+            # Calculate the map boundaries.
+            boundaryLeftTop = nginMapData.mapPixelToNginWorldPoint( ( 0, 0 ) )
+            boundaryRightBottom = nginMapData.mapPixelToNginWorldPoint( (
+                nginMapData.sizeScreens[ 0 ] * kScreenSizeX,
+                nginMapData.sizeScreens[ 1 ] * kScreenSizeY,
+            ) )
+
             # Map header
             # \todo Should probably add a level of indirection for the metatile
             #       set.
@@ -933,6 +940,16 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
         .byte {}
         ; heightScreens
         .byte {}
+        ; boundaryLeft
+        .word ${:04X}
+        ; boundaryRight
+        ; \\todo Use view width from configuration
+        .word ${:04X} - (256-16) - 1 ; Inclusive
+        ; boundaryTop
+        .word ${:04X}
+        ; boundaryBottom
+        ; \\todo Use view height from configuration
+        .word ${:04X} - (240-16) - 1 ; Inclusive
         ; numObjects
         .byte {}
         ; ngin_MapData_Pointers
@@ -960,6 +977,8 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             f.write( kHeaderTemplate.format(
                 nginMapData.sizeScreens[ 0 ],
                 nginMapData.sizeScreens[ 1 ],
+                boundaryLeftTop[0], boundaryRightBottom[0],
+                boundaryLeftTop[1], boundaryRightBottom[1],
                 len( objects )
             ) )
 

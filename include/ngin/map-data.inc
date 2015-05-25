@@ -34,12 +34,25 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 .endstruct
 
 .struct ngin_MapData_Header
+    ; \todo Width/height doesn't need to be stored since boundary checks were
+    ;       moved to Camera (from MapScroller).
     widthScreens    .byte
     heightScreens   .byte
+
+    ; Map boundaries (world space coordinates); all are inclusive
+    boundaryLeft    .word
+    boundaryRight   .word
+    boundaryTop     .word
+    boundaryBottom  .word
+
+    ; Number of objects in the map
     numObjects      .byte
+
+    ; Pointers to map data
     pointers        .tag ngin_MapData_Pointers
 .endstruct
 
+.globalzp ngin_MapData_header
 .globalzp ngin_MapData_pointers
 
 .global __ngin_MapData_load
