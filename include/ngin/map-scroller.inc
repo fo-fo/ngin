@@ -3,6 +3,9 @@ NGIN_MAP_SCROLLER_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
+; How many pixels (max) can be scrolled per each call to the scroll functions
+ngin_MapScroller_kMaxScrollPerCall = 8
+
 ; Sets the scroll position counters of the MapScroller based on the specified
 ; coordinates (in world space).
 .global __ngin_MapScroller_setPosition

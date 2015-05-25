@@ -30,7 +30,7 @@ local kAttributeTileUpdateWidthPixels = MapData.kAttrViewWidth + kTile16Width
 local kAttributeTileUpdateHeightPixels = MapData.kAttrViewHeight + kTile16Height
 
 -- Maximum amount that can be scrolled per a single scroll call.
-local kMaxScrollPerCall = 8
+local kMaxScrollPerCall = SYM.ngin_MapScroller_kMaxScrollPerCall[ 1 ]
 
 -------------------------------------------------------------------------------
 
