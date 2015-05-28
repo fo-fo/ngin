@@ -865,12 +865,13 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
         .define objectX {}
         .define objectY {}
         {}
-        xLo:     .lobytes objectX
-        xHi:     .hibytes objectX
-        yLo:     .lobytes objectY
-        yHi:     .hibytes objectY
-        type:    .byte    {}
-        ySorted: .byte    {}
+        xLo:       .lobytes objectX
+        xHi:       .hibytes objectX
+        yLo:       .lobytes objectY
+        yHi:       .hibytes objectY
+        type:      .byte    {}
+        xToYIndex: .byte    {}
+        ySorted:   .byte    {}
         .undefine objectX
         .undefine objectY
     .endscope
@@ -900,6 +901,12 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             ySortedObjects = list( enumerate( objects ) )
             ySortedObjects.sort( key=lambda x: x[1].position[1] )
 
+            # Create a mapping from X index to Y index.
+            xToYIndex = [ None ] * len( ySortedObjects )
+            for yIndex, ( xIndex, blah ) in enumerate( ySortedObjects ):
+                assert xToYIndex[ xIndex ] is None
+                xToYIndex[ xIndex ] = yIndex
+
             objectTypes = map( lambda x: x.type, objects )
             # Get the unique object types for import.
             uniqueObjectTypes = set( objectTypes )
@@ -920,6 +927,7 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
                                    objectNginWorldPoints ) ),
                 importZp + listToString( uniqueObjectTypes ),
                 listToString( objectTypes ),
+                listToString( xToYIndex ),
                 listToString( map( lambda x: x[0], ySortedObjects ) ),
             ) )
 
@@ -971,6 +979,7 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
         .addr objects::yLo
         .addr objects::yHi
         .addr objects::type
+        .addr objects::xToYIndex
         .addr objects::ySorted
     .endproc
 """

@@ -53,7 +53,8 @@ local pointersStructMembers = {
     objectsYLo                  = 15,
     objectsYHi                  = 16,
     objectsType                 = 17,
-    objectsYSortedIndex         = 18
+    objectsXToYIndex            = 18,
+    objectsYSortedIndex         = 19
 }
 
 local ngin_MapData_header   = SYM.ngin_MapData_header[ 1 ]
@@ -225,6 +226,13 @@ function MapData.objectYToXIndex( index )
     -- Get the index to the X list from another list.
     local objectsYSortedIndex = readPointer( "objectsYSortedIndex" )
     return NDX.readMemory( objectsYSortedIndex + index )
+end
+
+-- Converts index in the X sorted list to an index in the Y sorted list.
+function MapData.objectXToYIndex( index )
+    -- Get the index to the Y list from another list.
+    local objectsXToYIndex = readPointer( "objectsXToYIndex" )
+    return NDX.readMemory( objectsXToYIndex + index )
 end
 
 -- Read an object based on an Y sorted index.

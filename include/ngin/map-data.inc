@@ -30,6 +30,7 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
     objectsYLo                  .addr
     objectsYHi                  .addr
     objectsType                 .addr
+    objectsXToYIndex            .addr
     objectsYSortedIndex         .addr
 .endstruct
 

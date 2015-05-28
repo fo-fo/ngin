@@ -282,4 +282,22 @@ function ObjectSpawner.resetSpawn()
     setObjectNotSpawned( index )
 end
 
+function ObjectSpawner.inView()
+    local index = RAM.__ngin_ObjectSpawner_inView_index
+
+    assert( index ~= kInvalidSpawnIndex )
+
+    local indexY = MapData.objectXToYIndex( index )
+
+    local inViewX = index  > edgeLeft  .objectIndex and
+                    index  < edgeRight .objectIndex
+    local inViewY = indexY > edgeTop   .objectIndex and
+                    indexY < edgeBottom.objectIndex
+
+    REG.C = 0
+    if inViewX and inViewY then
+        REG.C = 1
+    end
+end
+
 ngin.ObjectSpawner = ObjectSpawner

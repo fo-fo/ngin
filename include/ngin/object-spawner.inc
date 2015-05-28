@@ -64,4 +64,14 @@ ngin_ObjectSpawner_kInvalidSpawnIndex = 0
     jsr __ngin_ObjectSpawner_resetSpawn
 .endmacro
 
+.global __ngin_ObjectSpawner_inView
+.global __ngin_ObjectSpawner_inView_index
+.macro ngin_ObjectSpawner_inView index
+    __ngin_requireParameter {index}, "index"
+
+    ngin_mov8 __ngin_ObjectSpawner_inView_index, {index}
+
+    jsr __ngin_ObjectSpawner_inView
+.endmacro
+
 .endif

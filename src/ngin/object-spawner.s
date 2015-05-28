@@ -21,6 +21,7 @@ __ngin_ObjectSpawner_setPosition_position:      .tag ngin_Vector2_16
 __ngin_ObjectSpawner_scrollHorizontal_amount:   .byte 0
 __ngin_ObjectSpawner_scrollVertical_amount:     .byte 0
 __ngin_ObjectSpawner_resetSpawn_index:          .byte 0
+__ngin_ObjectSpawner_inView_index:              .byte 0
 
 .segment "NGIN_CODE"
 
@@ -49,6 +50,12 @@ __ngin_ObjectSpawner_resetSpawn_index:          .byte 0
 
 .proc __ngin_ObjectSpawner_resetSpawn
     ngin_Lua_string "ngin.ObjectSpawner.resetSpawn()"
+
+    rts
+.endproc
+
+.proc __ngin_ObjectSpawner_inView
+    ngin_Lua_string "ngin.ObjectSpawner.inView()"
 
     rts
 .endproc

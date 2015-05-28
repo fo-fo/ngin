@@ -68,6 +68,8 @@ ngin_Object_define object_Ball
         cmp #.hibyte( ngin_SpriteRenderer_kOriginY + 256 )
         ngin_branchIfGreaterOrEqual deactivate
 
+    dontDeactivate:
+
         ngin_SpriteRenderer_render \
             { ngin_Object_this animationState + \
               ngin_SpriteAnimator_State::metasprite, x }, \
@@ -80,6 +82,16 @@ ngin_Object_define object_Ball
         rts
 
     deactivate:
+        ; If the spawn point is still within the active spawn view area,
+        ; (carry is set), don't deactivate. For example, if a bouncing ball
+        ; is spawned, but then (temporarily) bounces down so that it would
+        ; be deactivated under normal conditions, this check makes sure that
+        ; it stays active. Otherwise the object would disappear, and wouldn't
+        ; reappear when moving the camrea further down, because the spawn point
+        ; would already be in view.
+        ngin_ObjectSpawner_inView { ngin_Object_this spawnIndex, x }
+        bcs dontDeactivate
+
         ; \todo Should NOT allow onUpdate to be called anymore after this
         ;       point. Can be done e.g. by combining onRender and onUpdate
         ;       back again. ;) But no major harm should come from onUpdate
@@ -88,7 +100,6 @@ ngin_Object_define object_Ball
         ngin_log debug, "deactivating object_Ball"
 
         ; Reset the spawn bit so that it can be respawned.
-        ; \todo Check that spawn point is within the visible area?
         ngin_ObjectSpawner_resetSpawn { ngin_Object_this spawnIndex, x }
 
         ngin_Object_free x
