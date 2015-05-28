@@ -27,7 +27,7 @@
             <Keywords name="Keywords1">.bankbyte .blank .concat .const .hibyte .hiword .ident .left .lobyte .loword .match .mid .not .ref .referenced .right .sizeof .strat .sprintf .string .strlen .tcount .xmatch .a16 .a8 .addr .align .asciiz .assert .autoimport .bss .byt .byte .case .charmap .code .condes .constructor .data .dbyt .debuginfo .define .def .defined .destructor .dword .else .elseif .end .error .exitmac .exitmacro .export .exportzp .faraddr .feature .fileopt .fopt .forceimport .global .globalzp .i16 .i8 .import .importzp .incbin .include .interruptor .linecont .list .listbytes .local .localchar .macpack .org .out .p02 .p816 .pagelen .pagelength .pc02 .popseg .psc02 .pushseg .reloc .res .rodata .segment .setcpu .smart .sunplus .tag .warning .word .zeropage .processor dc.b dc.w .and .or .paramcount .lobytes .hibytes .undefine .set .mod</Keywords>
             <Keywords name="Keywords2">adc and asl bit clc cld cli clv cmp cpx cpy dec dex dey eor inc inx iny lda ldx ldy lsr nop ora pha php pla plp rol ror sbc sec sed sei sta stx sty tax tay tsx txa txs tya bpl bmi bvc bvs bcc bcs bne beq jmp jsr rts rti brk axs</Keywords>
             <Keywords name="Keywords3">$ % #</Keywords>
-            <Keywords name="Keywords4">x y</Keywords>
+            <Keywords name="Keywords4">a x y</Keywords>
             <Keywords name="Keywords5">ngin_</Keywords>
             <Keywords name="Keywords6">__ngin_</Keywords>
             <Keywords name="Keywords7"></Keywords>

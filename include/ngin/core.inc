@@ -4,6 +4,9 @@ NGIN_CORE_INC_INCLUDED = 1
 ; Enable line continuation with backslash (unfortunately not a .feature)
 .linecont +
 
+; Needed by __ngin_decimalInteger.
+.include "ngin/ascii.inc"
+
 .macro ngin_entryPoint entrySymbol
     .export __ngin_start := entrySymbol
 .endmacro
@@ -314,5 +317,26 @@ __ngin_kBitsPerByte = 8
 ; hold numElements values.
 .define ngin_bitFieldSize( numElements ) \
     (__ngin_divideCeil {numElements}, {__ngin_kBitsPerByte})
+
+.macro __ngin_decimalInteger integer
+    .local divider
+    divider .set 100000000
+    .local value
+    value = integer
+
+    ; \note .charmap isn't a problem here, because string/character literals
+    ;       are not used.
+
+    .repeat 9, i
+        ; Output the corresponding digit, or a space if the digit and all the
+        ; more significant digits are zeroes. Unless we're outputting the least
+        ; significant digit, which is always displayed (so that 0 is displayed).
+        .byte .lobyte( __ngin_choice \
+            (value/divider) <> 0 .or divider = 1, \
+            (value/divider) .mod 10 + ngin_Ascii::kZero, \
+            ngin_Ascii::kSpace )
+        divider .set divider/10
+    .endrepeat
+.endmacro
 
 .endif

@@ -5,6 +5,7 @@ NGIN_ASCII_INC_INCLUDED = 1
     kLf     = 10
     kCr     = 13
     kSpace  = 32
+    kQuote  = 34
     kZero   = 48
 .endenum
 

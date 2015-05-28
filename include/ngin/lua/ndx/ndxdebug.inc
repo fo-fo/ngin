@@ -78,15 +78,27 @@ NDXDEBUG_INC_INCLUDED = 1
 .define ndxHex16( addr ) 1, 2, <(addr), >(addr)
 .define ndxDec16( addr ) 1, 3, <(addr), >(addr)
 
-; Execute a string as Lua code.
-.macro ndxLuaExecStr str, output_nop
+; Start a Lua code block. Switches segment. The Lua code can be inserted in the
+; current segment. NOTE: Modifies the character mapping and opens a scope.
+.macro ndxLuaExecStrStart
     __ndxSaveCharMap
     __ndxStartDebugInfo __ndxDebugType::LUA_EXEC_STR
+        ; \note Symbol name is significant
         string_start:
-        .byte str
+.endmacro
+
+; End a Lua code block started by ndxLuaExecStrStart.
+.macro ndxLuaExecStrEnd output_nop
         string_len = * - string_start
     __ndxEndDebugInfo output_nop
     __ndxRestoreCharMap
+.endmacro
+
+; Execute a string as Lua code.
+.macro ndxLuaExecStr str, output_nop
+    ndxLuaExecStrStart
+    .byte str
+    ndxLuaExecStrEnd {output_nop}
 .endmacro
 
 ; Execute a string as Lua code (only in DEBUG mode).

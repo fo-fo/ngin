@@ -6,7 +6,7 @@
     .define __sizeIdentifier .ident( .sprintf( "__%s_SIZE__", segment ) )
     .import __sizeIdentifier
     __ngin_BuildLog_string .sprintf( "  %25s", segment )
-    __ngin_BuildLog_decimalInteger __sizeIdentifier
+    __ngin_decimalInteger __sizeIdentifier
     __ngin_BuildLog_string " bytes"
     __ngin_BuildLog_newLine
     .undefine __sizeIdentifier
