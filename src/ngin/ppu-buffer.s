@@ -2,13 +2,11 @@
 .include "ngin/core.inc"
 .include "ngin/branch.inc"
 .include "ngin/ppu.inc"
-
-; \todo Should be configurable somewhere
-kPpuBufferSize = 64
+.include "ngin/assert.inc"
 
 .segment "NGIN_STACK"
 
-ngin_PpuBuffer_buffer: .res kPpuBufferSize
+ngin_PpuBuffer_buffer: .res ngin_PpuBuffer_kBufferSize
 .assert .hibyte( ngin_PpuBuffer_buffer ) = 1 .and \
         .sizeof( ngin_PpuBuffer_buffer ) > 0 .and \
         .hibyte( ngin_PpuBuffer_buffer + .sizeof( ngin_PpuBuffer_buffer )-1 ) = 1, \
@@ -28,12 +26,11 @@ ngin_PpuBuffer_pointer: .byte 0
 .endproc
 
 .proc __ngin_PpuBuffer_upload
-    .pushseg
-    .segment "NGIN_BSS"
-        savedStackPointer: .byte 0
-    .popseg
+    __ngin_bss savedStackPointer: .byte 0
 
-    ; \todo Runtime assert for ngin_ppuBufferPointer overflows.
+    ; Watch out for ngin_ppuBufferPointer overflows.
+    ngin_assert .sprintf( "RAM.ngin_PpuBuffer_pointer < %d", \
+                          ::ngin_PpuBuffer_kBufferSize )
 
     ; Save stack pointer.
     tsx

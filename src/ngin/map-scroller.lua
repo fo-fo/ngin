@@ -52,6 +52,7 @@ local scrollDataRight
 
 -- Retrieve values of some of the symbols defined by Ngin.
 local ngin_PpuBuffer_buffer        = SYM.ngin_PpuBuffer_buffer[ 1 ]
+local ngin_PpuBuffer_bufferSize    = SYM.ngin_PpuBuffer_kBufferSize[ 1 ]
 
 -- Attribute cache keeps a copy of the PPU color attributes in CPU memory.
 -- The required size depends on the view size. 9x9 bytes should be enough for
@@ -64,12 +65,16 @@ end
 
 -- Add a byte to PPU buffer.
 local function addPpuBufferByte( value )
+    assert( RAM.ngin_PpuBuffer_pointer < ngin_PpuBuffer_bufferSize )
+
     RAM[ ngin_PpuBuffer_buffer + RAM.ngin_PpuBuffer_pointer ] = value
     RAM.ngin_PpuBuffer_pointer = RAM.ngin_PpuBuffer_pointer + 1
 end
 
 -- Terminate the PPU buffer.
 local function terminatePpuBuffer()
+    assert( RAM.ngin_PpuBuffer_pointer < ngin_PpuBuffer_bufferSize )
+
     RAM[ ngin_PpuBuffer_buffer + RAM.ngin_PpuBuffer_pointer ] = 0x80
 end
 

@@ -1,5 +1,6 @@
 .include "ngin/lfsr8.inc"
 .include "ngin/core.inc"
+.include "ngin/assert.inc"
 
 .segment "NGIN_BSS"
 
@@ -19,8 +20,9 @@ ngin_constructor __ngin_Lfsr8_construct
 
 .proc __ngin_Lfsr8_random
     lda ngin_Lfsr8_value
-    ; \todo Runtime assert that the current value isn't 0 (which locks the
-    ;       LFSR)
+    ; A zero locks the LFSR, so give a diagnostic if a zero has ended up
+    ; in the value somehow (e.g. bad seed.)
+    ngin_assert "RAM.ngin_Lfsr8_value ~= 0"
     asl
     bcc noEor
         eor #kEorValue

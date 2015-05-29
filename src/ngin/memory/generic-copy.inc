@@ -93,9 +93,7 @@ NGIN_MEMORY_GENERIC_COPY_INC_INCLUDED = 1
         genericCopyIteration {destinationType}, {sourceType}, \
                              {destination}, {source}
         iny
-    ; Unconditional branch
-    ; \todo Add a macro for unconditional branch, including runtime assert.
-    ngin_branchIfNotZero restLoop
+    ngin_always ngin_branchIfNotZero restLoop
 
 .local done
 done:

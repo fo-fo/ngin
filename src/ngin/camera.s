@@ -79,7 +79,7 @@ ngin_Camera_position:                   .tag ngin_Vector2_16_8
     mapLoop:
         ngin_PpuBuffer_startFrame
         ngin_MapScroller_scrollHorizontal #ngin_signed8 -kScrollPerUpload
-        ; \todo Runtime assert that A (scrolled amount) is kScrollPerUpload.
+        ngin_assert .sprintf( "ngin.signed8( REG.A ) == %d", -kScrollPerUpload )
         ngin_PpuBuffer_endFrame
         ngin_PpuBuffer_upload
         dec scrollCounter

@@ -3,6 +3,9 @@ NGIN_PPU_BUFFER_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
 
+; \todo Should be configurable somewhere
+ngin_PpuBuffer_kBufferSize = 128
+
 ; This bit has to be set in a terminating byte of a PPU buffer.
 ngin_PpuBuffer_kTerminatorMask = %1000_0000
 

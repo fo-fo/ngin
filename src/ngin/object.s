@@ -22,7 +22,7 @@ __ngin_Object_data:                     .res ngin_Object_kMaxActiveObjects * \
 nextObject:                             .res ngin_Object_kMaxActiveObjects
 
 ; For each active object, type of the object
-objectType:                             .res ngin_Object_kMaxActiveObjects
+__ngin_Object_type:                     .res ngin_Object_kMaxActiveObjects
 
 ; Linked list of free objects
 freeObjects:                            .byte 0
@@ -43,7 +43,7 @@ ngin_constructor __ngin_Object_construct
         txa
         sta nextObject-1, x
         lda #ngin_Object_kInvalidTypeId
-        sta objectType-1, x
+        sta __ngin_Object_type-1, x
         dex
     ngin_branchIfNotZero loop
 
@@ -76,7 +76,7 @@ ngin_constructor __ngin_Object_construct
 
         ; Set the object type.
         lda typeId
-        sta objectType, x
+        sta __ngin_Object_type, x
 
         ; Set the current object ID for constructor.
         stx ngin_Object_current
@@ -108,8 +108,9 @@ ngin_constructor __ngin_Object_construct
 .proc __ngin_Object_free
     ; Insert the freed object (in X) to the front of the freeObjects list.
 
-    ; \todo Runtime assert to make sure that the object in X doesn't already
-    ;       have type "invalid".
+    ; Make sure that the object to be freed isn't already free (double free).
+    ngin_assert .sprintf( "RAM[ SYM.__ngin_Object_type[ 1 ] + REG.X ] ~= %d", \
+                          ::ngin_Object_kInvalidTypeId )
 
     ngin_log debug, "Object.free(): freeing instanceId=%d", x
 
@@ -120,7 +121,7 @@ ngin_constructor __ngin_Object_construct
     stx freeObjects
 
     ; Set the freed object's type to invalid (so that updateAll will ignore it).
-    ngin_mov8 { objectType, x }, #ngin_Object_kInvalidTypeId
+    ngin_mov8 { __ngin_Object_type, x }, #ngin_Object_kInvalidTypeId
 
     rts
 .endproc
@@ -144,7 +145,7 @@ ngin_constructor __ngin_Object_construct
 
     loop:
         ldx ngin_Object_current
-        ldy objectType, x
+        ldy __ngin_Object_type, x
         cpy #ngin_Object_kInvalidTypeId
         beq invalidId
             ; Not invalid, call the update routine.
