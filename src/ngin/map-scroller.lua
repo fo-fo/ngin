@@ -201,7 +201,7 @@ local function update( scrollData, perpScrollData )
             perpScrollData.mapPosition+kUpdateLengthPixels-1, kTileSize do
 
         -- Calculate the nametable Y corresponding to mapY.
-        ppuY = perpScrollData.ppuPosition + mapY - perpScrollData.mapPosition
+        local ppuY = perpScrollData.ppuPosition + mapY - perpScrollData.mapPosition
 
         -- Again, need to swap X and Y depending on the update direction.
         local ppuAddress
@@ -269,7 +269,7 @@ local function updateAttributes( scrollData, perpScrollData )
             perpScrollData.attrMapPosition+kUpdateLengthPixels-1,
             kAttributeTileSize do
 
-        ppuY = perpScrollData.attrPpuPosition + mapY - perpScrollData.attrMapPosition
+        local ppuY = perpScrollData.attrPpuPosition + mapY - perpScrollData.attrMapPosition
 
         local ppuAddress
         if scrollData.updateDirection == kDirectionVertical then

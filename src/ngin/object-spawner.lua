@@ -104,6 +104,7 @@ local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
 
     local readFunction
     local element
+    local perpElement
     if edge.edgeId == kEdgeLeft or edge.edgeId == kEdgeRight then
         readFunction = MapData.readObjectXSorted
         element = "x"
@@ -116,6 +117,7 @@ local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
 
     -- \note "amount" is always negative here when edgeId is kEdgeLeft/kEdgeTop.
     local compareFunction
+    local oppositeCompareFunction
     local step
     if edge.edgeId == kEdgeLeft or edge.edgeId == kEdgeTop then
         compareFunction = function ( objectPosition, edgePosition )
@@ -173,7 +175,7 @@ local function scroll( amount, edge, oppositeEdge, perpEdge, perpOppositeEdge )
     while true do
         -- \note We need to check the *next* object, because the current object
         --       is always outside the view.
-        nextObjectIndex = oppositeEdge.objectIndex + step
+        local nextObjectIndex = oppositeEdge.objectIndex + step
         local object = readFunction( nextObjectIndex )
         -- \note "left" as in "leave"
         local leftView = oppositeCompareFunction( object[ element ],
