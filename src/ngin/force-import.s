@@ -9,3 +9,4 @@
 .forceimport __ngin_BuildLog_forceImport
 .forceimport __ngin_forceSegmentForceImport
 .forceimport __ngin_logForceImport
+.forceimport __ngin_assertForceImport

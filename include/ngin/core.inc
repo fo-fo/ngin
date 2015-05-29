@@ -294,14 +294,6 @@ __ngin_strideSpecifier = 0
     ngin_popSeg
 .endmacro
 
-; This macro can be used to mark unconditional branches in code, and to do
-; a runtime check to verify that the expected condition holds.
-.macro ngin_always branch
-    ; \todo Check what branch is used, and assert that the branch condition
-    ;       is true (e.g. if BCC, assert that carry is 0)
-    branch
-.endmacro
-
 ; This macro can be used for documentation when JSR+RTS is replaced with
 ; a JMP.
 .macro ngin_jsrRts operand

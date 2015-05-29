@@ -32,6 +32,7 @@ add_library( ngin STATIC
     debug/upload-debug-palette.s
     sprite-animator.s
     log.s
+    assert.s
 )
 
 # \note Debug info is added to the release build also, because might as well.
