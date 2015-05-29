@@ -70,7 +70,9 @@ ngin_constructor __ngin_Object_construct
         ldy nextObject, x
         sty freeObjects
 
-        ngin_log debug, "Object.new(): allocated object"
+        ngin_log debug, \
+            "Object.new(): allocated object: typeId=%d, instanceId=%d", \
+            typeId, x
 
         ; Set the object type.
         lda typeId
@@ -109,7 +111,7 @@ ngin_constructor __ngin_Object_construct
     ; \todo Runtime assert to make sure that the object in X doesn't already
     ;       have type "invalid".
 
-    ngin_log debug, "Object.free()"
+    ngin_log debug, "Object.free(): freeing instanceId=%d", x
 
     ; Point the freed object at the head of the freeObjects list.
     ngin_mov8 { nextObject, x }, freeObjects

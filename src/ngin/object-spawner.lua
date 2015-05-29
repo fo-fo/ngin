@@ -55,13 +55,13 @@ local function setObjectNotSpawned( objectListIndex )
 end
 
 local function spawnObject( object, objectListIndex )
-    print( string.format( "spawning object: type=%d, x=%d, y=%d, index=%d",
-        object.type, object.x, object.y, objectListIndex ) )
+    ngin.log( "debug", "ObjectSpawner: spawning type=%d, x=%d, y=%d, index=%d",
+        object.type, object.x, object.y, objectListIndex )
 
     -- Check if the object has already been spawned. If so, don't spawn
     -- again.
     if objectSpawned( objectListIndex ) then
-        print( "  object already spawned, skipping" )
+        ngin.log( "debug", "ObjectSpawner: object already spawned, skipping" )
         return
     end
 
@@ -87,7 +87,7 @@ local function spawnObject( object, objectListIndex )
     if REG.X ~= Object_kInvalidId then
         setObjectSpawned( objectListIndex )
     else
-        print( "ObjectSpawner failed to spawn the object" )
+        ngin.log( "debug", "ObjectSpawner: failed to spawn object" )
     end
 
     -- Set index to invalid after spawn is done.
