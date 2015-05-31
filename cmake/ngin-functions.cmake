@@ -65,62 +65,111 @@ ${__ngin_compileFlags} \
     )
 endfunction()
 
-# OUTFILE:  Prefix for the output filenames
-# IMAGE:    Sprite image to import
-# SYMBOL:   Symbol to use for IMAGE in code
-# DEPENDS:  Additional dependencies
-# \todo Accept multiple inputs at once. Put all in the same library, but in
-#       separate compilation units (possibly)
-function( ngin_addSpriteAsset target )
+function( ngin_spriteAssetLibrary target )
     cmake_parse_arguments(
         TOOLARGS
         "8X16"                          # Options
         "OUTFILE"                       # One-value arguments
-        "IMAGES;SYMBOLS;DEPENDS"        # Multi-value arguments
+        ""                              # Multi-value arguments
         ${ARGN}
     )
 
+    # Take note of the variables. They will be applied in
+    # ngin_endSpriteAssetLibrary.
+
+    set( __ngin_spriteAsset_extraArgs "" )
+    if ( TOOLARGS_8X16 )
+        list( APPEND __ngin_spriteAsset_extraArgs --8x16 )
+    endif()
+
+    # Export to parent scope.
+    set( __ngin_spriteAsset_extraArgs ${__ngin_spriteAsset_extraArgs} PARENT_SCOPE )
+    set( __ngin_spriteAsset_target ${target} PARENT_SCOPE )
+    set( __ngin_spriteAsset_outfile ${TOOLARGS_OUTFILE} PARENT_SCOPE )
+    set( __ngin_spriteAsset_images  "" PARENT_SCOPE )
+    set( __ngin_spriteAsset_depends "" PARENT_SCOPE )
+    set( __ngin_spriteAsset_args    "" PARENT_SCOPE )
+endfunction()
+
+function( ngin_spriteAsset )
+    cmake_parse_arguments(
+        TOOLARGS
+        "HFLIP;VFLIP;HVFLIP"            # Options
+        ""                              # One-value arguments
+        "IMAGE;SYMBOL;DEPENDS"          # Multi-value arguments
+        ${ARGN}
+    )
+
+    # If empty, figure out a symbol based on the file name.
+    if ( "${TOOLARGS_SYMBOL}" STREQUAL "" )
+        # Remove the extension.
+        get_filename_component( TOOLARGS_SYMBOL ${TOOLARGS_IMAGE} NAME_WE )
+
+        # Turn it into a C-compatible identifier.
+        string( MAKE_C_IDENTIFIER ${TOOLARGS_SYMBOL} TOOLARGS_SYMBOL )
+    endif()
+
+    list( APPEND __ngin_spriteAsset_images ${TOOLARGS_IMAGE} )
+    list( APPEND __ngin_spriteAsset_depends ${TOOLARGS_DEPENDS} )
+
+    if ( TOOLARGS_HFLIP )
+        list( APPEND __ngin_spriteAsset_args "--hflip" )
+    endif()
+
+    if ( TOOLARGS_VFLIP )
+        list( APPEND __ngin_spriteAsset_args "--vflip" )
+    endif()
+
+    if ( TOOLARGS_HVFLIP )
+        list( APPEND __ngin_spriteAsset_args "--hvflip" )
+    endif()
+
+    list( APPEND __ngin_spriteAsset_args
+        -s ${TOOLARGS_SYMBOL}
+        -i ${TOOLARGS_IMAGE}
+    )
+
+    # Export to parent scope.
+    set( __ngin_spriteAsset_images ${__ngin_spriteAsset_images} PARENT_SCOPE )
+    set( __ngin_spriteAsset_depends ${__ngin_spriteAsset_depends} PARENT_SCOPE )
+    set( __ngin_spriteAsset_args ${__ngin_spriteAsset_args} PARENT_SCOPE )
+endfunction()
+
+function( ngin_endSpriteAssetLibrary )
     set( spriteImporter
         ${__ngin_toolsRoot}/sprite-importer/sprite-importer.py
     )
 
-    set( extraArgs "" )
-    if ( TOOLARGS_8X16 )
-        list( APPEND extraArgs --8x16 )
-    endif()
-
-    # \todo Check that TOOLARGS_OUTFILE is not empty, etc
     add_custom_command(
         OUTPUT
-            ${TOOLARGS_OUTFILE}.s
-            ${TOOLARGS_OUTFILE}.inc
-            ${TOOLARGS_OUTFILE}.chr
+            ${__ngin_spriteAsset_outfile}.s
+            ${__ngin_spriteAsset_outfile}.inc
+            ${__ngin_spriteAsset_outfile}.chr
         COMMAND
             python ${spriteImporter}
-            -i ${TOOLARGS_IMAGES}
-            -s ${TOOLARGS_SYMBOLS}
-            -o ${CMAKE_CURRENT_BINARY_DIR}/${TOOLARGS_OUTFILE}
-            ${extraArgs}
+            ${__ngin_spriteAsset_args}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${__ngin_spriteAsset_outfile}
+            ${__ngin_spriteAsset_extraArgs}
         DEPENDS
             ${spriteImporter}
             # \todo May need to expand to full path to avoid UB?
-            ${TOOLARGS_IMAGES}
-            ${TOOLARGS_DEPENDS}
+            ${__ngin_spriteAsset_images}
+            ${__ngin_spriteAsset_depends}
         WORKING_DIRECTORY
             ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT
-            "sprite-importer.py: Importing ${TOOLARGS_IMAGES}"
+            "sprite-importer.py: Importing ${__ngin_spriteAsset_images}"
         VERBATIM
     )
 
-    add_library( ${target}
-        ${TOOLARGS_OUTFILE}.s
+    add_library( ${__ngin_spriteAsset_target}
+        ${__ngin_spriteAsset_outfile}.s
     )
 
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
 
-    set_target_properties( ${target}
+    set_target_properties( ${__ngin_spriteAsset_target}
         PROPERTIES
             COMPILE_FLAGS "\
 ${__ngin_compileFlags} \

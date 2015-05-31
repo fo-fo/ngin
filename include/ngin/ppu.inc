@@ -28,6 +28,12 @@ NGIN_PPU_INC_INCLUDED = 1
             attributes  .byte
             x_          .byte
         .endstruct
+
+        ; Object attribute flags:
+        kPriorityFront      = %000_000_00
+        kPriorityBack       = %001_000_00
+        kFlipHorizontal     = %010_000_00
+        kFlipVertical       = %100_000_00
     .endscope
 
     .scope ctrl
@@ -61,8 +67,6 @@ NGIN_PPU_INC_INCLUDED = 1
         kPalEmphasizeRed    =  %100_0000
         kEmphasizeBlue      = %1000_0000
     .endscope
-
-    ; \todo Define bitmasks of OAM attributes(?)
 
     ; -------------------------------------------------------------------------
     ; Addresses in PPU memory space:

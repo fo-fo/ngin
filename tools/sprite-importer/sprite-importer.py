@@ -18,7 +18,11 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              "..", "common"))
 import common
 
-kHardwareSpriteSize8x8, kHardwareSpriteSize8x16 = 0, 1
+class HardwareSpriteSize:
+    k8x8, k8x16 = 0, 1
+
+class SpriteFlip:
+    kHorizontal, kVertical, kHorizontalAndVertical = 0, 1, 2
 
 class Sprite( object ):
     def __init__( self, x, y, tile, attributes ):
@@ -71,7 +75,7 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
     allAnimationFrames = []
 
     def importImage( infile, gridSize, hardwareSpriteSize ):
-        pilImage = Image.open( infile )
+        pilImage = Image.open( infile.file )
 
         # If grid size (width/height) hasn't been specified, use the image size.
         # Either of the width/height can be omitted.
@@ -84,15 +88,17 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
         assert pilImage.size[0] % gridSize[0] == 0
         assert pilImage.size[1] % gridSize[1] == 0
 
-        if hardwareSpriteSize == kHardwareSpriteSize8x8:
+        if hardwareSpriteSize == HardwareSpriteSize.k8x8:
             spriteSize = ( 8, 8 )
-        elif hardwareSpriteSize == kHardwareSpriteSize8x16:
+        elif hardwareSpriteSize == HardwareSpriteSize.k8x16:
             spriteSize = ( 8, 16 )
         else:
             assert False
 
         resultSprites = []
         animationFrames = []
+
+        # ---------------------------------------------------------------------
 
         def importSpriteLayer( image, layer ):
             # Create a copy of the image, because we will be modifying it.
@@ -182,9 +188,13 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
                     sx = sliceCropLeftTop[ 0 ] + x + offsetX
                     sy = cropLeftTop[ 1 ] + sliceCropLeftTop[ 1 ] + y + offsetY
                     resultSprites.append( Sprite(
-                        sx, sy, uniqueResultTiles[ rawTile ], layer
+                        sx, sy, uniqueResultTiles[ rawTile ], [ layer ]
                     ) )
 
+        # ---------------------------------------------------------------------
+
+        # Import all frames of an animation (either from a grid, or from
+        # the file format itself, e.g. GIF).
         while True:
             # \note Should be optional whether the animation frame tiles are
             #       optimized globally, or per frame. For now it's global.
@@ -199,6 +209,7 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
                     resultSprites = []
 
                     # 4 layers, one for each 4-color sprite palette
+                    # Import the layer, put results in "resultSprites" list.
                     kNumSpritePalettes = 4
                     for layer in range( kNumSpritePalettes ):
                         importSpriteLayer( animationFrame, layer )
@@ -215,15 +226,61 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
             except EOFError:
                 break
 
-        return animationFrames
+        return infile.symbol, animationFrames
+
+    def flipImage( symbol, frames, horizontalFlip, verticalFlip, hardwareSpriteSize ):
+        assert horizontalFlip or verticalFlip
+
+        newSymbol = symbol + "_"
+        if horizontalFlip: newSymbol += "H"
+        if verticalFlip:   newSymbol += "V"
+
+        newFrames = []
+        for frame in frames:
+            newFrame = []
+            for sprite in frame:
+                newX, newY = sprite.x, sprite.y
+                newAttributes = list( sprite.attributes )
+
+                # \todo If the sprite is already flipped (from tile
+                #       optimization), we should undo the flip here. Could use
+                #       XOR for that...
+                if horizontalFlip:
+                    # 6 is magic. Don't question it.
+                    newX = -newX - 6
+                    newAttributes.append( "ppu::oam::kFlipHorizontal" )
+
+                if verticalFlip:
+                    newY = -newY - 6
+                    if hardwareSpriteSize == HardwareSpriteSize.k8x16:
+                        newY -= 8
+                    newAttributes.append( "ppu::oam::kFlipVertical" )
+
+                newFrame.append( Sprite(
+                    newX, newY, sprite.tile, newAttributes
+                ) )
+
+            newFrames.append( newFrame )
+
+        return newSymbol, newFrames
 
     for infile in infiles:
-        animationFrames = importImage( infile, gridSize, hardwareSpriteSize )
-        allAnimationFrames.append( animationFrames )
+        symbol, frames = importImage( infile, gridSize, hardwareSpriteSize )
+        allAnimationFrames.append( ( symbol, frames ) )
+
+        if SpriteFlip.kHorizontal in infile.options:
+            allAnimationFrames.append(
+                flipImage( symbol, frames, True, False, hardwareSpriteSize ) )
+        if SpriteFlip.kVertical in infile.options:
+            allAnimationFrames.append(
+                flipImage( symbol, frames, False, True, hardwareSpriteSize ) )
+        if SpriteFlip.kHorizontalAndVertical in infile.options:
+            allAnimationFrames.append(
+                flipImage( symbol, frames, True, True, hardwareSpriteSize ) )
 
     return allAnimationFrames, resultTiles
 
-def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
+def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
     with open( outPrefix + ".s", "w" ) as f:
         f.write( "; Data generated by Ngin sprite-importer.py\n\n" )
 
@@ -235,14 +292,14 @@ def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize
         f.write( ".proc chrData\n" )
 
         # Need to align to two tiles for 8x16
-        if hardwareSpriteSize == kHardwareSpriteSize8x16:
+        if hardwareSpriteSize == HardwareSpriteSize.k8x16:
             f.write( "    .align ppu::kBytesPer8x16Tile\n" )
 
         f.write( '    .incbin "{}.chr"\n'.format( outPrefixBase ) )
         f.write( ".endproc\n" )
         f.write( "ngin_popSeg\n\n" )
 
-        if hardwareSpriteSize == kHardwareSpriteSize8x16:
+        if hardwareSpriteSize == HardwareSpriteSize.k8x16:
             f.write( ".define _8x16Tile( t ) ( ( ( (t) << 1 ) & $FF ) "+\
                      " | ( ( (t) >> 7 ) & 1 ) )\n\n" )
 
@@ -250,12 +307,11 @@ def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize
         #       arg (can also be specified per frame, if coming from JSON)
         kDelay = 5
 
-        for animationIndex, animationFrames in enumerate( allAnimationFrames ):
+        for symbol, animationFrames in allAnimationFrames:
             for frameIndex, frame in enumerate( animationFrames ):
-                symbol = symbols[ animationIndex ]
                 f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
 
-                if hardwareSpriteSize == kHardwareSpriteSize8x16:
+                if hardwareSpriteSize == HardwareSpriteSize.k8x16:
                     f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x16Tile )\n" )
                 else:
                     f.write( "    B = .lobyte( chrData/ppu::kBytesPer8x8Tile )\n" )
@@ -268,15 +324,16 @@ def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize
 
                 for sprite in frame:
                     tile = None
-                    if hardwareSpriteSize == kHardwareSpriteSize8x16:
+                    if hardwareSpriteSize == HardwareSpriteSize.k8x16:
                         tile = "_8x16Tile B+{}".format( sprite.tile )
                     else:
                         tile = "B+{}".format( sprite.tile )
 
+                    attributes = "|".join( map( str, sprite.attributes ) )
+
                     f.write( ( "        ngin_SpriteRenderer_sprite " + \
                         "{:4}, {:4}, {}, {:3}\n" ).format( sprite.x, sprite.y,
-                                                           tile,
-                                                           sprite.attributes
+                                                           tile, attributes
                     ) )
 
                 f.write( "    ngin_SpriteRenderer_endMetasprite\n" )
@@ -297,37 +354,86 @@ def writeData( symbols, outPrefix, allAnimationFrames, tiles, hardwareSpriteSize
         f.write( "{} = 1\n\n".format( uniqueSymbol ) )
         f.write( '.include "ngin/ngin.inc"\n\n' )
 
-        for animationIndex, animationFrames in enumerate( allAnimationFrames ):
-            symbol = symbols[ animationIndex ]
+        for symbol, animationFrames in allAnimationFrames:
             for frameIndex, frame in enumerate( animationFrames ):
                 f.write( ".global {}_{}\n".format( symbol, frameIndex ) )
             f.write( ".global {}\n".format( symbol ) )
 
         f.write( "\n.endif\n" )
 
+class SymbolArg( object ):
+    def __init__( self, symbol ):
+        self.symbol = symbol
+
+class InfileArg( object ):
+    def __init__( self, infile ):
+        self.infile = infile
+
+class Infile( object ):
+    def __init__( self, file, symbol, options ):
+        self.file       = file
+        self.symbol     = symbol
+        # No duplicates allowed in options.
+        self.options    = set( options )
+
 def main():
     argParser = argparse.ArgumentParser(
         description="Import sprites from images into Ngin" )
-    argParser.add_argument( "-i", "--infile", nargs="+", required=True )
-    argParser.add_argument( "-s", "--symbol", nargs="+", required=True )
+
+    argParser.add_argument( "--hflip", dest="infiles", action="append_const",
+                            help="generate a horizontally flipped variant",
+                            const=SpriteFlip.kHorizontal )
+    argParser.add_argument( "--vflip", dest="infiles", action="append_const",
+                            help="generate a vertically flipped variant",
+                            const=SpriteFlip.kVertical )
+    argParser.add_argument( "--hvflip", dest="infiles", action="append_const",
+                            help="generate a horizontally and vertically flipped variant",
+                            const=SpriteFlip.kHorizontalAndVertical )
+
+    argParser.add_argument( "-i", "--infile", dest="infiles", action="append",
+                            type=InfileArg, metavar="FILE", required=True )
+    argParser.add_argument( "-s", "--symbol", dest="infiles", action="append",
+                            type=SymbolArg, metavar="SYMBOL", required=True )
+
     argParser.add_argument( "-o", "--outprefix", required=True,
-        help="prefix for output files" )
+        help="prefix for output files", metavar="PREFIX" )
+
+    # \todo Grid size should be a per-sprite option...
+    #       Should 8x16 be per-sprite as well? (Pros: more flexible, cons:
+    #       can be annoying to define for each sprite separately, because in
+    #       most cases want to use only one h/w sprite size)
     argParser.add_argument( "-x", "--gridwidth", type=int,
-        help="sprite grid width" )
+        help="sprite grid width", metavar="WIDTH" )
     argParser.add_argument( "-y", "--gridheight", type=int,
-        help="sprite grid height" )
+        help="sprite grid height", metavar="HEIGHT" )
     argParser.add_argument( "--8x16", action="store_const",
-        const=kHardwareSpriteSize8x16, default=kHardwareSpriteSize8x8,
+        const=HardwareSpriteSize.k8x16, default=HardwareSpriteSize.k8x8,
         help="use 8x16px hardware sprites (default: 8x8px)" )
 
     args = argParser.parse_args()
 
+    # Gather the input files and their options from the command arguments.
+    gatheredInfiles = []
+    currentSymbol   = None
+    currentOptions  = []
+    for entry in args.infiles:
+        if isinstance( entry, ( int, long ) ):
+            currentOptions.append( entry )
+        elif isinstance( entry, SymbolArg ):
+            currentSymbol = entry.symbol
+        elif isinstance( entry, InfileArg ):
+            gatheredInfiles.append( Infile(
+                entry.infile, currentSymbol, currentOptions
+            ) )
+            # Clear options on each file.
+            currentOptions = []
+
     hardwareSpriteSize = getattr( args, "8x16" )
 
-    allAnimationFrames, tiles = importSprites( args.infile,
+    allAnimationFrames, tiles = importSprites( gatheredInfiles,
         ( args.gridwidth, args.gridheight ), hardwareSpriteSize )
 
-    writeData( args.symbol, args.outprefix, allAnimationFrames, tiles,
+    writeData( args.outprefix, allAnimationFrames, tiles,
                hardwareSpriteSize )
 
 main()

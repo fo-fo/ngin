@@ -41,7 +41,7 @@ ngin_Object_define object_Ball
 
         ; Initialize animation.
         ngin_SpriteAnimator_initialize { ngin_Object_this animationState, x }, \
-                                         #animation_ball
+                                         #animation_ball_stand
 
         rts
     .endproc

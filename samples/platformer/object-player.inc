@@ -5,20 +5,34 @@ NGIN_SAMPLE_PLATFORMER_OBJECT_PLAYER_INC_INCLUDED = 1
 
 .global playerId
 
+; Bitflags
+.enum object_Player_Status
+    kGrounded   = 1 << 0
+    kDirection  = 1 << 1
+.endenum
+
+.enum object_Player_State
+    kStand
+    kRun
+    kAttack
+.endenum
+
 ngin_Object_declare object_Player
     ; 16.8 fixed point position
-    position        .tag ngin_Vector2_16_8
+    position            .tag ngin_Vector2_16_8
 
     ; 8.8 fixed point velocity
-    velocity        .tag ngin_Vector2_8_8
+    velocity            .tag ngin_Vector2_8_8
 
-    animationState  .tag ngin_SpriteAnimator_State
+    animationState      .tag ngin_SpriteAnimator_State
 
-    spawnIndex      .byte
+    spawnIndex          .byte
 
-    ; True, if player is standing on ground
-    ; \todo Don't waste a full byte on this.
-    grounded        .byte
+    status              .byte ; object_Player_Status
+
+    state               .byte ; object_Player_State
+
+    currentAnimation    .byte
 ngin_Object_endDeclare
 
 .endif

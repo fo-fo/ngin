@@ -12,9 +12,33 @@ kBoundingBoxRight  = 8
 
 ; 8.8 fixed point
 kHorizontalMoveVelocity = 256+128
-kJumpVelocity           = 1000
+kJumpVelocity           = 1020
 
 kAllowJumpInAir         = ngin_Bool::kFalse
+
+; -----------------------------------------------------------------------------
+
+.enum Animation
+    ; \note Has to match the order in object_Player_State.
+    kStandL
+    kStandR
+    kRunL
+    kRunR
+    kAttackL
+    kAttackR
+.endenum
+
+.define animations \
+    animation_player_stand_H,          \
+    animation_player_stand,            \
+    animation_player_run_H,            \
+    animation_player_run,              \
+    animation_player_attack_H,         \
+    animation_player_attack
+
+.segment "RODATA"
+animationsLo: .lobytes animations
+animationsHi: .hibytes animations
 
 ; -----------------------------------------------------------------------------
 
@@ -49,7 +73,14 @@ ngin_Object_define object_Player
 
         ; Initialize animation.
         ngin_SpriteAnimator_initialize { ngin_Object_this animationState, x }, \
-                                         #animation_player
+                                         #animation_player_stand
+
+        ngin_mov8 { ngin_Object_this status, x }, \
+                   #object_Player_Status::kDirection
+
+        ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kStand
+        ngin_mov8 { ngin_Object_this currentAnimation, x }, \
+                   #Animation::kStandL
 
         rts
     .endproc
@@ -91,7 +122,9 @@ ngin_Object_define object_Player
             lda ngin_Object_this velocity+ngin_Vector2_8_8::comp+1, x
             bmi notMovingDown
                 ; Moving down.
-                ngin_mov8 { ngin_Object_this grounded, x }, #1
+                lda ngin_Object_this status, x
+                ora #object_Player_Status::kGrounded
+                sta ngin_Object_this status, x
             .local notMovingDown
             notMovingDown:
         .endif
@@ -120,7 +153,7 @@ ngin_Object_define object_Player
                           collisionResponse
     .endproc
 
-    .proc applyControlsToVelocity
+    .proc handleControls
         ; \todo Read controllers in a centralized place once per frame?
         ngin_Controller_read1
         ngin_bss controller: .byte 0
@@ -129,11 +162,21 @@ ngin_Object_define object_Player
         ; Default to 0.
         ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, #0
 
+        ; Default state to stand.
+        ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kStand
+
         lda controller
         and #ngin_Controller::kLeft
         ngin_branchIfZero notLeft
             ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
                 #ngin_signed16 -kHorizontalMoveVelocity
+
+            ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kRun
+
+            ; \todo Macro for bit clear, set, flip, test
+            lda ngin_Object_this status, x
+            and #.lobyte( ~object_Player_Status::kDirection )
+            sta ngin_Object_this status, x
         notLeft:
 
         lda controller
@@ -141,11 +184,18 @@ ngin_Object_define object_Player
         ngin_branchIfZero notRight
             ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
                 #ngin_signed16 kHorizontalMoveVelocity
+
+            ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kRun
+
+            lda ngin_Object_this status, x
+            ora #object_Player_Status::kDirection
+            sta ngin_Object_this status, x
         notRight:
 
         ; If option is false, only allow jumping if grounded.
         .if .not ::kAllowJumpInAir
-            lda ngin_Object_this grounded, x
+            lda ngin_Object_this status, x
+            and #object_Player_Status::kGrounded
             ngin_branchIfZero notGrounded
         .endif
         ; \todo Trigger on edge ("not pressed -> pressed" transition)
@@ -157,6 +207,51 @@ ngin_Object_define object_Player
         notA:
         notGrounded:
 
+        ; Handle attack.
+        lda controller
+        and #ngin_Controller::kB
+        ngin_branchIfZero notB
+            ngin_mov8 { ngin_Object_this state, x }, \
+                       #object_Player_State::kAttack
+        notB:
+
+        rts
+    .endproc
+
+    .proc reloadAnimation
+        ngin_bss newAnimation:    .byte 0
+        ngin_bss newAnimationPtr: .word 0
+
+        ldx ngin_Object_current
+
+        ; Calculate the new animation based on state and direction.
+        ; Take the state, multiply by 2, and add the direction to get an
+        ; index in the Animation enum.
+        lda ngin_Object_this status, x
+        and #object_Player_Status::kDirection
+        .assert object_Player_Status::kDirection = %10, error
+        lsr
+        sta newAnimation
+        lda ngin_Object_this state, x
+        asl
+        ora newAnimation
+        sta newAnimation
+
+        ; If animation changed, reinitialize.
+        cmp ngin_Object_this currentAnimation, x
+        beq didntChange
+            ; Changed.
+            ; ngin_log debug, "animation changed to %d", a
+            sta ngin_Object_this currentAnimation, x
+            tay
+            lda animationsLo, y
+            sta newAnimationPtr+0
+            lda animationsHi, y
+            sta newAnimationPtr+1
+            ngin_SpriteAnimator_initialize \
+                { ngin_Object_this animationState, x }, newAnimationPtr
+        didntChange:
+
         rts
     .endproc
 
@@ -164,14 +259,15 @@ ngin_Object_define object_Player
         ngin_add16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
                      #kGravity
 
-        jsr applyControlsToVelocity
+        jsr handleControls
+        jsr reloadAnimation
 
-        lda ngin_Object_this grounded, x
-
-        ; Default to 0. moveVertical will set to 1 if grounded.
-        ; \note Since the grounded state is checked in applyControlsToVelocity,
+        ; Default "grounded" to 0. moveVertical will set to 1 if grounded.
+        ; \note Since the grounded state is checked in handleControls,
         ;       it is delayed by one frame.
-        ngin_mov8 { ngin_Object_this grounded, x }, #0
+        lda ngin_Object_this status, x
+        and #.lobyte( ~object_Player_Status::kGrounded )
+        sta ngin_Object_this status, x
 
         jsr moveHorizontal
         jsr moveVertical

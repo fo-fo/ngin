@@ -4,7 +4,10 @@
 
 .segment "NGIN_ZEROPAGE" : zeropage
 
-__ngin_SpriteAnimator_update_state: .tag ngin_SpriteAnimator_State
+__ngin_SpriteAnimator_update_state:   .tag ngin_SpriteAnimator_State
+
+; \todo Use a temporary
+__ngin_SpriteAnimator_initialize_ptr: .word 0
 
 .segment "NGIN_CODE"
 
