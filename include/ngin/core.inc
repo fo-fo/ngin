@@ -214,10 +214,46 @@ __ngin_strideSpecifier = 0
 .endunion
 
 .define ngin_immVector2_16( x_, y_ ) ( (.loword( y_ ) << 16) | \
-                                              .loword( x_ ) )
+                                        .loword( x_ ) )
 
 .define ngin_Vector2_16_immX( vector ) .loword( vector )
 .define ngin_Vector2_16_immY( vector ) .hiword( vector )
+
+.union ngin_BoundingBox16
+    .struct
+        leftTop     .tag ngin_Vector2_16
+        rightBottom .tag ngin_Vector2_16
+    .endstruct
+    .struct
+        left        .word
+        top         .word
+        right       .word
+        bottom      .word
+    .endstruct
+.endunion
+
+.define ngin_immBoundingBox8( left, top, right, bottom ) \
+    ( (.lobyte( left   ) << 24) | \
+      (.lobyte( top    ) << 16) | \
+      (.lobyte( right  ) <<  8) | \
+       .lobyte( bottom ) )
+
+.define ngin_BoundingBox8_immLeft( boundingBox ) \
+    .hibyte( .hiword( boundingBox ) )
+
+.define ngin_BoundingBox8_immTop( boundingBox ) \
+    .lobyte( .hiword( boundingBox ) )
+
+.define ngin_BoundingBox8_immRight( boundingBox ) \
+    .hibyte( boundingBox )
+
+.define ngin_BoundingBox8_immBottom( boundingBox ) \
+    .lobyte( boundingBox )
+
+; Sign extend an 8-bit number to a full 32-bit number by duplicating the MSB
+; in the upper bits.
+.define ngin_signExtend8( number ) \
+    ( ( ( 0 - ( .lobyte( number ) >> 7 ) ) << 8 ) | .lobyte( number ) )
 
 .struct __ngin_EmptyStruct
 .endstruct
