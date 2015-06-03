@@ -5,10 +5,7 @@
 ; -----------------------------------------------------------------------------
 
 ; All are inclusive:
-kBoundingBoxTop    = -30
-kBoundingBoxBottom = 0
-kBoundingBoxLeft   = -8
-kBoundingBoxRight  = 8
+kBoundingBox = ngin_immBoundingBox8 -8, -30, 8, 0 ; LTRB
 
 ; 8.8 fixed point
 kHorizontalMoveVelocity = 256+128
@@ -18,8 +15,8 @@ kAllowJumpInAir         = ngin_Bool::kFalse
 
 ; -----------------------------------------------------------------------------
 
-.enum Animation
-    ; \note Has to match the order in object_Player_State.
+.enum Player_Animation
+    ; \note Has to match the order in Player_State.
     kStandL
     kStandR
     kRunL
@@ -40,17 +37,20 @@ kAllowJumpInAir         = ngin_Bool::kFalse
 animationsLo: .lobytes animations
 animationsHi: .hibytes animations
 
+.segment "BSS"
+player_boundingBox: .tag ngin_BoundingBox16
+
 ; -----------------------------------------------------------------------------
 
 .segment "CODE"
 
-ngin_bss playerId: .byte 0
+ngin_bss player_id: .byte 0
 
 ngin_Object_define object_Player
     .proc onConstruct
         ngin_log debug, "object_Player.construct()"
 
-        stx playerId
+        stx player_id
 
         ; Take note of the spawn index, because it can be used to reset the
         ; spawn flag later on if needed.
@@ -76,11 +76,11 @@ ngin_Object_define object_Player
                                          #animation_player_stand
 
         ngin_mov8 { ngin_Object_this status, x }, \
-                   #object_Player_Status::kDirection
+                   #Player_Status::kDirection
 
-        ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kStand
+        ngin_mov8 { ngin_Object_this state, x }, #Player_State::kStand
         ngin_mov8 { ngin_Object_this currentAnimation, x }, \
-                   #Animation::kStandL
+                   #Player_Animation::kStandL
 
         rts
     .endproc
@@ -123,7 +123,7 @@ ngin_Object_define object_Player
             bmi notMovingDown
                 ; Moving down.
                 lda ngin_Object_this status, x
-                ora #object_Player_Status::kGrounded
+                ora #Player_Status::kGrounded
                 sta ngin_Object_this status, x
             .local notMovingDown
             notMovingDown:
@@ -138,19 +138,25 @@ ngin_Object_define object_Player
     .endmacro
 
     .proc moveVertical
-        movement_template y_, x_, fracY, intY, intX, kBoundingBoxTop, \
-                          kBoundingBoxBottom, kBoundingBoxLeft, kBoundingBoxRight, \
-                          ngin_MapCollision_lineSegmentEjectVertical, \
-                          ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
-                          collisionResponse
+        movement_template y_, x_, fracY, intY, intX, \
+            ngin_signExtend8 ngin_BoundingBox8_immTop    kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immBottom kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immLeft   kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immRight  kBoundingBox, \
+            ngin_MapCollision_lineSegmentEjectVertical, \
+            ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
+            collisionResponse
     .endproc
 
     .proc moveHorizontal
-        movement_template x_, y_, fracX, intX, intY, kBoundingBoxLeft, \
-                          kBoundingBoxRight, kBoundingBoxTop, kBoundingBoxBottom, \
-                          ngin_MapCollision_lineSegmentEjectHorizontal, \
-                          ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
-                          collisionResponse
+        movement_template x_, y_, fracX, intX, intY, \
+            ngin_signExtend8 ngin_BoundingBox8_immLeft   kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immRight  kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immTop    kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immBottom kBoundingBox, \
+            ngin_MapCollision_lineSegmentEjectHorizontal, \
+            ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
+            collisionResponse
     .endproc
 
     .proc handleControls
@@ -163,7 +169,7 @@ ngin_Object_define object_Player
         ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, #0
 
         ; Default state to stand.
-        ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kStand
+        ngin_mov8 { ngin_Object_this state, x }, #Player_State::kStand
 
         lda controller
         and #ngin_Controller::kLeft
@@ -171,11 +177,11 @@ ngin_Object_define object_Player
             ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
                 #ngin_signed16 -kHorizontalMoveVelocity
 
-            ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kRun
+            ngin_mov8 { ngin_Object_this state, x }, #Player_State::kRun
 
             ; \todo Macro for bit clear, set, flip, test
             lda ngin_Object_this status, x
-            and #.lobyte( ~object_Player_Status::kDirection )
+            and #.lobyte( ~Player_Status::kDirection )
             sta ngin_Object_this status, x
         notLeft:
 
@@ -185,17 +191,17 @@ ngin_Object_define object_Player
             ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::x_, x }, \
                 #ngin_signed16 kHorizontalMoveVelocity
 
-            ngin_mov8 { ngin_Object_this state, x }, #object_Player_State::kRun
+            ngin_mov8 { ngin_Object_this state, x }, #Player_State::kRun
 
             lda ngin_Object_this status, x
-            ora #object_Player_Status::kDirection
+            ora #Player_Status::kDirection
             sta ngin_Object_this status, x
         notRight:
 
         ; If option is false, only allow jumping if grounded.
         .if .not ::kAllowJumpInAir
             lda ngin_Object_this status, x
-            and #object_Player_Status::kGrounded
+            and #Player_Status::kGrounded
             ngin_branchIfZero notGrounded
         .endif
         ; \todo Trigger on edge ("not pressed -> pressed" transition)
@@ -212,7 +218,7 @@ ngin_Object_define object_Player
         and #ngin_Controller::kB
         ngin_branchIfZero notB
             ngin_mov8 { ngin_Object_this state, x }, \
-                       #object_Player_State::kAttack
+                       #Player_State::kAttack
         notB:
 
         rts
@@ -226,10 +232,10 @@ ngin_Object_define object_Player
 
         ; Calculate the new animation based on state and direction.
         ; Take the state, multiply by 2, and add the direction to get an
-        ; index in the Animation enum.
+        ; index in the Player_Animation enum.
         lda ngin_Object_this status, x
-        and #object_Player_Status::kDirection
-        .assert object_Player_Status::kDirection = %10, error
+        and #Player_Status::kDirection
+        .assert Player_Status::kDirection = %10, error
         lsr
         sta newAnimation
         lda ngin_Object_this state, x
@@ -255,6 +261,14 @@ ngin_Object_define object_Player
         rts
     .endproc
 
+    .proc calculateBoundingBox
+        ; \todo This might be doing some redundant work that could be avoided
+        ;       if it was combined with movement_template.
+        calculateBoundingBox_template \
+            player_boundingBox, \
+            { ngin_Object_this position, x }, #kBoundingBox
+    .endproc
+
     .proc move
         ngin_add16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
                      #kGravity
@@ -266,11 +280,12 @@ ngin_Object_define object_Player
         ; \note Since the grounded state is checked in handleControls,
         ;       it is delayed by one frame.
         lda ngin_Object_this status, x
-        and #.lobyte( ~object_Player_Status::kGrounded )
+        and #.lobyte( ~Player_Status::kGrounded )
         sta ngin_Object_this status, x
 
         jsr moveHorizontal
         jsr moveVertical
+        jsr calculateBoundingBox
 
         rts
     .endproc

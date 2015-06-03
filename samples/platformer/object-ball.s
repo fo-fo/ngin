@@ -1,20 +1,19 @@
 .include "object-ball.inc"
 .include "common.inc"
 .include "assets/sprites/sprites.inc"
+.include "object-player.inc"
 
 ; -----------------------------------------------------------------------------
 
 ; All are inclusive:
-kBoundingBoxTop    = -30
-kBoundingBoxBottom = 0
-kBoundingBoxLeft   = -8
-kBoundingBoxRight  = 8
+kBoundingBox = ngin_immBoundingBox8 -8, -9, 8, 0 ; LTRB
 
 ; -----------------------------------------------------------------------------
 
 .segment "CODE"
 
-ngin_bss playerId: .byte 0
+ngin_bss playerId:          .byte 0
+ngin_bss ball_boundingBox:  .tag ngin_BoundingBox16
 
 ngin_Object_define object_Ball
     .proc onConstruct
@@ -109,14 +108,20 @@ ngin_Object_define object_Ball
     .proc onUpdate
         jsr move
 
+        jsr checkObjectCollisions
+
+        rts
+    .endproc
+
+    .proc invertVelocity
+        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }, \
+            #0, { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }
         rts
     .endproc
 
     .macro collisionResponse y_, fracY
         ; Invert velocity on collision.
-        ngin_sub16 { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }, \
-                     #0, \
-                   { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }
+        jsr invertVelocity
 
         ; Also clear the subpixel part of position.
         ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, \
@@ -124,11 +129,22 @@ ngin_Object_define object_Ball
     .endmacro
 
     .proc moveVertical
-        movement_template y_, x_, fracY, intY, intX, kBoundingBoxTop, \
-                          kBoundingBoxBottom, kBoundingBoxLeft, kBoundingBoxRight, \
-                          ngin_MapCollision_lineSegmentEjectVertical, \
-                          ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
-                          collisionResponse
+        movement_template y_, x_, fracY, intY, intX, \
+            ngin_signExtend8 ngin_BoundingBox8_immTop    kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immBottom kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immLeft   kBoundingBox, \
+            ngin_signExtend8 ngin_BoundingBox8_immRight  kBoundingBox, \
+            ngin_MapCollision_lineSegmentEjectVertical, \
+            ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
+            collisionResponse
+    .endproc
+
+    .proc calculateBoundingBox
+        ; \todo This might be doing some redundant work that could be avoided
+        ;       if it was combined with movement_template.
+        calculateBoundingBox_template \
+            ball_boundingBox, \
+            { ngin_Object_this position, x }, #kBoundingBox
     .endproc
 
     .proc move
@@ -136,6 +152,34 @@ ngin_Object_define object_Ball
                      #kGravity
 
         jsr moveVertical
+        jsr calculateBoundingBox
+
+        rts
+    .endproc
+
+    .proc checkObjectCollisions
+        ; Check for collisions against the player.
+
+        ; \todo player_boundingBox might be out of date for some objects,
+        ;       and up-to-date for some objects, because the player may be
+        ;       updated in the middle of other objects. One solution would be
+        ;       to update (not draw) player before all other objects.
+
+        ; Check for rect-rect collision.
+        ngin_Collision_rectOverlap \
+            ball_boundingBox   + ngin_BoundingBox16::leftTop,      \
+            ball_boundingBox   + ngin_BoundingBox16::rightBottom,  \
+            player_boundingBox + ngin_BoundingBox16::leftTop,      \
+            player_boundingBox + ngin_BoundingBox16::rightBottom
+
+        bcc noCollision
+            ; Got player-ball collision.
+            ; \todo Some better response.
+            ngin_log debug, "Got player-ball collision"
+            ngin_mov16 \
+                { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
+                #ngin_immFixedPoint8_8 -5, 0
+        noCollision:
 
         rts
     .endproc

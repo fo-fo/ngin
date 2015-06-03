@@ -123,4 +123,51 @@ kGravity = 32
     rts
 .endmacro
 
+; Macro for calculating the bounding box of an object based on its position
+; and the the bounding box relative to position.
+; position: ngin_Vector2_16_8 (could support Vector2_16 if intX/intY is added in
+;                              it as an union)
+; boundingBox: relative bounds (ngin_immBoundingBox8)
+; destination: ngin_BoundingBox16
+; \todo This should be moved into the engine in some form or another.
+.macro calculateBoundingBox_template destination, position, boundingBox
+    ; \todo Don't use an implementation detail. :) And if moved to engine, use
+    ;       better namespacing.
+    __ngin_getOperandStride {destination}, __strideDestination
+    __ngin_getOperandStride {position}, __stridePosition
+
+    ; "boundingBox" has to be an immediate currently. Probably it's never going
+    ; to be a non-immediate.
+    __ngin_requireImmediate {boundingBox}, "boundingBox"
+
+    ; Strip the immediate "#".
+    .local boundingBoxStripped
+    boundingBoxStripped = .right( .tcount( {boundingBox} ) - 1, {boundingBox} )
+
+    ; \note Currently subpixel position is ignored (= floor). Could round
+    ;       as well, but slightly slower.
+
+    ngin_add16 \
+        { ngin_BoundingBox16::left * __strideDestination + destination }, \
+        { ngin_Vector2_16_8::intX * __stridePosition + position }, \
+        #ngin_signExtend8 ngin_BoundingBox8_immLeft boundingBoxStripped
+
+    ngin_add16 \
+        { ngin_BoundingBox16::top * __strideDestination + destination }, \
+        { ngin_Vector2_16_8::intY * __stridePosition + position }, \
+        #ngin_signExtend8 ngin_BoundingBox8_immTop boundingBoxStripped
+
+    ngin_add16 \
+        { ngin_BoundingBox16::right * __strideDestination + destination }, \
+        { ngin_Vector2_16_8::intX * __stridePosition + position }, \
+        #ngin_signExtend8 ngin_BoundingBox8_immRight boundingBoxStripped
+
+    ngin_add16 \
+        { ngin_BoundingBox16::bottom * __strideDestination + destination }, \
+        { ngin_Vector2_16_8::intY * __stridePosition + position }, \
+        #ngin_signExtend8 ngin_BoundingBox8_immBottom boundingBoxStripped
+
+    rts
+.endmacro
+
 .endif

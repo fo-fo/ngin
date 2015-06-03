@@ -66,7 +66,7 @@ ngin_entryPoint start
 
     .define playerThis( elem ) ngin_Object_other object_Player, {elem}
 
-    ldx playerId
+    ldx player_id
 
     ; \todo Use temporaries.
     ngin_bss cameraToPlayer:    .tag ngin_FixedPoint16_8

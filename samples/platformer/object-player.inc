@@ -3,15 +3,16 @@ NGIN_SAMPLE_PLATFORMER_OBJECT_PLAYER_INC_INCLUDED = 1
 
 .include "ngin/ngin.inc"
 
-.global playerId
+.global player_id
+.global player_boundingBox ; ngin_BoundingBox16
 
 ; Bitflags
-.enum object_Player_Status
+.enum Player_Status
     kGrounded   = 1 << 0
     kDirection  = 1 << 1
 .endenum
 
-.enum object_Player_State
+.enum Player_State
     kStand
     kRun
     kAttack
@@ -28,9 +29,9 @@ ngin_Object_declare object_Player
 
     spawnIndex          .byte
 
-    status              .byte ; object_Player_Status
+    status              .byte ; Player_Status
 
-    state               .byte ; object_Player_State
+    state               .byte ; Player_State
 
     currentAnimation    .byte
 ngin_Object_endDeclare
