@@ -27,5 +27,6 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/debug.inc"
 .include "ngin/sprite-animator.inc"
 .include "ngin/assert.inc"
+.include "ngin/ngin-muse.inc"
 
 .endif

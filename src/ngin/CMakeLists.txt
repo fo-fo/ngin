@@ -33,6 +33,8 @@ add_library( ngin STATIC
     sprite-animator.s
     log.s
     assert.s
+    sound/muse/muse.s
+    sound/ngin-muse.s
 )
 
 # \note Debug info is added to the release build also, because might as well.

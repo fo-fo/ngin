@@ -4,6 +4,7 @@
 
 .export __ngin_forceSegmentForceImport : absolute = 1
 
+.segment "NGIN_MUSE_CODE"
 .segment "NGIN_CODE"
 .segment "NGIN_RESET_PROLOGUE"
 .segment "NGIN_RESET_CONSTRUCTORS"

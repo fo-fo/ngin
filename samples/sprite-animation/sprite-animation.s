@@ -22,7 +22,7 @@ ngin_entryPoint start
         ngin_SpriteRenderer_render \
             animationState + ngin_SpriteAnimator_State::metasprite, \
             #ngin_immVector2_16 ngin_SpriteRenderer_kTopLeftX+256/2, \
-                                      ngin_SpriteRenderer_kTopLeftY+240/2
+                                ngin_SpriteRenderer_kTopLeftY+240/2
 
         ngin_SpriteAnimator_update animationState
 

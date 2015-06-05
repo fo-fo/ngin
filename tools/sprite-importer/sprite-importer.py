@@ -3,7 +3,6 @@
 # NOTE: Requires Python Imaging Library: http://www.pythonware.com/products/pil/
 
 # \todo Add vertical/horizontal flipping of sprites when possible.
-# \todo Add an option to generate a flipped metasprite (+ animation)
 # \todo Import from Aseprite JSON. Can convert ASE->JSON+PNG with Aseprite
 #       CLI tools.
 # \todo Have an option for adjusting the cropping. Might produce better results

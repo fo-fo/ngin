@@ -26,6 +26,7 @@
     printSegmentSize "NGIN_RESET_PROLOGUE"
     printSegmentSize "NGIN_RESET_CONSTRUCTORS"
     printSegmentSize "NGIN_RESET_EPILOGUE"
+    printSegmentSize "NGIN_MUSE_CODE"
     printSegmentSize "NGIN_RODATA"
     printSegmentSize "NGIN_BSS"
     __ngin_BuildLog_newLine

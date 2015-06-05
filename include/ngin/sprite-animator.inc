@@ -23,7 +23,7 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
     .if .match( .left( 1, {metasprite_} ), # )
         .local metaspriteStripped
         metaspriteStripped = .right( .tcount( {metasprite_} ) - 1, \
-                                                    {metasprite_} )
+                                              {metasprite_} )
 
         ; Copy the delay from the metasprite to the animation state.
         ; \note "state" is not allowed to be an immediate
