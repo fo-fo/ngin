@@ -38,11 +38,16 @@ def writeData( outPrefix, songs, effects, symbols ):
 
         f.write( "\n" )
 
-        # \todo DPCM should be in its own segment to ensure that the DPCM
-        #       data is within $C000..$FFFF (assert for that)
         f.write( "; DPCM:\n" )
+        f.write( ".pushseg\n" )
+        f.write( '.segment "DPCM"\n' )
+        f.write( '.assert * .mod 64 = 0, error, "DPCM samples need to be ' + \
+                 'aligned to 64 bytes"\n' )
+        f.write( '.assert * >= $C000, error, "DPCM samples need to start ' + \
+                 'at an address greater than or equal to $C000"\n' )
         f.write( '.include "{}-dpcm.{}"\n'.format( outPrefixBase,
                                                    kGeneratedExtension ) )
+        f.write( '.popseg\n' )
 
         f.write( "\n" )
         f.write( "; Songs:\n" )

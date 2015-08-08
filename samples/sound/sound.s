@@ -2,6 +2,7 @@
 
 ; \todo More songs
 ; \todo Trigger sound effects with controller
+; \todo Switch songs with controller
 
 ; From asset importer:
 .include "sounds.inc"
@@ -14,7 +15,8 @@ ngin_entryPoint start
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     ngin_Muse_init #sounds
-    ngin_Muse_startSong #sounds::songs::test_song
+    ; ngin_Muse_startSong #sounds::songs::test_song
+    ngin_Muse_startSong #sounds::songs::ninja_song
 
     ; Unpause the music.
     ; \todo Expose flags, or expose pause/etc as macros.
