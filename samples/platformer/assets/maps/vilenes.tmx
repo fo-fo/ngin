@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="10">
+ <tileset firstgid="1" name="Visual" tilewidth="768" tileheight="480">
+  <tile id="0">
+   <image width="768" height="480" source="tiles/vilenes-mockup.png"/>
+  </tile>
+ </tileset>
+ <tileset firstgid="2" name="Attributes" tilewidth="16" tileheight="16">
+  <image source="tiles/attributes.png" width="256" height="256"/>
+  <tile id="0">
+   <properties>
+    <property name="Solid" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="258" name="Screen Grid" tilewidth="256" tileheight="256">
+  <image source="tiles/screen-grid.png" width="256" height="256"/>
+ </tileset>
+ <layer name="Visual" width="64" height="32">
+  <data encoding="base64" compression="zlib">
+   eJztzgEJAAAMA6C9f+nHGAxNYAIAAAAAAADAimsHqHkh/AAC
+  </data>
+ </layer>
+ <layer name="Attributes" width="64" height="32">
+  <properties>
+   <property name="IgnoreGraphics" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJztl9EKgDAIRaX//+joIYhhm+W1eZcHgqhpO6ymbSKyLXC8xRObhfKfEzuLv7//yDmXPxfe913LxwR6vmz+B39e/xPUvMufD+Qe+FVfjuzrWdas9ffEW65nA+HfxqHrfyRefy2Oxf0gwt+TKxL0/idKDi1XFiJ6slHO8s9D+WP7od6Yaw4m0PUgk791PUU5H8W34+5yzKQ3F6u/Je9K/tZ/HYbv/6l/9DO/pvzH91b3f1vPe3v9k/HsWGvCqsxY3x0OBAI7
+  </data>
+ </layer>
+ <objectgroup name="Objects">
+  <object id="3" name="camera" type="ngin_Marker" x="16" y="16" width="256" height="208"/>
+  <object id="4" name="player" type="object_Player" x="124" y="150" width="16" height="32"/>
+  <object id="6" type="object_Ball" x="310" y="130" width="16" height="16"/>
+  <object id="7" type="object_Ball" x="394" y="26" width="16" height="16"/>
+  <object id="8" type="object_Ball" x="365" y="398" width="16" height="16"/>
+  <object id="9" type="object_Ball" x="591" y="432" width="16" height="16"/>
+ </objectgroup>
+ <layer name="Screen Grid" width="64" height="32">
+  <properties>
+   <property name="IgnoreAttributes" value="true"/>
+   <property name="IgnoreGraphics" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJzt10ENAAAIxDDAv2hkXALtfwJWBQAAAPdN/+4BAADgg/R/p/sF7vgAGQ==
+  </data>
+ </layer>
+</map>

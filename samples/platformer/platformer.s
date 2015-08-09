@@ -7,9 +7,10 @@
 ngin_entryPoint start
 .proc start
     ngin_Debug_uploadDebugPalette
+    jsr uploadPalette
 
-    ngin_MapData_load #maps_level1
-    ngin_Camera_initializeView #maps_level1::markers::camera
+    ngin_MapData_load #maps_vilenes
+    ngin_Camera_initializeView #maps_vilenes::markers::camera
 
     ; Enable NMI so that we can use ngin_Nmi_waitVBlank.
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
@@ -51,6 +52,24 @@ ngin_entryPoint start
     rts
 .endproc
 
+.proc uploadPalette
+    ngin_Ppu_pollVBlank
+
+    .pushseg
+    .segment "RODATA"
+    .proc palette ; surt's village mockup:
+        .byte $0F, 1, 18, 33
+        .byte $0F, 0, 61, 48
+        .byte $0F, 22, 39, 42
+        .byte $0F, $04, $14, $24
+    .endproc
+    .popseg
+    ngin_Ppu_setAddress #ppu::backgroundPalette
+    ngin_copyMemoryToPort #ppu::data, #palette, #.sizeof( palette )
+
+    rts
+.endproc
+
 .proc moveCamera
     ; Calculate the desired camera position based on the player position.
 
@@ -87,7 +106,11 @@ ngin_entryPoint start
 
         ; Additional offset to center the view (somewhat).
         ; \todo Something better.
-        ngin_add24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 -128, 0
+        .if .xmatch( {component}, {x_} )
+            ngin_add24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 -128, 0
+        .else
+            ngin_add24 cameraToPlayer, #ngin_immFixedPoint16_8 ngin_signed16 -192, 0
+        .endif
 
         ; By default, assume that the 16.8 value fits in 8.8. If it doesn't,
         ; it will be clamped by the code below.
