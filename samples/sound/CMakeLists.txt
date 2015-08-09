@@ -3,7 +3,7 @@ ngin_addSample( ngin-sample-sound
 )
 
 ngin_museSoundAssetLibrary( ngin-sample-sound-sounds OUTFILE sounds )
-    ngin_museSongAsset       ( SONG   sound/test-song.pom )
+    ngin_museSongAsset       ( SONG   sound/castle-song.pom )
     ngin_museSongAsset       ( SONG   sound/ninja-song.pom )
     ngin_museSoundEffectAsset( EFFECT sound/break.pom )
     ngin_museSoundEffectAsset( EFFECT sound/checkpoint.pom )
