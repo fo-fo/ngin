@@ -5,7 +5,8 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 
 .enum ngin_MapData_Attributes0
     ; \note The bottom two bits are used for the color set index.
-    kSolid = %1_00
+    kSolid    = %01_00
+    kSolidTop = %10_00
 .endenum
 
 .struct ngin_MapData_Pointers

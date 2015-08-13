@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="10">
- <tileset firstgid="1" name="Visual" tilewidth="768" tileheight="480">
+ <tileset firstgid="1" name="Visual" tilewidth="768" tileheight="480" tilecount="1">
   <tile id="0">
    <image width="768" height="480" source="tiles/vilenes-mockup.png"/>
   </tile>
  </tileset>
- <tileset firstgid="2" name="Attributes" tilewidth="16" tileheight="16">
+ <tileset firstgid="2" name="Attributes" tilewidth="16" tileheight="16" tilecount="256">
   <image source="tiles/attributes.png" width="256" height="256"/>
   <tile id="0">
    <properties>
     <property name="Solid" value="true"/>
    </properties>
   </tile>
+  <tile id="1">
+   <properties>
+    <property name="SolidTop" value="true"/>
+   </properties>
+  </tile>
  </tileset>
- <tileset firstgid="258" name="Screen Grid" tilewidth="256" tileheight="256">
+ <tileset firstgid="258" name="Screen Grid" tilewidth="256" tileheight="256" tilecount="1">
   <image source="tiles/screen-grid.png" width="256" height="256"/>
  </tileset>
  <layer name="Visual" width="64" height="32">
@@ -26,7 +31,7 @@
    <property name="IgnoreGraphics" value="true"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJztl9EKgDAIRaX//+joIYhhm+W1eZcHgqhpO6ymbSKyLXC8xRObhfKfEzuLv7//yDmXPxfe913LxwR6vmz+B39e/xPUvMufD+Qe+FVfjuzrWdas9ffEW65nA+HfxqHrfyRefy2Oxf0gwt+TKxL0/idKDi1XFiJ6slHO8s9D+WP7od6Yaw4m0PUgk791PUU5H8W34+5yzKQ3F6u/Je9K/tZ/HYbv/6l/9DO/pvzH91b3f1vPe3v9k/HsWGvCqsxY3x0OBAI7
+   eJztlwEOwyAIRYm7/50XkzUhhFoUFH/nS5qtTpBfrLBCROUF1yge2104+nNss/j3/R8Z89GPhXe/a/6QiI4XTX8FKf+f38XvI4iKe3X+5fMYBUU/1xu1DyLPwFV9eWRfj3JmSf0ee8v4btQ4r/0/ql/aRdf/mXjzr9mhaK9483/5sIxlE33+keJD87ULd7GM1PsiPnvXzGBGT4qq39vjcf1a76StmU10P9Saw30gEV0Pd9JvzScp35/s5bw7H5m0YpHvs9YPWHtddP18zPpfB+H979U/e83VHP3Pv/F6PnvN1Xjqeeus75mPjrUmvJWM/H4BLUQCfQ==
   </data>
  </layer>
  <objectgroup name="Objects">

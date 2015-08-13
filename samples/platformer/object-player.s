@@ -5,7 +5,7 @@
 ; -----------------------------------------------------------------------------
 
 ; All are inclusive:
-kBoundingBox = ngin_immBoundingBox8 -8, -30, 8, 0 ; LTRB
+kBoundingBox = ngin_immBoundingBox8 -6, -30, 6, 0 ; LTRB
 
 ; 8.8 fixed point
 kHorizontalMoveVelocity = 256+128

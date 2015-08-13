@@ -32,7 +32,8 @@ end
 local function lineSegmentEjectGeneric(
     x, y0, length, deltaX,
     adjustX, adjustY,
-    readAttribute
+    readAttribute,
+    direction
 )
     -- If deltaX is zero, no movement and thus no collision occurs.
     if deltaX == 0 then
@@ -61,7 +62,8 @@ local function lineSegmentEjectGeneric(
     -- \note Has to match ngin_MapData_Attributes0::kSolid from map-data.inc.
     --       No way to do automatic verification of that currently,
     --       unfortunately, because scopes can't be accessed from Lua.
-    local kSolid = 0x4
+    local kSolid    = 0x4
+    local kSolidTop = 0x8
 
     local mapTileY0 = math.floor( mapY0 / kTile16Size )
     local mapTileY1 = math.floor( ( mapY0 + length - 1 ) / kTile16Size )
@@ -83,6 +85,22 @@ local function lineSegmentEjectGeneric(
             --       that can be "touched", it might be necessary to check all
             --       tiles until the end.
             break
+        elseif bit32.btest( attribute, kSolidTop ) then
+            -- "Solid top" is a one-way platform that blocks movement only from
+            -- the top side.
+            -- Only check for the vertical case and only when moving down.
+            -- \note X is Y, Y is X.
+            if direction == "vertical" and deltaX > 0 then
+                -- Collide only if the line segment was previously above the
+                -- tile (to allow movement down within the tile).
+                local newTileX = math.floor( newMapX / kTile16Size )
+                local oldTileX = math.floor(    mapX / kTile16Size )
+                if oldTileX < newTileX then
+                    hitSolid = true
+                    ejectedX = newTileX * kTile16Size - 1
+                    break
+                end
+            end
         end
     end
 
@@ -100,7 +118,8 @@ function MapCollision.lineSegmentEjectHorizontal()
     local hitSolid, ejectedX = lineSegmentEjectGeneric(
         x, y0, length, deltaX,
         MapData.adjustX(), MapData.adjustY(),
-        MapData.readAttribute
+        MapData.readAttribute,
+        "horizontal"
     )
 
     if hitSolid then REG.C = 1 else REG.C = 0 end
@@ -119,7 +138,8 @@ function MapCollision.lineSegmentEjectVertical()
     local hitSolid, ejectedY = lineSegmentEjectGeneric(
         y, x0, length, deltaY,
         MapData.adjustY(), MapData.adjustX(),
-        function ( x, y ) return MapData.readAttribute( y, x ) end
+        function ( x, y ) return MapData.readAttribute( y, x ) end,
+        "vertical"
     )
 
     if hitSolid then REG.C = 1 else REG.C = 0 end
