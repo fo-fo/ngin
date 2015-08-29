@@ -21,9 +21,14 @@ kBoundingBoxHeight = 20
 
 ; -----------------------------------------------------------------------------
 
-ngin_bss position:          .tag ngin_Vector2_16_8
-ngin_bss spritePosition:    .tag ngin_Vector2_16
-ngin_bss controller:        .byte 0
+ngin_bss position:              .tag ngin_Vector2_16_8
+ngin_bss spritePosition:        .tag ngin_Vector2_16
+ngin_bss controller:            .byte 0
+
+; Non-zero, if overlapping a special tile (ngin_MapData_Attributes0::kSpecial)
+ngin_bss overlappingSpecial:    .byte 0
+ngin_bss frameCount:            .byte 0
+
 
 ; -----------------------------------------------------------------------------
 
@@ -76,66 +81,11 @@ ngin_entryPoint start
     rts
 .endproc
 
-.proc moveObjectHorizontal
-    ngin_bss deltaX: .word 0
-    ; X coordinate adjusted with the relative bounding box of the object.
-    ngin_bss boundX: .word 0
-    kMovementAmount = 3
-
-    lda controller
-    and #ngin_Controller::kLeft | ngin_Controller::kRight
-    ngin_branchIfNotZero leftOrRight
-        ; Neither
-        rts
-    leftOrRight:
-
-    ngin_mov16 deltaX, #0
-
-    lda controller
-    and #ngin_Controller::kLeft
-    ngin_branchIfZero notLeft
-        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 -kMovementAmount, 0
-        ; No adjustment needed when moving left.
-        ngin_mov16 boundX, position + ngin_Vector2_16_8::intX
-    notLeft:
-
-    lda controller
-    and #ngin_Controller::kRight
-    ngin_branchIfZero notRight
-        ngin_mov16 deltaX, #ngin_immFixedPoint8_8 ngin_signed8 kMovementAmount, 0
-        ; Adjust when moving right.
-        ngin_add16 boundX, \
-                   position + ngin_Vector2_16_8::intX, \
-                   #kBoundingBoxWidth-1
-    notRight:
-
-    ; Only use the hibyte of delta for collision.
-    ngin_MapCollision_lineSegmentEjectHorizontal \
-        boundX, position + ngin_Vector2_16_8::intY, #kBoundingBoxHeight, 1+deltaX
-
-    ; Read the return value, and re-adjust based on the direction of movement.
-    ; Need to adjust only if moving right in this case.
-    lda 1+deltaX
-    bmi movingLeft
-        ; Moving right
-        ngin_add16 position + ngin_Vector2_16_8::intX, \
-                   ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
-                   #ngin_signed16 -(kBoundingBoxWidth-1)
-        jmp doneMovingRight
-    movingLeft:
-        ; Moving left
-        ngin_mov16 position + ngin_Vector2_16_8::intX, \
-                   ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
-    doneMovingRight:
-
-    ngin_Camera_move deltaX, #0
-
-    rts
-.endproc
-
-; Copy-pasta from moveObjectHorizontal with slight modifications.
-; Should be combined, but can't bother for now.
-.proc moveObjectVertical
+; Generic movement code template. Variable naming based on the vertical case.
+.macro moveObjectGeneric_template kUp, kDown, intY, kBoundingBoxHeight, \
+        kBoundingBoxWidth, intX, collisionEject, collisionOverlap, \
+        collisionEject_scannedAttributes, collisionEject_ejectedY, \
+        collisionOverlap_scannedAttributes, axis
     ngin_bss deltaY: .word 0
     ngin_bss boundY: .word 0
     kMovementAmount = 3
@@ -149,43 +99,149 @@ ngin_entryPoint start
 
     ngin_mov16 deltaY, #0
 
-    lda controller
-    and #ngin_Controller::kUp
-    ngin_branchIfZero notUp
-        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 -kMovementAmount, 0
-        ; No adjustment needed when moving up.
-        ngin_mov16 boundY, position + ngin_Vector2_16_8::intY
-    notUp:
+    .scope
+        lda controller
+        and #ngin_Controller::kUp
+        ngin_branchIfZero notUp
+            ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 -kMovementAmount, 0
+            ; No adjustment needed when moving up.
+            ngin_mov16 boundY, position + ngin_Vector2_16_8::intY
+        notUp:
 
-    lda controller
-    and #ngin_Controller::kDown
-    ngin_branchIfZero notDown
-        ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 kMovementAmount, 0
-        ; Adjust when moving down.
-        ngin_add16 boundY, \
-                   position + ngin_Vector2_16_8::intY, \
-                   #kBoundingBoxHeight-1
-    notDown:
+        lda controller
+        and #ngin_Controller::kDown
+        ngin_branchIfZero notDown
+            ngin_mov16 deltaY, #ngin_immFixedPoint8_8 ngin_signed8 kMovementAmount, 0
+            ; Adjust when moving down.
+            ngin_add16 boundY, \
+                       position + ngin_Vector2_16_8::intY, \
+                       #kBoundingBoxHeight-1
+        notDown:
+    .endscope
 
-    ngin_MapCollision_lineSegmentEjectVertical \
+    ; Do an ejecting collision test.
+    collisionEject \
         boundY, position + ngin_Vector2_16_8::intX, #kBoundingBoxWidth, 1+deltaY
 
-    lda 1+deltaY
-    bmi movingUp
-        ; Moving down
-        ngin_add16 position + ngin_Vector2_16_8::intY, \
-                   ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
-                   #ngin_signed16 -(kBoundingBoxHeight-1)
-        jmp doneMovingDown
-    movingUp:
-        ; Moving up
-        ngin_mov16 position + ngin_Vector2_16_8::intY, \
-                   ngin_MapCollision_lineSegmentEjectVertical_ejectedY
-    doneMovingDown:
+    ; Carry is 1 if collided with a solid. If 0, didn't collide, and the
+    ; "scannedAttributes" return value is complete. If did collide, no need
+    ; to check for special tiles, because it's not possible that the object
+    ; would have moved into a new tile because of limited movement speed.
+    bcs gotCollision
+        ; Check whether the "special" flag is set in the collided tiles.
+        lda collisionEject_scannedAttributes
+        and #ngin_MapData_Attributes0::kSpecial
+        ngin_branchIfZero notSpecial
+            ngin_mov8 overlappingSpecial, #ngin_Bool::kTrue
+            ngin_jsrRts adjustPositionAndMoveCamera
+        notSpecial:
+    gotCollision:
 
-    ngin_Camera_move #0, deltaY
+    ; Got ejected, or didn't overlap a special tile. Need to check if the
+    ; trailing edge exited a special tile.
+
+    ; If we're not overlapping a special tile, we can exit right out (don't have
+    ; to check whether the trailing edge exits an overlap.)
+    lda overlappingSpecial
+    ngin_branchIfZero adjustPositionAndMoveCamera
+
+    ; Calculate the trailing edge in boundY based on the unmodified position.
+    jsr calculateTrailingEdge
+
+    ; Adjust the position, ejectedY from lineSegmentEjectVertical is
+    ; still valid.
+    jsr adjustPositionAndMoveCamera
+
+    ; Do an overlapping collision check to find out which tiles the trailing
+    ; edge overlapped before moving.
+    collisionOverlap \
+        boundY, position + ngin_Vector2_16_8::intX, #kBoundingBoxWidth
+
+    ; If the trailing edge doesn't overlap a special tile (unmodified position),
+    ; then it can't leave such tile either, so no further checking is necessary.
+    lda collisionOverlap_scannedAttributes
+    and #ngin_MapData_Attributes0::kSpecial
+    ngin_branchIfZero oldNotOverSpecial
+        ; Old edge is over the special tile.
+        ; Do another check based on the modified position.
+        ; \todo Would be enough to modify just the boundY parameter.
+        jsr calculateTrailingEdge
+        collisionOverlap \
+            boundY, position + ngin_Vector2_16_8::intX, #kBoundingBoxWidth
+
+        ; If this one is NOT over the special tile, then the object cannot be
+        ; overlapping anymore.
+        lda collisionOverlap_scannedAttributes
+        and #ngin_MapData_Attributes0::kSpecial
+        ngin_branchIfNotZero newOverSpecial
+            ; At last we know that the object has exited a special tile.
+            ngin_mov8 overlappingSpecial, #ngin_Bool::kFalse
+        newOverSpecial:
+    oldNotOverSpecial:
 
     rts
+
+    .proc adjustPositionAndMoveCamera
+        ; Adjust position based on the ejected coordinate.
+        lda 1+deltaY
+        bmi movingUp
+            ; Moving down
+            ngin_add16 position + ngin_Vector2_16_8::intY, \
+                       collisionEject_ejectedY, \
+                       #ngin_signed16 -(kBoundingBoxHeight-1)
+            jmp doneMovingDown
+        movingUp:
+            ; Moving up
+            ngin_mov16 position + ngin_Vector2_16_8::intY, \
+                       collisionEject_ejectedY
+        doneMovingDown:
+
+        .if axis = 0
+            ngin_Camera_move deltaY, #0
+        .else
+            ngin_Camera_move #0, deltaY
+        .endif
+
+        rts
+    .endproc
+
+    .proc calculateTrailingEdge
+        lda controller
+        and #ngin_Controller::kUp
+        ngin_branchIfZero notUp
+            ngin_add16 boundY, \
+                       position + ngin_Vector2_16_8::intY, \
+                       #kBoundingBoxHeight-1
+        notUp:
+
+        lda controller
+        and #ngin_Controller::kDown
+        ngin_branchIfZero notDown
+            ngin_mov16 boundY, position + ngin_Vector2_16_8::intY
+        notDown:
+
+        rts
+    .endproc
+.endmacro
+
+.proc moveObjectHorizontal
+    moveObjectGeneric_template kLeft, kRight, intX, kBoundingBoxWidth, \
+        kBoundingBoxHeight, intY, ngin_MapCollision_lineSegmentEjectHorizontal, \
+        ngin_MapCollision_lineSegmentOverlapHorizontal, \
+        ngin_MapCollision_lineSegmentEjectHorizontal_scannedAttributes, \
+        ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX, \
+        ngin_MapCollision_lineSegmentOverlapVertical_scannedAttributes, \
+        0
+.endproc
+
+.proc moveObjectVertical
+    moveObjectGeneric_template kUp, kDown, intY, kBoundingBoxHeight, \
+        kBoundingBoxWidth, intX, ngin_MapCollision_lineSegmentEjectVertical, \
+        ngin_MapCollision_lineSegmentOverlapVertical, \
+        ngin_MapCollision_lineSegmentEjectVertical_scannedAttributes, \
+        ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
+        ngin_MapCollision_lineSegmentOverlapVertical_scannedAttributes, \
+        1
 .endproc
 
 .proc moveObjects
@@ -205,6 +261,15 @@ ngin_entryPoint start
 .proc renderSprites
     ngin_ShadowOam_startFrame
 
+    ; Skip on every 2nd frame to indicate overlap with a special tile.
+    inc frameCount
+    lda overlappingSpecial
+    ngin_branchIfZero noSkip
+        lda frameCount
+        and #1
+        ngin_branchIfZero skip
+    noSkip:
+
     ; Adjust the object coordinate for sprite rendering.
     ; Slightly inefficient, since could output directly to the parameter area
     ; of ngin_SpriteRenderer_render.
@@ -212,6 +277,7 @@ ngin_entryPoint start
 
     ngin_SpriteRenderer_render #metasprite, spritePosition
 
+skip:
     ngin_ShadowOam_endFrame
 
     rts

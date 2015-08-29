@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="16" tileheight="16" nextobjectid="7">
- <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16">
-  <image source="tileset.png" width="64" height="16"/>
+ <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16" tilecount="5">
+  <image source="tileset.png" width="80" height="16"/>
   <tile id="1">
    <properties>
     <property name="Solid" value="true"/>
@@ -12,13 +12,18 @@
     <property name="SolidTop" value="true"/>
    </properties>
   </tile>
+  <tile id="4">
+   <properties>
+    <property name="Special" value="true"/>
+   </properties>
+  </tile>
  </tileset>
  <layer name="Tile Layer 1" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJzt1t0KgCAMBeD58/7PHEFBUM4zOW4X7eJcpODndFFVRGpwSlDYvrVm7/pR/xzrj6B7nN2rxdeeNb9d+Zq/5/7ga72F+E3e+7X4aJ1s3/Kesft/ti903CtMf2Udlr+6xq7z74Ok7+NH3z/D9/i38vBH30Kr38Ds9C13mj7Xj+4/b78I3vOzrPq7k358DigOBdk=
+   eJztlkkKgDAMRdPp/lcWQUEwzWSaLOziLWqx74fEoQJATaYk4e3X1hxdv9R/XusPpBm5vmr81Jrytwts/977g5+aLYm/wTuvxi+t09uvec6855/LJb0ehaffco6X33qGxD8mUPf0CVY/tqYyePsH4qcyRNTPZfja/1nfMZ81A/eOXv1vFeGffQu1/iZkpV/T0+339WfPX7S/gHzmOaz+1Wx/PgcQKwY5
   </data>
  </layer>
- <objectgroup name="Markers">
+ <objectgroup name="Markers" visible="0">
   <object id="4" name="camera" type="ngin_Marker" x="0" y="0" width="256" height="256"/>
   <object id="5" name="player" type="ngin_Marker" x="181" y="147.667" width="20" height="20"/>
  </objectgroup>

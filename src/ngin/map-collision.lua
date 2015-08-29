@@ -29,19 +29,18 @@ end
 -- Generic (horizontal/vertical) line segment collision routine
 -- Comments and variable naming are for the horizontal case, but also works
 -- for the vertical case by swapping axes.
-local function lineSegmentEjectGeneric(
+local function lineSegmentCollisionGeneric(
     x, y0, length, deltaX,
     adjustX, adjustY,
     readAttribute,
-    direction
+    direction,
+    eject
 )
     -- If deltaX is zero, no movement and thus no collision occurs.
-    if deltaX == 0 then
+    if eject and deltaX == 0 then
         return false, x
     end
 
-    -- \todo Move this assert to the assembly side (with inline Lua)
-    assert( deltaX ~= 0, "deltaX can't be zero" )
     -- \todo Assert that deltaX isn't too small/big to avoid tunneling.
 
     -- Adjust the incoming coordinates so that we can index the map
@@ -58,6 +57,8 @@ local function lineSegmentEjectGeneric(
     -- Assume there's no ejection by default.
     local ejectedX = newMapX
     local hitSolid = false
+    -- Bitwise OR of all tile attributes encountered during scanning.
+    local scannedAttributes = 0
 
     -- \note Has to match ngin_MapData_Attributes0::kSolid from map-data.inc.
     --       No way to do automatic verification of that currently,
@@ -70,41 +71,45 @@ local function lineSegmentEjectGeneric(
     for tileY = mapTileY0, mapTileY1 do
         local pixelY = tileY * kTile16Size
         local attribute = readAttribute( newMapX, pixelY )
-        if bit32.btest( attribute, kSolid ) then
-            hitSolid = true
-            -- Calculate ejected X. Correct result depends on movement
-            -- direction.
-            if deltaX > 0 then
-                ejectedX = math.floor( newMapX / kTile16Size ) * kTile16Size - 1
-            else
-                ejectedX = math.floor( newMapX / kTile16Size ) * kTile16Size +
-                                                                 kTile16Size
-            end
-            -- No need to check further.
-            -- \note If there were some special attribute types (e.g. something
-            --       that can be "touched", it might be necessary to check all
-            --       tiles until the end.
-            break
-        elseif bit32.btest( attribute, kSolidTop ) then
-            -- "Solid top" is a one-way platform that blocks movement only from
-            -- the top side.
-            -- Only check for the vertical case and only when moving down.
-            -- \note X is Y, Y is X.
-            if direction == "vertical" and deltaX > 0 then
-                -- Collide only if the line segment was previously above the
-                -- tile (to allow movement down within the tile).
-                local newTileX = math.floor( newMapX / kTile16Size )
-                local oldTileX = math.floor(    mapX / kTile16Size )
-                if oldTileX < newTileX then
-                    hitSolid = true
-                    ejectedX = newTileX * kTile16Size - 1
-                    break
+        scannedAttributes = bit32.bor( scannedAttributes, attribute )
+
+        if eject then
+            if bit32.btest( attribute, kSolid ) then
+                hitSolid = true
+                -- Calculate ejected X. Correct result depends on movement
+                -- direction.
+                if deltaX > 0 then
+                    ejectedX = math.floor( newMapX / kTile16Size ) * kTile16Size - 1
+                else
+                    ejectedX = math.floor( newMapX / kTile16Size ) * kTile16Size +
+                                                                     kTile16Size
+                end
+                -- No need to check further.
+                -- \note If there were some special attribute types (e.g. something
+                --       that can be "touched", it might be necessary to check all
+                --       tiles until the end.
+                break
+            elseif bit32.btest( attribute, kSolidTop ) then
+                -- "Solid top" is a one-way platform that blocks movement only from
+                -- the top side.
+                -- Only check for the vertical case and only when moving down.
+                -- \note X is Y, Y is X.
+                if direction == "vertical" and deltaX > 0 then
+                    -- Collide only if the line segment was previously above the
+                    -- tile (to allow movement down within the tile).
+                    local newTileX = math.floor( newMapX / kTile16Size )
+                    local oldTileX = math.floor(    mapX / kTile16Size )
+                    if oldTileX < newTileX then
+                        hitSolid = true
+                        ejectedX = newTileX * kTile16Size - 1
+                        break
+                    end
                 end
             end
         end
     end
 
-    return hitSolid, ejectedX - adjustX
+    return hitSolid, ejectedX - adjustX, scannedAttributes
 end
 
 function MapCollision.lineSegmentEjectHorizontal()
@@ -115,16 +120,19 @@ function MapCollision.lineSegmentEjectHorizontal()
         RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_deltaX
     )
 
-    local hitSolid, ejectedX = lineSegmentEjectGeneric(
+    local hitSolid, ejectedX, scannedAttributes = lineSegmentCollisionGeneric(
         x, y0, length, deltaX,
         MapData.adjustX(), MapData.adjustY(),
         MapData.readAttribute,
-        "horizontal"
+        "horizontal",
+        true
     )
 
     if hitSolid then REG.C = 1 else REG.C = 0 end
     write16Symbol( "ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX",
                    ejectedX )
+    RAM.ngin_MapCollision_lineSegmentEjectHorizontal_scannedAttributes =
+        scannedAttributes
 end
 
 function MapCollision.lineSegmentEjectVertical()
@@ -135,16 +143,53 @@ function MapCollision.lineSegmentEjectVertical()
         RAM.__ngin_MapCollision_lineSegmentEjectVertical_deltaY
     )
 
-    local hitSolid, ejectedY = lineSegmentEjectGeneric(
+    local hitSolid, ejectedY, scannedAttributes = lineSegmentCollisionGeneric(
         y, x0, length, deltaY,
         MapData.adjustY(), MapData.adjustX(),
         function ( x, y ) return MapData.readAttribute( y, x ) end,
-        "vertical"
+        "vertical",
+        true
     )
 
     if hitSolid then REG.C = 1 else REG.C = 0 end
     write16Symbol( "ngin_MapCollision_lineSegmentEjectVertical_ejectedY",
                    ejectedY )
+    RAM.ngin_MapCollision_lineSegmentEjectVertical_scannedAttributes =
+        scannedAttributes
+end
+
+function MapCollision.lineSegmentOverlapHorizontal()
+    local x  = read16Symbol( "__ngin_MapCollision_lineSegmentOverlapHorizontal_x" )
+    local y0 = read16Symbol( "__ngin_MapCollision_lineSegmentOverlapHorizontal_y0" )
+    local length = RAM.__ngin_MapCollision_lineSegmentOverlapHorizontal_length
+
+    local _, _, scannedAttributes = lineSegmentCollisionGeneric(
+        x, y0, length, 0,
+        MapData.adjustX(), MapData.adjustY(),
+        MapData.readAttribute,
+        "horizontal",
+        false
+    )
+
+    RAM.ngin_MapCollision_lineSegmentOverlapHorizontal_scannedAttributes =
+        scannedAttributes
+end
+
+function MapCollision.lineSegmentOverlapVertical()
+    local y  = read16Symbol( "__ngin_MapCollision_lineSegmentOverlapVertical_y" )
+    local x0 = read16Symbol( "__ngin_MapCollision_lineSegmentOverlapVertical_x0" )
+    local length = RAM.__ngin_MapCollision_lineSegmentOverlapVertical_length
+
+    local _, _, scannedAttributes = lineSegmentCollisionGeneric(
+        y, x0, length, 0,
+        MapData.adjustY(), MapData.adjustX(),
+        function ( x, y ) return MapData.readAttribute( y, x ) end,
+        "vertical",
+        false
+    )
+
+    RAM.ngin_MapCollision_lineSegmentOverlapVertical_scannedAttributes =
+        scannedAttributes
 end
 
 ngin.MapCollision = MapCollision

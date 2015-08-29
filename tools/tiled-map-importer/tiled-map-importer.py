@@ -29,8 +29,9 @@ kGidVertFlip = 1<<30
 kGidDiagFlip = 1<<29
 kGidFlagMask = kGidHorzFlip|kGidVertFlip|kGidDiagFlip
 
-kSolidAttribute = "ngin_MapData_Attributes0::kSolid"
+kSolidAttribute    = "ngin_MapData_Attributes0::kSolid"
 kSolidTopAttribute = "ngin_MapData_Attributes0::kSolidTop"
+kSpecialAttribute  = "ngin_MapData_Attributes0::kSpecial"
 
 kScreenSizeX, kScreenSizeY = 256, 256
 kMt32SizeX, kMt32SizeY = 32, 32
@@ -524,17 +525,17 @@ def combineProperties( propertyList, palette ):
     #       from different layers.
 
     # Solid will be true if at least one property specifies Solid=true.
-    solid = False
+    solid    = False
     solidTop = False
+    special  = False
 
     for properties in propertyList:
-        if properties.getBool( "Solid" ):
-            solid = True
-        if properties.getBool( "SolidTop" ):
-            solidTop = True
+        if properties.getBool( "Solid" ):    solid    = True
+        if properties.getBool( "SolidTop" ): solidTop = True
+        if properties.getBool( "Special" ):  special  = True
 
-    if solid and solidTop:
-        raise Exception( 'only one of "Solid" and "SolidTop" can be specified' )
+    if (solid and solidTop) or (solid and special) or (solidTop and special):
+        raise Exception( 'only one of {Solid, SolidTop, Special} can be specified' )
 
     paletteString = "{:3}".format( palette )
     combinedProperties = [ paletteString ]
@@ -542,6 +543,8 @@ def combineProperties( propertyList, palette ):
         combinedProperties.append( kSolidAttribute )
     if solidTop:
         combinedProperties.append( kSolidTopAttribute )
+    if special:
+        combinedProperties.append( kSpecialAttribute )
 
     return frozenset( combinedProperties )
 
