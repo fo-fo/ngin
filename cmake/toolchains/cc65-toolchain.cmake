@@ -1,14 +1,13 @@
 # CMake toolchain file for cc65
 # This is largely a result of experimentation, so some things may be done
 # suboptimally/wrong. Some compilation options/CMake features may not work.
-# Some generators will also not work (like MSVS). Ninja and Makefiles have
-# been tested to work.
+# Some generators will also not work (like MSVS). Ninja has been tested to work.
 # What is supported: C, assembly, static libraries
 
 set( CMAKE_SYSTEM_NAME Generic )
 
 macro( __compilerCc65 lang )
-    set( CMAKE_${lang}_COMPILER cl65 )
+    set( CMAKE_${lang}_COMPILER cl65 CACHE PATH "${lang} compiler" )
     set( CMAKE_${lang}_COMPILER_ID cc65 )
 
     # We cannot run tests for the cc65 compiler, because of cross-compilation,

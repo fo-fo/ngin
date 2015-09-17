@@ -2,7 +2,7 @@
 # All of the maps that use the same tileset have to be specified at the same
 # time, because all of the maps can affect the final tileset that is generated.
 
-# NOTE: Requires Python Imaging Library: http://www.pythonware.com/products/pil/
+# NOTE: Requires Pillow: https://python-pillow.github.io/
 
 # \todo Custom exception class, so we can differentiate between normalish errors
 #       (with clean print), and unexpected errors.
@@ -13,7 +13,7 @@ import base64
 import zlib
 import struct
 import os
-import Image
+from PIL import Image
 import uuid
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),

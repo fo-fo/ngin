@@ -1,6 +1,6 @@
 # This tool imports Ngin metasprites from image files.
 
-# NOTE: Requires Python Imaging Library: http://www.pythonware.com/products/pil/
+# NOTE: Requires Pillow: https://python-pillow.github.io/
 
 # \todo Add vertical/horizontal flipping of sprites when possible.
 # \todo Import from Aseprite JSON. Can convert ASE->JSON+PNG with Aseprite
@@ -9,7 +9,7 @@
 #       in some cases because the sprite allocation depends on the crop.
 
 import argparse
-import Image
+from PIL import Image
 import uuid
 import os
 import sys

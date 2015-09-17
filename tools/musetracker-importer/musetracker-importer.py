@@ -4,9 +4,6 @@ import subprocess
 import os
 import re
 
-# \todo Should be configurable.
-kMusetrackerPath = "C:\\Program Files (x86)\\musetracker\\Musetracker.exe"
-
 kGeneratedExtension = "ngininc"
 
 def toCIdentifier( str ):
@@ -97,6 +94,11 @@ def main():
     argParser = argparse.ArgumentParser(
         description="Import Musetracker songs into Ngin" )
 
+    # \todo Number of effects/songs should be allowed to be 0 (the check
+    #       further down makes sure that something is imported -- although
+    #       even that might not be something to require, really)
+    argParser.add_argument( "-m", "--musetracker", required=True,
+        help="Musetracker executable path" )
     argParser.add_argument( "-i", "--insong", nargs="*", required=True,
         metavar="SONG" )
     argParser.add_argument( "-e", "--ineffect", nargs="*", required=True,
@@ -122,7 +124,7 @@ def main():
     # Use a fairly obscure extension to make name collisions less likely.
     musetrackerOutputPrefix = args.outprefix + "." + kGeneratedExtension
 
-    musetrackerArgs = [ kMusetrackerPath, "-s" ] + args.insong + [ "-e" ] \
+    musetrackerArgs = [ args.musetracker, "-s" ] + args.insong + [ "-e" ] \
         + args.ineffect + [ "-o", musetrackerOutputPrefix ]
 
     musetrackerReturn = subprocess.call( musetrackerArgs )

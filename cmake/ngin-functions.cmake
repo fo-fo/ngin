@@ -36,7 +36,7 @@ function( ngin_addMapAssets target )
             ${TOOLARGS_OUTFILE}.inc
             ${TOOLARGS_OUTFILE}.chr
         COMMAND
-            python ${tiledMapImporter}
+            ${__ngin_python} ${tiledMapImporter}
             -i ${TOOLARGS_MAPS}
             -s ${TOOLARGS_SYMBOLS}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${TOOLARGS_OUTFILE}
@@ -151,7 +151,7 @@ function( ngin_endSpriteAssetLibrary )
             ${__ngin_spriteAsset_outfile}.inc
             ${__ngin_spriteAsset_outfile}.chr
         COMMAND
-            python ${spriteImporter}
+            ${__ngin_python} ${spriteImporter}
             ${__ngin_spriteAsset_args}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${__ngin_spriteAsset_outfile}
             ${__ngin_spriteAsset_extraArgs}
@@ -275,7 +275,8 @@ function( ngin_endMuseSoundAssetLibrary )
             ${__ngin_museSoundAsset_outfile}.s
             ${__ngin_museSoundAsset_outfile}.inc
         COMMAND
-            python ${musetrackerImporter}
+            ${__ngin_python} ${musetrackerImporter}
+            -m ${__ngin_musetracker}
             -i ${__ngin_museSoundAsset_songs}
             -e ${__ngin_museSoundAsset_soundEffects}
             -s ${__ngin_museSoundAsset_symbols}
@@ -345,9 +346,9 @@ function( ngin_addExecutable name )
     add_custom_target(
         "start-${name}"
         COMMAND
-            ${__ngin_emulatorExecutable} ${currentBinaryDirRelative}/${name}.nes
+            ${__ngin_ndx} ${currentBinaryDirRelative}/${name}.nes
         DEPENDS ${name}
-        # \note NintendulatorDX v36 or later is required for this to work,
+        # \note NDX v36 or later is required for this to work,
         #       older versions will not find the source files relative to the
         #       current working directory.
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

@@ -1,8 +1,10 @@
 @echo off
 setlocal
 
+set __nginNinja=%~dp0ngin-ninja.cmd
+
 pushd build\release
-ninja %*
+call %__nginNinja% %*
 popd
 
 endlocal
