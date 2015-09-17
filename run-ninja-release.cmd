@@ -1,8 +1,6 @@
 @echo off
 setlocal
 
-pushd build\release
-ninja %*
-popd
+call tools\build\build-release.cmd %*
 
 endlocal

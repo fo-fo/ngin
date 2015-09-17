@@ -1,8 +1,6 @@
 @echo off
 setlocal
 
-pushd build\debug
-ninja %*
-popd
+call tools\build\build-debug.cmd %*
 
 endlocal

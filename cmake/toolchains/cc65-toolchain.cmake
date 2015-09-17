@@ -28,8 +28,6 @@ __compilerCc65( ASM )
 
 set( CMAKE_ASM_SOURCE_FILE_EXTENSIONS s;S;asm )
 
-# \todo Not sure why CACHE is required here. Seems like something empties
-#       this variable after this script has ran...
 set( CMAKE_AR "ar65" CACHE PATH "archive" )
 
 # \note Need to delete the old file first because ar65 can only add files

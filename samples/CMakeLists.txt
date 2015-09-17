@@ -1,3 +1,9 @@
+# \todo Maybe can be removed if it has nothing extra to do besides addExecutable.
+# \todo Rename to __ngin_addSample (internal use only)
+function( ngin_addSample name )
+    ngin_addExecutable( ${name} ${ARGN} )
+endfunction()
+
 add_subdirectory( basic )
 add_subdirectory( sprite )
 add_subdirectory( nametable )
