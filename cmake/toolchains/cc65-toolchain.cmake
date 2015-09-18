@@ -27,7 +27,9 @@ __compilerCc65( ASM )
 
 set( CMAKE_ASM_SOURCE_FILE_EXTENSIONS s;S;asm )
 
-set( CMAKE_AR "ar65" CACHE PATH "archive" )
+# Not sure why CMake by default looks for the compilers, but not the archiver.
+# Force it to try to find the archiver.
+find_program( CMAKE_AR ar65 )
 
 # \note Need to delete the old file first because ar65 can only add files
 #       into an archive (or remove named files, but we don't know the names).

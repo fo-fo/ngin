@@ -18,25 +18,25 @@ The engine is fairly incomplete at this point, so I don't recommend using it for
 
 Only Windows is supported as a host platform at this time. The build system itself doesn't depend on Windows, but the engine heavily depends on the Lua support of *NDX*, and *NDX* is currently only available for Windows.
 
-*CMake*, *Ninja*, *cc65* and *Python 2* need to be in system *PATH*. *Python 2* needs to be accessible as `python`. *NDX* (`Nintendulator.exe`) needs to exist in directory `C:\Program Files (x86)\nintendulatordx` and *Musetracker* (`Musetracker.exe`) needs to exist in directory `C:\Program Files (x86)\musetracker`.
+*CMake*, *Ninja*, *cc65* and *Python 2* need to be in system *PATH*. *Python 2* needs to be accessible as `python`. *NDX* (`Nintendulator.exe`) needs to exist in directory `C:\Program Files (x86)\nintendulatordx` or in *PATH* and *Musetracker* (`Musetracker.exe`) needs to exist in directory `C:\Program Files (x86)\musetracker` or in *PATH*.
 
 Sorry about the hardcoded paths, they will be eventually made configurable.
 
 The path of the engine source code must not contain spaces. A warning will be given by CMake if this is the case.
 
-To configure the build, open a command line window at Ngin's directory and execute `run-cmake`. This will create a directory called `build`, and use CMake to configure the Release and Debug builds within it. **Note that this step needs to be executed only once.** It only needs to be re-executed if the `build` directory is removed (e.g. if the build becomes corrupted for some reason).
+To configure the build, open a command line window at Ngin's directory and execute `initialize-build`. This will create a directory called `build`, and use CMake to configure the Release and Debug builds within it. **Note that this step needs to be executed only once.** It only needs to be re-executed if the `build` directory is removed (e.g. if the build becomes corrupted for some reason).
 
-To build the engine and samples, execute `run-ninja-debug` or `run-ninja-release` in the command line window. Currently there are very few differences between the Debug and Release builds.
+To build the engine and samples, execute `build-debug` or `build-release` in the command line window. Currently there are very few differences between the Debug and Release builds.
 
 The arguments of these commands are passed directly to *Ninja*, so they can be used to build individual targets as well. To build the sprite animation sample (for example), the following command can be used.
 
-    run-ninja-debug ngin-sample-sprite-animation
+    build-debug ngin-sample-sprite-animation
 
 The following command can be used to start a sample in NDX:
 
-    run-ninja-debug start-ngin-sample-sprite-animation
+    build-debug start-ngin-sample-sprite-animation
 
 The available targets can be enumerated as follows:
 
-    run-ninja-debug -t targets
+    build-debug -t targets
 

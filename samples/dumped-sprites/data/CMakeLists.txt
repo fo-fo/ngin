@@ -12,7 +12,7 @@ add_custom_command(
     OUTPUT
         ${outputs}
     COMMAND
-        python ${__ngin_rootDir}/extras/ppu-dump-sprite-extractor/ppu-dump-sprite-extractor.py
+        ${__ngin_python} ${__ngin_rootDir}/extras/ppu-dump-sprite-extractor/ppu-dump-sprite-extractor.py
         ${CMAKE_CURRENT_SOURCE_DIR}/${dumpFilename}
         ${CMAKE_CURRENT_BINARY_DIR}/${dumpFilename}
     DEPENDS

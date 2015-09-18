@@ -1,10 +1,6 @@
 @echo off
 setlocal
 
-set __nginNinja=%~dp0ngin-ninja.cmd
-
-pushd build\release
-call %__nginNinja% %*
-popd
+call %~dp0ngin-cmake.cmd --build build/release -- %*
 
 endlocal
