@@ -74,7 +74,7 @@ function( ngin_spriteAssetLibrary target )
     cmake_parse_arguments(
         TOOLARGS
         "8X16"                          # Options
-        "OUTFILE"                       # One-value arguments
+        "OUTFILE;XGRID;YGRID"           # One-value arguments
         ""                              # Multi-value arguments
         ${ARGN}
     )
@@ -85,6 +85,12 @@ function( ngin_spriteAssetLibrary target )
     set( __ngin_spriteAsset_extraArgs "" )
     if ( TOOLARGS_8X16 )
         list( APPEND __ngin_spriteAsset_extraArgs --8x16 )
+    endif()
+    if ( TOOLARGS_XGRID )
+        list( APPEND __ngin_spriteAsset_extraArgs -x ${TOOLARGS_XGRID} )
+    endif()
+    if ( TOOLARGS_YGRID )
+        list( APPEND __ngin_spriteAsset_extraArgs -y ${TOOLARGS_YGRID} )
     endif()
 
     # Export to parent scope.
