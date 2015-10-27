@@ -23,3 +23,17 @@ def packNesTile( tile ):
         allTiles += bitplane0All + bitplane1All
 
     return allTiles
+
+def listToString( list, width=3 ):
+    return ", ".join( map( lambda x: "{:{width}}".format( x, width=width ), list ) )
+
+def writeByteArray( f, indentText, list, bytesPerLine=8 ):
+    f.write( indentText )
+    numLines = ( len( list ) + bytesPerLine-1 ) / bytesPerLine
+    for i in xrange( numLines ):
+        start = i*bytesPerLine
+        end = start + bytesPerLine
+        sliced = list[ start:end ]
+        if i != 0:
+            f.write( " " * len( indentText ) )
+        f.write( ".byte " + listToString( sliced ) + "\n" )

@@ -191,6 +191,99 @@ endfunction()
 
 # -----------------------------------------------------------------------------
 
+function( ngin_paletteAssetLibrary target )
+    cmake_parse_arguments(
+        TOOLARGS
+        ""                              # Options
+        "OUTFILE"                       # One-value arguments
+        ""                              # Multi-value arguments
+        ${ARGN}
+    )
+
+    # Export to parent scope.
+    set( __ngin_paletteAsset_target ${target} PARENT_SCOPE )
+    set( __ngin_paletteAsset_outfile ${TOOLARGS_OUTFILE} PARENT_SCOPE )
+    set( __ngin_paletteAsset_images  "" PARENT_SCOPE )
+    set( __ngin_paletteAsset_depends "" PARENT_SCOPE )
+    set( __ngin_paletteAsset_args    "" PARENT_SCOPE )
+endfunction()
+
+function( ngin_paletteAsset )
+    cmake_parse_arguments(
+        TOOLARGS
+        ""                              # Options
+        ""                              # One-value arguments
+        "IMAGE;SYMBOL;DEPENDS"          # Multi-value arguments
+        ${ARGN}
+    )
+
+    # If empty, figure out a symbol based on the file name.
+    if ( "${TOOLARGS_SYMBOL}" STREQUAL "" )
+        # Remove the extension.
+        get_filename_component( TOOLARGS_SYMBOL ${TOOLARGS_IMAGE} NAME_WE )
+
+        # Turn it into a C-compatible identifier.
+        string( MAKE_C_IDENTIFIER ${TOOLARGS_SYMBOL} TOOLARGS_SYMBOL )
+    endif()
+
+    list( APPEND __ngin_paletteAsset_images ${TOOLARGS_IMAGE} )
+    list( APPEND __ngin_paletteAsset_depends ${TOOLARGS_DEPENDS} )
+
+    list( APPEND __ngin_paletteAsset_args
+        -s ${TOOLARGS_SYMBOL}
+        -i ${TOOLARGS_IMAGE}
+    )
+
+    # Export to parent scope.
+    set( __ngin_paletteAsset_images ${__ngin_paletteAsset_images} PARENT_SCOPE )
+    set( __ngin_paletteAsset_depends ${__ngin_paletteAsset_depends} PARENT_SCOPE )
+    set( __ngin_paletteAsset_args ${__ngin_paletteAsset_args} PARENT_SCOPE )
+endfunction()
+
+function( ngin_endPaletteAssetLibrary )
+    set( paletteImporter
+        ${__ngin_toolsRoot}/palette-importer/palette-importer.py
+    )
+
+    add_custom_command(
+        OUTPUT
+            ${__ngin_paletteAsset_outfile}.s
+            ${__ngin_paletteAsset_outfile}.inc
+            ${__ngin_paletteAsset_outfile}.chr
+        COMMAND
+            ${__ngin_python} ${paletteImporter}
+            ${__ngin_paletteAsset_args}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${__ngin_paletteAsset_outfile}
+        DEPENDS
+            ${paletteImporter}
+            # \todo May need to expand to full path to avoid UB?
+            ${__ngin_paletteAsset_images}
+            ${__ngin_paletteAsset_depends}
+        WORKING_DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT
+            "palette-importer.py: Importing ${__ngin_paletteAsset_images}"
+        VERBATIM
+    )
+
+    add_library( ${__ngin_paletteAsset_target}
+        ${__ngin_paletteAsset_outfile}.s
+    )
+
+    file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR} )
+
+    set_target_properties( ${__ngin_paletteAsset_target}
+        PROPERTIES
+            COMPILE_FLAGS "\
+${__ngin_compileFlags} \
+--asm-include-dir ${currentBinaryDirRelative} \
+--bin-include-dir ${currentBinaryDirRelative}"
+    )
+endfunction()
+
+# -----------------------------------------------------------------------------
+
 function( ngin_museSoundAssetLibrary target )
     # \todo Options for segments (song segments, DPCM segment, etc)
     cmake_parse_arguments(

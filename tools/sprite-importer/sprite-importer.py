@@ -298,6 +298,8 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
         f.write( ".endproc\n" )
         f.write( "ngin_popSeg\n\n" )
 
+        f.write( 'ngin_pushSeg "RODATA"\n\n' )
+
         if hardwareSpriteSize == HardwareSpriteSize.k8x16:
             f.write( ".define _8x16Tile( t ) ( ( ( (t) << 1 ) & $FF ) "+\
                      " | ( ( (t) >> 7 ) & 1 ) )\n\n" )
@@ -340,6 +342,8 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
 
             # Duplicate symbol to point to the first frame.
             f.write( "{} := {}_{}\n\n".format( symbol, symbol, 0 ) )
+
+        f.write( "ngin_popSeg\n\n" )
 
     with open( outPrefix + ".chr", "wb" ) as f:
         for tile in tiles:

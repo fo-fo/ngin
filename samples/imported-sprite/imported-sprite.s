@@ -2,12 +2,14 @@
 
 ; From asset importer:
 .include "sprites.inc"
+.include "palettes.inc"
 
 .segment "CODE"
 
 ngin_entryPoint start
 .proc start
     ngin_Debug_uploadDebugPalette
+    jsr uploadPalette
     jsr renderSprites
 
     ngin_Ppu_pollVBlank
@@ -16,6 +18,15 @@ ngin_entryPoint start
                             ppu::mask::kShowSpritesLeft )
 
     jmp *
+.endproc
+
+.proc uploadPalette
+    ngin_Ppu_pollVBlank
+
+    ngin_Ppu_setAddress #ppu::spritePalette+1
+    ngin_copyMemoryToPort #ppu::data, #sprite_pal+1, #3
+
+    rts
 .endproc
 
 .proc renderSprites

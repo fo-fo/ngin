@@ -19,6 +19,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              "..", "common"))
 import common
+from common import listToString, writeByteArray
 
 # Zero indicates an empty tile.
 kEmptyGid = 0
@@ -740,21 +741,6 @@ def processMap( map_, nginCommonMapData, produceDebugImage ):
                 ) )
             else:
                 mapData.objects.append( object )
-
-def listToString( list, width=3 ):
-    return ", ".join( map( lambda x: "{:{width}}".format( x, width=width ), list ) )
-
-def writeByteArray( f, indentText, list ):
-    kBytesPerLine = 8
-    f.write( indentText )
-    numLines = ( len( list ) + kBytesPerLine-1 ) / kBytesPerLine
-    for i in xrange( numLines ):
-        start = i*kBytesPerLine
-        end = start + kBytesPerLine
-        sliced = list[ start:end ]
-        if i != 0:
-            f.write( " " * len( indentText ) )
-        f.write( ".byte " + listToString( sliced ) + "\n" )
 
 def writeNginData( nginCommonMapData, outPrefix, symbols ):
     with open( outPrefix + ".s", "w" ) as f:
