@@ -5,13 +5,14 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
 
 .enum ngin_MapData_Attributes0
     ; \note The bottom two bits are used for the color set index.
-    kSolid    = %000001_00
-    kSolidTop = %000010_00
-    ; \todo Figure out how to handle the attributes in a generic way, trying
-    ;       to avoid game specifics. Also the attributes waste bits right now,
-    ;       because it doesn't make sense for a tile to be both "solid" and
-    ;       "special".
-    kSpecial  = %000100_00
+    kSolid     = %000001_00
+    kSolidTop  = %000010_00
+    ; \todo Some user attributes could be mutually exclusive with kSolid,
+    ;       so bits are wasted in that case.
+    kUserAttr1 = %000100_00
+    kUserAttr2 = %001000_00
+    kUserAttr3 = %010000_00
+    kUserAttr4 = %100000_00
 .endenum
 
 .struct ngin_MapData_Pointers

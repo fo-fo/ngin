@@ -1,5 +1,5 @@
 .include "ngin/ngin.inc"
-
+.include "map-attributes.inc"
 .include "assets/maps.inc"
 
 ; -----------------------------------------------------------------------------
@@ -25,7 +25,7 @@ ngin_bss position:              .tag ngin_Vector2_16_8
 ngin_bss spritePosition:        .tag ngin_Vector2_16
 ngin_bss controller:            .byte 0
 
-; Non-zero, if overlapping a special tile (ngin_MapData_Attributes0::kSpecial)
+; Non-zero, if overlapping a special tile (MapAttributes::kSpecial)
 ngin_bss overlappingSpecial:    .byte 0
 ngin_bss frameCount:            .byte 0
 
@@ -130,7 +130,7 @@ ngin_entryPoint start
     bcs gotCollision
         ; Check whether the "special" flag is set in the collided tiles.
         lda collisionEject_scannedAttributes
-        and #ngin_MapData_Attributes0::kSpecial
+        and #MapAttributes::kSpecial
         ngin_branchIfZero notSpecial
             ngin_mov8 overlappingSpecial, #ngin_Bool::kTrue
             ngin_jsrRts adjustPositionAndMoveCamera
@@ -160,7 +160,7 @@ ngin_entryPoint start
     ; If the trailing edge doesn't overlap a special tile (unmodified position),
     ; then it can't leave such tile either, so no further checking is necessary.
     lda collisionOverlap_scannedAttributes
-    and #ngin_MapData_Attributes0::kSpecial
+    and #MapAttributes::kSpecial
     ngin_branchIfZero oldNotOverSpecial
         ; Old edge is over the special tile.
         ; Do another check based on the modified position.
@@ -172,7 +172,7 @@ ngin_entryPoint start
         ; If this one is NOT over the special tile, then the object cannot be
         ; overlapping anymore.
         lda collisionOverlap_scannedAttributes
-        and #ngin_MapData_Attributes0::kSpecial
+        and #MapAttributes::kSpecial
         ngin_branchIfNotZero newOverSpecial
             ; At last we know that the object has exited a special tile.
             ngin_mov8 overlappingSpecial, #ngin_Bool::kFalse

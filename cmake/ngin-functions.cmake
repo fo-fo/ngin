@@ -59,11 +59,15 @@ function( ngin_addMapAssets target )
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
 
+    file( RELATIVE_PATH currentSourceDirRelative ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR} )
+
     set_target_properties( ${target}
         PROPERTIES
             COMPILE_FLAGS "\
 ${__ngin_compileFlags} \
 --asm-include-dir ${currentBinaryDirRelative} \
+--asm-include-dir ${currentSourceDirRelative} \
 --bin-include-dir ${currentBinaryDirRelative}"
     )
 endfunction()

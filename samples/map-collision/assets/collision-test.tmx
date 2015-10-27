@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="32" tilewidth="16" tileheight="16" nextobjectid="7">
  <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16" tilecount="5">
+  <properties>
+   <property name="Include" value="../map-attributes.inc"/>
+  </properties>
   <image source="tileset.png" width="80" height="16"/>
   <tile id="1">
    <properties>
@@ -14,7 +17,7 @@
   </tile>
   <tile id="4">
    <properties>
-    <property name="Special" value="true"/>
+    <property name="Attributes" value="MapAttributes::kSpecial"/>
    </properties>
   </tile>
  </tileset>
