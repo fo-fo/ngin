@@ -30,7 +30,7 @@ end
 -- Comments and variable naming are for the horizontal case, but also works
 -- for the vertical case by swapping axes.
 local function lineSegmentCollisionGeneric(
-    x, y0, length, deltaX,
+    x, y0, length, deltaX, flags,
     adjustX, adjustY,
     readAttribute,
     direction,
@@ -65,6 +65,9 @@ local function lineSegmentCollisionGeneric(
     --       unfortunately, because scopes can't be accessed from Lua.
     local kSolid    = 0x4
     local kSolidTop = 0x8
+    local kScanAll  = 0x80 -- ngin_MapCollision_Flags::kScanAll
+
+    local scanAll = bit32.btest( flags, kScanAll )
 
     local mapTileY0 = math.floor( mapY0 / kTile16Size )
     local mapTileY1 = math.floor( ( mapY0 + length - 1 ) / kTile16Size )
@@ -73,7 +76,9 @@ local function lineSegmentCollisionGeneric(
         local attribute = readAttribute( newMapX, pixelY )
         scannedAttributes = bit32.bor( scannedAttributes, attribute )
 
-        if eject then
+        -- Special handling for solids, but only in ejecting routines AND
+        -- only if we haven't hit a solid yet (optimization).
+        if eject and not hitSolid then
             if bit32.btest( attribute, kSolid ) then
                 hitSolid = true
                 -- Calculate ejected X. Correct result depends on movement
@@ -85,10 +90,7 @@ local function lineSegmentCollisionGeneric(
                                                                      kTile16Size
                 end
                 -- No need to check further.
-                -- \note If there were some special attribute types (e.g. something
-                --       that can be "touched", it might be necessary to check all
-                --       tiles until the end.
-                break
+                if not scanAll then break end
             elseif bit32.btest( attribute, kSolidTop ) then
                 -- "Solid top" is a one-way platform that blocks movement only from
                 -- the top side.
@@ -102,7 +104,7 @@ local function lineSegmentCollisionGeneric(
                     if oldTileX < newTileX then
                         hitSolid = true
                         ejectedX = newTileX * kTile16Size - 1
-                        break
+                        if not scanAll then break end
                     end
                 end
             end
@@ -119,9 +121,10 @@ function MapCollision.lineSegmentEjectHorizontal()
     local deltaX = ngin.signed8(
         RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_deltaX
     )
+    local flags = RAM.__ngin_MapCollision_lineSegmentEjectHorizontal_flags
 
     local hitSolid, ejectedX, scannedAttributes = lineSegmentCollisionGeneric(
-        x, y0, length, deltaX,
+        x, y0, length, deltaX, flags,
         MapData.adjustX(), MapData.adjustY(),
         MapData.readAttribute,
         "horizontal",
@@ -142,9 +145,10 @@ function MapCollision.lineSegmentEjectVertical()
     local deltaY = ngin.signed8(
         RAM.__ngin_MapCollision_lineSegmentEjectVertical_deltaY
     )
+    local flags = RAM.__ngin_MapCollision_lineSegmentEjectVertical_flags
 
     local hitSolid, ejectedY, scannedAttributes = lineSegmentCollisionGeneric(
-        y, x0, length, deltaY,
+        y, x0, length, deltaY, flags,
         MapData.adjustY(), MapData.adjustX(),
         function ( x, y ) return MapData.readAttribute( y, x ) end,
         "vertical",
@@ -164,7 +168,7 @@ function MapCollision.lineSegmentOverlapHorizontal()
     local length = RAM.__ngin_MapCollision_lineSegmentOverlapHorizontal_length
 
     local _, _, scannedAttributes = lineSegmentCollisionGeneric(
-        x, y0, length, 0,
+        x, y0, length, 0, 0,
         MapData.adjustX(), MapData.adjustY(),
         MapData.readAttribute,
         "horizontal",
@@ -181,7 +185,7 @@ function MapCollision.lineSegmentOverlapVertical()
     local length = RAM.__ngin_MapCollision_lineSegmentOverlapVertical_length
 
     local _, _, scannedAttributes = lineSegmentCollisionGeneric(
-        y, x0, length, 0,
+        y, x0, length, 0, 0,
         MapData.adjustY(), MapData.adjustX(),
         function ( x, y ) return MapData.readAttribute( y, x ) end,
         "vertical",

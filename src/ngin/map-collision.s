@@ -10,6 +10,7 @@ __ngin_MapCollision_lineSegmentEjectHorizontal_x:               .word 0
 __ngin_MapCollision_lineSegmentEjectHorizontal_y0:              .word 0
 __ngin_MapCollision_lineSegmentEjectHorizontal_length:          .byte 0
 __ngin_MapCollision_lineSegmentEjectHorizontal_deltaX:          .byte 0
+__ngin_MapCollision_lineSegmentEjectHorizontal_flags:           .byte 0
 ; Return values
 ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX:          .word 0
 ngin_MapCollision_lineSegmentEjectHorizontal_scannedAttributes: .byte 0
@@ -23,6 +24,8 @@ __ngin_MapCollision_lineSegmentEjectVertical_length := \
     __ngin_MapCollision_lineSegmentEjectHorizontal_length
 __ngin_MapCollision_lineSegmentEjectVertical_deltaY := \
     __ngin_MapCollision_lineSegmentEjectHorizontal_deltaX
+__ngin_MapCollision_lineSegmentEjectVertical_flags := \
+    __ngin_MapCollision_lineSegmentEjectHorizontal_flags
 ngin_MapCollision_lineSegmentEjectVertical_ejectedY := \
     ngin_MapCollision_lineSegmentEjectHorizontal_ejectedX
 ngin_MapCollision_lineSegmentEjectVertical_scannedAttributes := \
