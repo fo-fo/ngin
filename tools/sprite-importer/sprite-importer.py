@@ -17,6 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              "..", "common"))
 import common
 
+kDefaultDelay = 5
+
 class HardwareSpriteSize:
     k8x8, k8x16 = 0, 1
 
@@ -29,6 +31,11 @@ class Sprite( object ):
         self.y = y
         self.tile = tile
         self.attributes = attributes
+
+class AnimationFrame( object ):
+    def __init__( self, sprites, delay ):
+        self.sprites = sprites
+        self.delay   = delay
 
 # Crops an image to minimum size. Returns the left-top and right-bottom
 # coordinates of the cropped image. The right-bottom coordinates are exclusive.
@@ -213,7 +220,9 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
                     for layer in range( kNumSpritePalettes ):
                         importSpriteLayer( animationFrame, layer )
 
-                    animationFrames.append( resultSprites )
+                    delay = infile.keyValueOptions.get( "delay", kDefaultDelay )
+
+                    animationFrames.append( AnimationFrame( resultSprites, delay ) )
 
             # Try to seek to the next frame (for GIF, etc). EOFError is raised when
             # there are no more frames. This will also work for PNG -- EOFError is
@@ -237,7 +246,7 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
         newFrames = []
         for frame in frames:
             newFrame = []
-            for sprite in frame:
+            for sprite in frame.sprites:
                 newX, newY = sprite.x, sprite.y
                 newAttributes = list( sprite.attributes )
 
@@ -259,7 +268,7 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
                     newX, newY, sprite.tile, newAttributes
                 ) )
 
-            newFrames.append( newFrame )
+            newFrames.append( AnimationFrame( newFrame, frame.delay ) )
 
         return newSymbol, newFrames
 
@@ -304,10 +313,6 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
             f.write( ".define _8x16Tile( t ) ( ( ( (t) << 1 ) & $FF ) "+\
                      " | ( ( (t) >> 7 ) & 1 ) )\n\n" )
 
-        # \todo Have to be able to specify animation speed from command line
-        #       arg (can also be specified per frame, if coming from JSON)
-        kDelay = 5
-
         for symbol, animationFrames in allAnimationFrames:
             for frameIndex, frame in enumerate( animationFrames ):
                 f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
@@ -320,10 +325,10 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
                 # \todo Allow loop point to be specified.
                 nextFrameIndex = ( frameIndex + 1 ) % len( animationFrames )
                 f.write( "    ngin_SpriteRenderer_metasprite {:4}, {}_{}\n".format(
-                    kDelay, symbol, nextFrameIndex
+                    frame.delay, symbol, nextFrameIndex
                 ) )
 
-                for sprite in frame:
+                for sprite in frame.sprites:
                     tile = None
                     if hardwareSpriteSize == HardwareSpriteSize.k8x16:
                         tile = "_8x16Tile B+{}".format( sprite.tile )
@@ -373,11 +378,17 @@ class InfileArg( object ):
         self.infile = infile
 
 class Infile( object ):
-    def __init__( self, file, symbol, options ):
+    def __init__( self, file, symbol, options, keyValueOptions ):
         self.file       = file
         self.symbol     = symbol
         # No duplicates allowed in options.
         self.options    = set( options )
+        self.keyValueOptions = keyValueOptions
+
+class KeyValueOption( object ):
+    def __init__( self, key, value ):
+        self.key   = key
+        self.value = value
 
 def main():
     argParser = argparse.ArgumentParser(
@@ -392,6 +403,9 @@ def main():
     argParser.add_argument( "--hvflip", dest="infiles", action="append_const",
                             help="generate a horizontally and vertically flipped variant",
                             const=SpriteFlip.kHorizontalAndVertical )
+    argParser.add_argument( "--delay", dest="infiles", action="append",
+                            help="specify frame delay",
+                            type=lambda x: KeyValueOption( "delay", x ) )
 
     argParser.add_argument( "-i", "--infile", dest="infiles", action="append",
                             type=InfileArg, metavar="FILE", required=True )
@@ -419,17 +433,21 @@ def main():
     gatheredInfiles = []
     currentSymbol   = None
     currentOptions  = []
+    currentKeyValueOptions = {}
     for entry in args.infiles:
         if isinstance( entry, ( int, long ) ):
             currentOptions.append( entry )
+        if isinstance( entry, KeyValueOption ):
+            currentKeyValueOptions[ entry.key ] = entry.value
         elif isinstance( entry, SymbolArg ):
             currentSymbol = entry.symbol
         elif isinstance( entry, InfileArg ):
             gatheredInfiles.append( Infile(
-                entry.infile, currentSymbol, currentOptions
+                entry.infile, currentSymbol, currentOptions, currentKeyValueOptions
             ) )
             # Clear options on each file.
             currentOptions = []
+            currentKeyValueOptions = {}
 
     hardwareSpriteSize = getattr( args, "8x16" )
 
