@@ -196,4 +196,19 @@ function MapCollision.lineSegmentOverlapVertical()
         scannedAttributes
 end
 
+function MapCollision.pointOverlap()
+    local x = read16Symbol( "__ngin_MapCollision_pointOverlap_x" )
+    local y = read16Symbol( "__ngin_MapCollision_pointOverlap_y" )
+
+    local _, _, scannedAttributes = lineSegmentCollisionGeneric(
+        x, y, 1, 0, 0,
+        MapData.adjustX(), MapData.adjustY(),
+        MapData.readAttribute,
+        "point", -- \note Has no effect currently
+        false
+    )
+
+    RAM.ngin_MapCollision_pointOverlap_scannedAttributes = scannedAttributes
+end
+
 ngin.MapCollision = MapCollision

@@ -50,6 +50,13 @@ __ngin_MapCollision_lineSegmentOverlapVertical_length := \
 ngin_MapCollision_lineSegmentOverlapVertical_scannedAttributes := \
     ngin_MapCollision_lineSegmentEjectHorizontal_scannedAttributes
 
+__ngin_MapCollision_pointOverlap_x := \
+    __ngin_MapCollision_lineSegmentEjectHorizontal_x
+__ngin_MapCollision_pointOverlap_y := \
+    __ngin_MapCollision_lineSegmentEjectHorizontal_y0
+ngin_MapCollision_pointOverlap_scannedAttributes := \
+    ngin_MapCollision_lineSegmentEjectHorizontal_scannedAttributes
+
 .segment "NGIN_CODE"
 
 .proc __ngin_MapCollision_lineSegmentEjectHorizontal
@@ -72,6 +79,12 @@ ngin_MapCollision_lineSegmentOverlapVertical_scannedAttributes := \
 
 .proc __ngin_MapCollision_lineSegmentOverlapVertical
     ngin_Lua_string "ngin.MapCollision.lineSegmentOverlapVertical()"
+
+    rts
+.endproc
+
+.proc __ngin_MapCollision_pointOverlap
+    ngin_Lua_string "ngin.MapCollision.pointOverlap()"
 
     rts
 .endproc

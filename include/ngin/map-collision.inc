@@ -116,4 +116,19 @@ NGIN_MAP_COLLISION_INC_INCLUDED = 1
     jsr __ngin_MapCollision_lineSegmentOverlapVertical
 .endmacro
 
+; Special case of an overlapping check: a single point
+.global __ngin_MapCollision_pointOverlap
+.global __ngin_MapCollision_pointOverlap_x
+.global __ngin_MapCollision_pointOverlap_y
+.global ngin_MapCollision_pointOverlap_scannedAttributes
+.macro ngin_MapCollision_pointOverlap x_, y_
+    __ngin_requireParameter {x_}, "x_"
+    __ngin_requireParameter {y_}, "y_"
+
+    ngin_mov16 __ngin_MapCollision_pointOverlap_x, {x_}
+    ngin_mov16 __ngin_MapCollision_pointOverlap_y, {y_}
+
+    jsr __ngin_MapCollision_pointOverlap
+.endmacro
+
 .endif

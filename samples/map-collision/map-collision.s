@@ -29,6 +29,8 @@ ngin_bss controller:            .byte 0
 ngin_bss overlappingSpecial:    .byte 0
 ngin_bss frameCount:            .byte 0
 
+ngin_bss prevScannedAttributes: .byte 0
+
 
 ; -----------------------------------------------------------------------------
 
@@ -244,9 +246,28 @@ ngin_entryPoint start
         1
 .endproc
 
+.proc doPointCheck
+    ; Do an overlapping point collision check, just for testing.
+    ngin_MapCollision_pointOverlap \
+        position + ngin_Vector2_16_8::intX \
+      , position + ngin_Vector2_16_8::intY
+
+    ; Display the scanned attributes, if they changed
+    lda ngin_MapCollision_pointOverlap_scannedAttributes
+    cmp prevScannedAttributes
+    beq didntChange
+        ; Changed, print it.
+        ngin_log debug, "pointOverlap_scannedAttributes: $%02X", a
+        sta prevScannedAttributes
+    didntChange:
+
+    rts
+.endproc
+
 .proc moveObjects
     jsr moveObjectHorizontal
     jsr moveObjectVertical
+    jsr doPointCheck
 
     rts
 .endproc
