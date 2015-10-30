@@ -257,7 +257,6 @@ function( ngin_endPaletteAssetLibrary )
         OUTPUT
             ${__ngin_paletteAsset_outfile}.s
             ${__ngin_paletteAsset_outfile}.inc
-            ${__ngin_paletteAsset_outfile}.chr
         COMMAND
             ${__ngin_python} ${paletteImporter}
             ${__ngin_paletteAsset_args}
