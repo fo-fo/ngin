@@ -6,7 +6,13 @@ The engine is fairly incomplete at this point, so I don't recommend using it for
 
 ## How to Build
 
-**Dependencies:**
+### Easy Start
+
+I have compiled a package containing all of the required dependencies (*Note: Windows only*). You can download the package [from Dropbox (~50 MB)](https://www.dropbox.com/s/mpbvuztlel80rw3/ngin-deps-v01.zip). The package has to be extracted in the Ngin root directory, i.e. the `deps` directory has to be at the same level as `include`, `src`, and so on.
+
+If you use the above package, you can skip straight to the [Configuring](#configuring) section. Otherwise, you'll have to download the dependencies separately.
+
+### Dependencies
 
 - [CMake](http://www.cmake.org/download/) (recent version, mine is *3.1.20150114-gdb5583*)
 - [Ninja](https://github.com/martine/ninja/releases) (I have version *1.5.3*)
@@ -22,9 +28,13 @@ Only Windows is supported as a host platform at this time. The build system itse
 
 Sorry about the hardcoded paths, they will be eventually made configurable.
 
-The path of the engine source code must not contain spaces. A warning will be given by CMake if this is the case.
+The path of the engine source code must not contain spaces. An error will be given by CMake if this is the case.
 
-To configure the build, open a command line window at Ngin's directory and execute `initialize-build`. This will create a directory called `build`, and use CMake to configure the Release and Debug builds within it. **Note that this step needs to be executed only once.** It only needs to be re-executed if the `build` directory is removed (e.g. if the build becomes corrupted for some reason).
+### Configuring
+
+To configure the build, open a command line window at Ngin's directory and execute `initialize-build`. This will create a directory called `build`, and use CMake to configure the Release and Debug builds within it. **Note that this step needs to be executed only once.** It only needs to be re-executed if the `build` directory is removed (e.g. if the build becomes corrupted for some reason, or you want to do a clean rebuild).
+
+### Building
 
 To build the engine and samples, execute `build-debug` or `build-release` in the command line window. Currently there are very few differences between the Debug and Release builds.
 
@@ -39,4 +49,3 @@ The following command can be used to start a sample in NDX:
 The available targets can be enumerated as follows:
 
     build-debug -t targets
-
