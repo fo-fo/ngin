@@ -170,9 +170,10 @@ class ObjectLayer( object ):
         self.properties = properties
 
 class Object( object ):
-    def __init__( self, name, type, position, size ):
+    def __init__( self, name, type, gid, position, size ):
         self.name = name
         self.type = type
+        self.gid = gid
         self.position = position
         self.size = size
 
@@ -380,7 +381,11 @@ def parseTmx( infile ):
         for event, elem in iterator:
             if event == "end" and elem.tag == "object":
                 name = elem.attrib.get( "name" )
-                type = elem.attrib[ "type" ]
+                type = elem.attrib.get( "type" )
+                # \note Only tile objects will have a GID.
+                gid = elem.attrib.get( "gid" )
+                if gid is not None:
+                    gid = int( gid )
                 position = (
                     float( elem.attrib[ "x" ] ),
                     float( elem.attrib[ "y" ] )
@@ -389,7 +394,7 @@ def parseTmx( infile ):
                     float( elem.attrib[ "width" ] ),
                     float( elem.attrib[ "height" ] )
                 )
-                return Object( name, type, position, size )
+                return Object( name, type, gid, position, size )
             else:
                 raise unexpectedElem( event, elem )
 
@@ -660,6 +665,43 @@ def processFlattenedMap( flatMap, flatProperties, nginCommonMapData ):
 
     return processMap()
 
+# This function looks for ObjectType custom property in tiles of every
+# tile object, and substitutes the object type with that property. This
+# allows the object type to be easily specified within a tileset (possibly
+# external).
+# It will also fix up the object coordinates so that the origin lies at the
+# center of the tile (called an "object avatar", i.e. visual representation of
+# the object in map).
+def handleTileObjects( map_ ):
+    for objectLayer in map_.objectLayers:
+        for object in objectLayer.objects:
+            # If not a tile object, continue.
+            if object.gid is None:
+                continue
+
+            tileset = map_.tilesetFromGid( object.gid )
+            tile = tileset.getTile( object.gid )
+
+            # Apply "ObjectType" custom property from tile to object.
+            if tile.properties is not None:
+                properties = tile.properties.properties
+                if "objecttype" in properties:
+                    # If the object type is specified, make sure that it matches
+                    # the ObjectType in the tile (for sanity).
+                    assert object.type is None or \
+                           object.type == properties[ "objecttype" ]
+                    object.type = properties[ "objecttype" ]
+
+            # Apply the origin (based on image size).
+            # \todo Make sure that this is exactly correct under all
+            #       circumstances (e.g. odd width/height). Behavior should
+            #       match that of sprite renderer.
+            # \note The object position uses floating point representation.
+            object.position = (
+                object.position[ 0 ] + tile.image.size.width /2 - 1,
+                object.position[ 1 ] - tile.image.size.height/2 - 1
+            )
+
 def processMap( map_, nginCommonMapData, produceDebugImage ):
     # \note Since tile sizes in tile sets may not be the same as the base
     #       tile size of the map, the render order of the map matters (tile on
@@ -670,6 +712,8 @@ def processMap( map_, nginCommonMapData, produceDebugImage ):
     # even though it could be technically supported.
     assert map_.tileSize.width  == 16
     assert map_.tileSize.height == 16
+
+    handleTileObjects( map_ )
 
     if produceDebugImage:
         debugImage = Image.new( "RGB", map_.pixelSize() )
@@ -901,11 +945,11 @@ def writeNginData( nginCommonMapData, outPrefix, symbols ):
             # Both positions are outside the map boundaries.
             #       (Use (0,0) for top-left, and $FFFF, $FFFF for bottom right)
             objects.append( Object(
-                "sentinelTopLeft", "ngin_Object_kInvalidTypeId",
+                "sentinelTopLeft", "ngin_Object_kInvalidTypeId", None,
                 nginMapData.nginWorldPointToMapPixel( ( 0, 0 ) ), size=None
             ) )
             objects.append( Object(
-                "sentinelBottomRight", "ngin_Object_kInvalidTypeId",
+                "sentinelBottomRight", "ngin_Object_kInvalidTypeId", None,
                 nginMapData.nginWorldPointToMapPixel( ( 0xFFFF, 0xFFFF ) ), size=None
             ) )
 

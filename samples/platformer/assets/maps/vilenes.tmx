@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="10">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="15">
  <tileset firstgid="1" name="Visual" tilewidth="768" tileheight="480" tilecount="1">
   <tile id="0">
    <image width="768" height="480" source="tiles/vilenes-mockup.png"/>
@@ -21,6 +21,20 @@
  <tileset firstgid="258" name="Screen Grid" tilewidth="256" tileheight="256" tilecount="1">
   <image source="tiles/screen-grid.png" width="256" height="256"/>
  </tileset>
+ <tileset firstgid="259" name="Object Avatars" tilewidth="128" tileheight="128" tilecount="2">
+  <tile id="0">
+   <properties>
+    <property name="ObjectType" value="object_Ball"/>
+   </properties>
+   <image width="64" height="64" source="../sprites/animation-ball-stand.png"/>
+  </tile>
+  <tile id="1">
+   <properties>
+    <property name="ObjectType" value="object_Player"/>
+   </properties>
+   <image width="128" height="128" source="../sprites/animation-player-stand.gif"/>
+  </tile>
+ </tileset>
  <layer name="Visual" width="64" height="32">
   <data encoding="base64" compression="zlib">
    eJztzgEJAAAMA6C9f+nHGAxNYAIAAAAAAADAimsHqHkh/AAC
@@ -36,11 +50,11 @@
  </layer>
  <objectgroup name="Objects">
   <object id="3" name="camera" type="ngin_Marker" x="16" y="16" width="256" height="208"/>
-  <object id="4" name="player" type="object_Player" x="124" y="150" width="16" height="32"/>
-  <object id="6" type="object_Ball" x="310" y="130" width="16" height="16"/>
-  <object id="7" type="object_Ball" x="394" y="26" width="16" height="16"/>
-  <object id="8" type="object_Ball" x="365" y="398" width="16" height="16"/>
-  <object id="9" type="object_Ball" x="591" y="432" width="16" height="16"/>
+  <object id="10" name="player" gid="260" x="28" y="154" width="128" height="128"/>
+  <object id="11" gid="259" x="286" y="175" width="64" height="64"/>
+  <object id="12" gid="259" x="370" y="71" width="64" height="64"/>
+  <object id="13" gid="259" x="567" y="477" width="64" height="64"/>
+  <object id="14" gid="259" x="341" y="443" width="64" height="64"/>
  </objectgroup>
  <layer name="Screen Grid" width="64" height="32">
   <properties>
