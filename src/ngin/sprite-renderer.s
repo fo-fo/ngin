@@ -18,6 +18,11 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 
 .segment "NGIN_CODE"
 
+; \todo Move to engine core? Might be useful elsewhere also.
+.proc __ngin_SpriteRenderer_nullCallback
+    rts
+.endproc
+
 .proc __ngin_SpriteRenderer_render
     metasprite := __ngin_SpriteRenderer_render_metasprite
     position   := __ngin_SpriteRenderer_render_position

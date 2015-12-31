@@ -154,6 +154,24 @@ function( ngin_spriteAsset )
     set( __ngin_spriteAsset_args ${__ngin_spriteAsset_args} PARENT_SCOPE )
 endfunction()
 
+function( ngin_spriteAssetEvent )
+    # \todo Allow multiple callbacks to be specified?
+    cmake_parse_arguments(
+        TOOLARGS
+        ""                              # Options
+        "ON_FRAME;CALLBACK"             # One-value arguments
+        ""                              # Multi-value arguments
+        ${ARGN}
+    )
+
+    # \todo ON_FRAME shouldn't be allowed to be empty.
+
+    list( APPEND __ngin_spriteAsset_args "--onframe" "${TOOLARGS_ON_FRAME},${TOOLARGS_CALLBACK}" )
+
+    # Export to parent scope.
+    set( __ngin_spriteAsset_args ${__ngin_spriteAsset_args} PARENT_SCOPE )
+endfunction()
+
 function( ngin_endSpriteAssetLibrary )
     set( spriteImporter
         ${__ngin_toolsRoot}/sprite-importer/sprite-importer.py

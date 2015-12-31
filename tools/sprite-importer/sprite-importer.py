@@ -33,9 +33,10 @@ class Sprite( object ):
         self.attributes = attributes
 
 class AnimationFrame( object ):
-    def __init__( self, sprites, delay ):
+    def __init__( self, sprites, delay, events=[] ):
         self.sprites = sprites
         self.delay   = delay
+        self.events  = events
 
 # Crops an image to minimum size. Returns the left-top and right-bottom
 # coordinates of the cropped image. The right-bottom coordinates are exclusive.
@@ -222,7 +223,9 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
 
                     delay = infile.keyValueOptions.get( "delay", kDefaultDelay )
 
-                    animationFrames.append( AnimationFrame( resultSprites, delay ) )
+                    frameNumber = len( animationFrames )
+                    events = infile.frameEventOptions.get( frameNumber, [] )
+                    animationFrames.append( AnimationFrame( resultSprites, delay, events ) )
 
             # Try to seek to the next frame (for GIF, etc). EOFError is raised when
             # there are no more frames. This will also work for PNG -- EOFError is
@@ -315,6 +318,9 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
 
         for symbol, animationFrames in allAnimationFrames:
             for frameIndex, frame in enumerate( animationFrames ):
+                assert len( frame.events ) <= 1, "multiple events in one frame not supported yet"
+                event = frame.events[ 0 ] if len( frame.events ) >= 1 else None
+
                 f.write( ".proc {}_{}\n".format( symbol, frameIndex ) )
 
                 if hardwareSpriteSize == HardwareSpriteSize.k8x16:
@@ -324,9 +330,14 @@ def writeData( outPrefix, allAnimationFrames, tiles, hardwareSpriteSize ):
 
                 # \todo Allow loop point to be specified.
                 nextFrameIndex = ( frameIndex + 1 ) % len( animationFrames )
-                f.write( "    ngin_SpriteRenderer_metasprite {:4}, {}_{}\n".format(
+                if event is not None:
+                    f.write( "    .import {}\n".format( event.callbackSymbol ) )
+                f.write( "    ngin_SpriteRenderer_metasprite {:}, {}_{}".format(
                     frame.delay, symbol, nextFrameIndex
                 ) )
+                if event is not None:
+                    f.write( ", {}".format( event.callbackSymbol ) )
+                f.write( "\n" )
 
                 for sprite in frame.sprites:
                     tile = None
@@ -378,17 +389,28 @@ class InfileArg( object ):
         self.infile = infile
 
 class Infile( object ):
-    def __init__( self, file, symbol, options, keyValueOptions ):
-        self.file       = file
-        self.symbol     = symbol
+    def __init__( self, file, symbol, options, keyValueOptions, frameEventOptions ):
+        self.file               = file
+        self.symbol             = symbol
         # No duplicates allowed in options.
-        self.options    = set( options )
-        self.keyValueOptions = keyValueOptions
+        self.options            = set( options )
+        self.keyValueOptions    = keyValueOptions
+        self.frameEventOptions  = frameEventOptions
 
 class KeyValueOption( object ):
     def __init__( self, key, value ):
         self.key   = key
         self.value = value
+
+class FrameEventOption( object ):
+    def __init__( self, frame, callbackSymbol ):
+        self.frame          = frame
+        self.callbackSymbol = callbackSymbol
+
+    @staticmethod
+    def fromString( s ):
+        comp = s.split( "," )
+        return FrameEventOption( int( comp[0] ), comp[1] )
 
 def main():
     argParser = argparse.ArgumentParser(
@@ -405,7 +427,12 @@ def main():
                             const=SpriteFlip.kHorizontalAndVertical )
     argParser.add_argument( "--delay", dest="infiles", action="append",
                             help="specify frame delay",
-                            type=lambda x: KeyValueOption( "delay", x ) )
+                            type=lambda x: KeyValueOption( "delay", x ),
+                            metavar="DELAY" )
+    argParser.add_argument( "--onframe", dest="infiles", action="append",
+                            help="specify a frame event callback, format: frame,symbol",
+                            type=FrameEventOption.fromString,
+                            metavar="EVENT" )
 
     argParser.add_argument( "-i", "--infile", dest="infiles", action="append",
                             type=InfileArg, metavar="FILE", required=True )
@@ -434,20 +461,27 @@ def main():
     currentSymbol   = None
     currentOptions  = []
     currentKeyValueOptions = {}
+    currentFrameEventOptions = {}
     for entry in args.infiles:
         if isinstance( entry, ( int, long ) ):
             currentOptions.append( entry )
-        if isinstance( entry, KeyValueOption ):
+        elif isinstance( entry, KeyValueOption ):
             currentKeyValueOptions[ entry.key ] = entry.value
+        elif isinstance( entry, FrameEventOption ):
+            if entry.frame not in currentFrameEventOptions:
+                currentFrameEventOptions[ entry.frame ] = []
+            currentFrameEventOptions[ entry.frame ].append( entry )
         elif isinstance( entry, SymbolArg ):
             currentSymbol = entry.symbol
         elif isinstance( entry, InfileArg ):
             gatheredInfiles.append( Infile(
-                entry.infile, currentSymbol, currentOptions, currentKeyValueOptions
+                entry.infile, currentSymbol, currentOptions,
+                currentKeyValueOptions, currentFrameEventOptions
             ) )
             # Clear options on each file.
             currentOptions = []
             currentKeyValueOptions = {}
+            currentFrameEventOptions = {}
 
     hardwareSpriteSize = getattr( args, "8x16" )
 

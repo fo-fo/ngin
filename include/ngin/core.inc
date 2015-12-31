@@ -367,4 +367,10 @@ __ngin_kBitsPerByte = 8
     .endrepeat
 .endmacro
 
+.macro ngin_asl count
+    .repeat count
+        asl
+    .endrepeat
+.endmacro
+
 .endif

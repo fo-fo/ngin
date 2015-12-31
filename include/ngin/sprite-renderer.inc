@@ -12,6 +12,9 @@ NGIN_SPRITE_RENDERER_INC_INCLUDED = 1
     ; Link to the next frame
     next                .word
 
+    ; Animation event callback
+    eventCallback       .word
+
     ; The metasprite itself
     metasprite          .tag __ngin_EmptyStruct
 .endstruct
@@ -43,7 +46,8 @@ ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY - \
 ngin_SpriteRenderer_kAttribute = %000_001_00
 
 ; Helper macro for defining metasprite header
-.macro ngin_SpriteRenderer_metasprite delay, next
+.global __ngin_SpriteRenderer_nullCallback
+.macro ngin_SpriteRenderer_metasprite delay, next, eventCallback
     .local thisMetasprite
     thisMetasprite:
 
@@ -59,6 +63,13 @@ ngin_SpriteRenderer_kAttribute = %000_001_00
         .addr (next)
     .else
         .addr thisMetasprite
+    .endif
+
+    ; By default, point the callback to no-op handler.
+    .if .not .blank( {eventCallback} )
+        .addr (eventCallback)
+    .else
+        .addr __ngin_SpriteRenderer_nullCallback
     .endif
 .endmacro
 

@@ -14,6 +14,8 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
 ; \note metasprite_ is used as the name to avoid conflicts with the
 ;       struct member in ngin_SpriteAnimator_State.
 .globalzp __ngin_SpriteAnimator_initialize_ptr
+.global   __ngin_SpriteAnimator_callEventCallback
+.globalzp __ngin_SpriteAnimator_callEventCallback_metasprite
 .macro ngin_SpriteAnimator_initialize state, metasprite_
     __ngin_requireParameter {state},       "state"
     __ngin_requireParameter {metasprite_}, "metasprite_"
@@ -44,6 +46,13 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
     ; Copy the metasprite pointer to the state data.
     ngin_mov16 { ngin_SpriteAnimator_State::metasprite * \
                  __ngin_SpriteAnimator_strideState + state }, metasprite_
+
+    ; Call the event callback for the first frame.
+    ngin_mov16 __ngin_SpriteAnimator_callEventCallback_metasprite, metasprite_
+    jsr __ngin_SpriteAnimator_callEventCallback
+
+    ; \todo Special-case a delay of 0 for "no delay" (currently delay of 256),
+    ;       could be useful for chaining of events(?)
 .endmacro
 
 .global   __ngin_SpriteAnimator_update
