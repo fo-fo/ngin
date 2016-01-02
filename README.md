@@ -28,11 +28,11 @@ Only Windows is supported as a host platform at this time. The build system itse
 
 Sorry about the hardcoded paths, they will be eventually made configurable.
 
-The path of the engine source code must not contain spaces. An error will be given by CMake if this is the case.
-
 ### Configuring
 
 To configure the build, open a command line window at Ngin's directory and execute `initialize-build`. This will create a directory called `build`, and use CMake to configure the Release and Debug builds within it. **Note that this step needs to be executed only once.** It only needs to be re-executed if the `build` directory is removed (e.g. if the build becomes corrupted for some reason, or you want to do a clean rebuild).
+
+**NOTE:** The path of the engine source code must not contain spaces. An error will be given by CMake if this is the case.
 
 ### Building
 
