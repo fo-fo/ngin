@@ -142,6 +142,11 @@ ngin_Object_kInvalidId                      = 255
 .endmacro
 
 .macro ngin_Object_endDefine
+    ; If onManualUpdate has been defined, export it.
+    .if .defined( onManualUpdate )
+        .export .ident( .sprintf( "__ngin_Object__%s_onManualUpdate", \
+            .string( __ngin_Object_define_identifier ) ) ) := onManualUpdate
+    .endif
     .endscope
     .undefine __ngin_Object_define_identifier
 .endmacro
@@ -219,6 +224,28 @@ ngin_Object_kInvalidId                      = 255
 .global __ngin_Object_updateAll
 .macro ngin_Object_updateAll
     jsr __ngin_Object_updateAll
+.endmacro
+
+; Calls onManualUpdate on a single object. The type must be specified manually.
+.macro ngin_Object_manualUpdate objectIdentifier, objectId
+    __ngin_requireParameter {objectId}, "objectId"
+
+    ; Need to save/restore the current object ID because updateAll depends on
+    ; it staying unchanged.
+    ; \todo Separate variable for first object to update on current frame.
+    lda ngin_Object_current
+    pha
+    ; If X register is passed, no need to load.
+    .if .not .xmatch( {objectId}, x )
+        ldx objectId
+    .endif
+    stx ngin_Object_current
+    .define __ngin_Object_manualUpdate_identifier .ident( .sprintf( \
+        "__ngin_Object__%s_onManualUpdate", .string( objectIdentifier ) ) )
+    .import __ngin_Object_manualUpdate_identifier
+    jsr __ngin_Object_manualUpdate_identifier
+    pla
+    sta ngin_Object_current
 .endmacro
 
 .endif

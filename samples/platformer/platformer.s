@@ -44,6 +44,10 @@ ngin_entryPoint start
     ;       because then the sprites would be off-sync with background.
     jsr moveCamera
 
+    ; Update player manually (calls onManualUpdate) so that it will be updated
+    ; before all other objects.
+    ngin_Object_manualUpdate object_Player, player_id
+
     ngin_Object_updateAll
 
     ngin_PpuBuffer_endFrame

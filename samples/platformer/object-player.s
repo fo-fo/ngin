@@ -106,12 +106,15 @@ ngin_Object_define object_Player
     .endproc
 
     .proc onUpdate
+        ; Empty -- handled in onManualUpdate instead.
+        rts
+    .endproc
+
+    .proc onManualUpdate
         ; For testing, this can be used to spawn the player multiple times:
         ; ngin_ObjectSpawner_resetSpawn { ngin_Object_this spawnIndex, x }
 
-        jsr move
-
-        rts
+        ngin_jsrRts move
     .endproc
 
     ; comp is "x_" or "y_". fracComp is "fracX" or "fracY".
