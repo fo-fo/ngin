@@ -9,7 +9,8 @@ kGravity = 32
 ; \todo Provide something like this in the engine.
 .macro movement_template y_, x_, fracY, intY, intX, boundingBoxYTop, \
         boundingBoxYBottom, boundingBoxXLeft, boundingBoxXRight, \
-        collisionRoutine, collisionRoutineReturnValue, collisionResponse
+        collisionRoutine, collisionRoutineReturnValue, collisionResponse, \
+        beforeMovementMacro, afterMovementMacro
 
     ; \todo Use temporaries!
     ngin_bss delta:         .byte 0
@@ -71,6 +72,10 @@ kGravity = 32
              { ngin_Object_this position+ngin_Vector2_16_8::intX, x }, \
                #ngin_signed16 boundingBoxXLeft
 
+    .if .not .blank( beforeMovementMacro )
+        beforeMovementMacro
+    .endif
+
     collisionRoutine boundY, \
                      boundX, \
                      #boundingBoxWidth, \
@@ -119,6 +124,10 @@ kGravity = 32
                      #ngin_signed16 -(boundingBoxYTop)
     .local doneMovingDown2
     doneMovingDown2:
+
+    .if .not .blank( afterMovementMacro )
+        afterMovementMacro
+    .endif
 
     rts
 .endmacro

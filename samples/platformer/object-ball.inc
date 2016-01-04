@@ -13,6 +13,13 @@ ngin_Object_declare object_Ball
     animationState  .tag ngin_SpriteAnimator_State
 
     spawnIndex      .byte
+
+    ; Keep track so that we can know it on the next frame.
+    boundingBoxTop  .word
+
+    ; Effective movement delta (used by player if standing on this ball)
+    ; Only Y movement is handled currently.
+    deltaY          .byte
 ngin_Object_endDeclare
 
 .endif

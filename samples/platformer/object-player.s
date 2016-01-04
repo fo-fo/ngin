@@ -1,4 +1,5 @@
 .include "object-player.inc"
+.include "object-ball.inc"
 .include "common.inc"
 .include "assets/sprites/sprites.inc"
 
@@ -38,7 +39,11 @@ animationsLo: .lobytes animations
 animationsHi: .hibytes animations
 
 .segment "BSS"
-player_boundingBox: .tag ngin_BoundingBox16
+player_boundingBox:             .tag ngin_BoundingBox16
+player_boundingBoxPrevBottom:   .word 0 ; Bottom coordinate from previous frame
+; Object ID that the player is standing on (ngin_Object_kInvalidId if not
+; standing on anything)
+player_standingOnObject:        .byte 0
 
 ; -----------------------------------------------------------------------------
 
@@ -81,6 +86,8 @@ ngin_Object_define object_Player
         ngin_mov8 { ngin_Object_this state, x }, #Player_State::kStand
         ngin_mov8 { ngin_Object_this currentAnimation, x }, \
                    #Player_Animation::kStandL
+
+        ngin_mov8 player_standingOnObject, #ngin_Object_kInvalidId
 
         rts
     .endproc
@@ -213,6 +220,8 @@ ngin_Object_define object_Player
         ngin_branchIfZero notA
             ngin_mov16 { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
                 #ngin_signed16 -kJumpVelocity
+            ; Release from platform.
+            ngin_mov8 player_standingOnObject, #ngin_Object_kInvalidId
         notA:
         notGrounded:
 
@@ -267,6 +276,7 @@ ngin_Object_define object_Player
     .proc calculateBoundingBox
         ; \todo This might be doing some redundant work that could be avoided
         ;       if it was combined with movement_template.
+        ; \note Macro includes an RTS.
         calculateBoundingBox_template \
             player_boundingBox, \
             { ngin_Object_this position, x }, #kBoundingBox
@@ -286,8 +296,38 @@ ngin_Object_define object_Player
         and #.lobyte( ~Player_Status::kGrounded )
         sta ngin_Object_this status, x
 
+        ; Check if player is standing on an object.
+        ldy player_standingOnObject
+        cpy #ngin_Object_kInvalidId
+        beq notStanding
+            ; Standing on something.
+            ; \note Assuming here that it's a ball, or something with an
+            ;       equivalent data layout. (Should standardize the order of
+            ;       position/velocity/etc data for such objects?)
+            .define ballThis( elem ) ngin_Object_other object_Ball, {elem}
+
+            ; Force Y velocity from deltaY (Y displacement) of the ball.
+            ngin_mov8 \
+                { ngin_Object_this velocity+ngin_Vector2_8_8::intY, x }, \
+                { ballThis         deltaY, y }
+            ngin_mov8 \
+                { ngin_Object_this velocity+ngin_Vector2_8_8::fracY, x }, \
+                #0
+            ; Clear the fractional part.
+            ngin_mov8 { ngin_Object_this position+ngin_Vector2_16_8::fracY, x }, #0
+            .undefine ballThis
+
+            ; Always grounded when on platform.
+            lda ngin_Object_this status, x
+            ora #Player_Status::kGrounded
+            sta ngin_Object_this status, x
+        notStanding:
+
         jsr moveHorizontal
         jsr moveVertical
+
+        ngin_mov16 player_boundingBoxPrevBottom, \
+                   player_boundingBox + ngin_BoundingBox16::bottom
         jsr calculateBoundingBox
 
         rts

@@ -12,8 +12,8 @@ kBoundingBox = ngin_immBoundingBox8 -8, -9, 8, 0 ; LTRB
 
 .segment "CODE"
 
-ngin_bss playerId:          .byte 0
 ngin_bss ball_boundingBox:  .tag ngin_BoundingBox16
+ngin_bss ball_boundingBoxPrevTop: .word 0 ; Top coordinate from previous frame
 
 ngin_Object_define object_Ball
     .proc onConstruct
@@ -106,9 +106,20 @@ ngin_Object_define object_Ball
     .endproc
 
     .proc onUpdate
-        jsr move
+        ; Have to calculate bounding box before checking for object collisions.
+        ; Make a copy because it's about to be updated.
+        ngin_mov16 ball_boundingBoxPrevTop, \
+                   { ngin_Object_this boundingBoxTop, x }
+        jsr calculateBoundingBox
+        ngin_mov16 { ngin_Object_this boundingBoxTop, x }, \
+                   ball_boundingBox + ngin_BoundingBox16::top
 
+        ; Check ball-player collisions before moving, so that player's
+        ; coordinate is in sync with ours (if ball is moved before checking,
+        ; the displacement would not be applied to player until player's update).
         jsr checkObjectCollisions
+
+        jsr move
 
         rts
     .endproc
@@ -128,6 +139,30 @@ ngin_Object_define object_Ball
                     #0
     .endmacro
 
+    ; \todo Use a temporary.
+    ngin_bss yBeforeMovementLo: .byte 0
+    .macro beforeMovement
+        ; Save old position. Even though the integer part is 16-bit, it's
+        ; enough to save the lower 8 bits since we're only interested in the
+        ; difference (which will be calculated later, and should always fit in
+        ; 8 bits).
+        ngin_mov8 \
+            yBeforeMovementLo, \
+            { ngin_Object_this position+ngin_Vector2_16_8::intY+0, x }
+    .endmacro
+
+    .macro afterMovement
+        ; Calculate how much the object actually moved. Difference should fit
+        ; in 8 bits, so don't need to calculate the hibyte.
+        ; \note Simply using velocity won't suffice, because if the object
+        ;       is ejected from map, the effective movement amount might be less
+        ;       than the velocity.
+        lda ngin_Object_this position+ngin_Vector2_16_8::intY+0, x
+        sec
+        sbc yBeforeMovementLo
+        sta ngin_Object_this deltaY, x
+    .endmacro
+
     .proc moveVertical
         movement_template y_, x_, fracY, intY, intX, \
             ngin_signExtend8 ngin_BoundingBox8_immTop    kBoundingBox, \
@@ -136,12 +171,13 @@ ngin_Object_define object_Ball
             ngin_signExtend8 ngin_BoundingBox8_immRight  kBoundingBox, \
             ngin_MapCollision_lineSegmentEjectVertical, \
             ngin_MapCollision_lineSegmentEjectVertical_ejectedY, \
-            collisionResponse
+            collisionResponse, beforeMovement, afterMovement
     .endproc
 
     .proc calculateBoundingBox
         ; \todo This might be doing some redundant work that could be avoided
         ;       if it was combined with movement_template.
+        ; \note Macro includes an RTS.
         calculateBoundingBox_template \
             ball_boundingBox, \
             { ngin_Object_this position, x }, #kBoundingBox
@@ -152,18 +188,14 @@ ngin_Object_define object_Ball
                      #kGravity
 
         jsr moveVertical
-        jsr calculateBoundingBox
 
         rts
     .endproc
 
     .proc checkObjectCollisions
         ; Check for collisions against the player.
-
-        ; \todo player_boundingBox might be out of date for some objects,
-        ;       and up-to-date for some objects, because the player may be
-        ;       updated in the middle of other objects. One solution would be
-        ;       to update (not draw) player before all other objects.
+        ; \note Player is updated before all other objects, so
+        ;       player_boundingBox is up-to-date here.
 
         ; Check for rect-rect collision.
         ngin_Collision_rectOverlap \
@@ -174,12 +206,44 @@ ngin_Object_define object_Ball
 
         bcc noCollision
             ; Got player-ball collision.
-            ; \todo Some better response.
-            ngin_log debug, "Got player-ball collision"
-            ngin_mov16 \
-                { ngin_Object_this velocity+ngin_Vector2_8_8::y_, x }, \
-                #ngin_immFixedPoint8_8 -5, 0
+
+            ; Check if player came from the top, i.e. the bottom of player's
+            ; bounding box must have been above the top of the ball's bounding
+            ; box.
+            ngin_cmp16 player_boundingBoxPrevBottom, ball_boundingBoxPrevTop
+            beq fromAbove
+            ngin_branchIfGreaterOrEqual notFromAbove
+                fromAbove:
+
+                .define playerThis( elem ) ngin_Object_other object_Player, {elem}
+                ldy player_id
+
+                ; Set player's fractional position to 0. Set Y position to
+                ; slightly inside the platform.
+                ngin_mov8 \
+                    { playerThis position+ngin_Vector2_16_8::fracY, y }, \
+                    #0
+                ngin_add16 \
+                    { playerThis position+ngin_Vector2_16_8::intY, y }, \
+                    ball_boundingBox + ngin_BoundingBox16::top, \
+                    #1
+
+                ; Set displacement to 0.
+                ngin_mov8 { ngin_Object_this deltaY, x }, #0
+                .undefine playerThis
+
+                ; Store object ID.
+                stx player_standingOnObject
+            notFromAbove:
+
+            jmp doneCollision
         noCollision:
+            ; No collision, release the player if it was standing on us.
+            cpx player_standingOnObject
+            bne notStandingOnPlayer
+                ngin_mov8 player_standingOnObject, #ngin_Object_kInvalidId
+            notStandingOnPlayer:
+        doneCollision:
 
         rts
     .endproc

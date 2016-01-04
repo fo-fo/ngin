@@ -3,8 +3,10 @@ NGIN_SAMPLE_PLATFORMER_OBJECT_PLAYER_INC_INCLUDED = 1
 
 .include "ngin/ngin.inc"
 
-.global player_id
+.global player_id ; .byte
+.global player_standingOnObject ; .byte
 .global player_boundingBox ; ngin_BoundingBox16
+.global player_boundingBoxPrevBottom ; .word
 
 ; Bitflags
 .enum Player_Status

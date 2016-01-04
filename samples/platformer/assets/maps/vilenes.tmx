@@ -51,8 +51,8 @@
  <objectgroup name="Objects">
   <object id="3" name="camera" type="ngin_Marker" x="16" y="16" width="256" height="208"/>
   <object id="10" name="player" gid="260" x="28" y="154" width="128" height="128"/>
-  <object id="11" gid="259" x="286" y="175" width="64" height="64"/>
-  <object id="12" gid="259" x="370" y="71" width="64" height="64"/>
+  <object id="11" gid="259" x="168" y="173" width="64" height="64"/>
+  <object id="12" gid="259" x="369" y="106" width="64" height="64"/>
   <object id="13" gid="259" x="567" y="477" width="64" height="64"/>
   <object id="14" gid="259" x="341" y="443" width="64" height="64"/>
  </objectgroup>
