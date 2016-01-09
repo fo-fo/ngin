@@ -18,8 +18,8 @@ If you use the above package, you can skip straight to the [Configuring](#config
 - [Ninja](https://github.com/martine/ninja/releases) (I have version *1.5.3*)
 - [cc65](http://cc65.github.io/cc65/) (I have *V2.14 - Git a13284a*)
 - [Python 2](https://www.python.org/downloads/) (I have version *2.7.9*)
-- [NDX](http://kkfos.aspekt.fi/projects/nes/tools/nintendulatordx/) (*v36* or later)
-- [Musetracker](http://kkfos.aspekt.fi/projects/nes/tools/musetracker/) (*v15* or later)
+- [NDX](http://kkfos.aspekt.fi/) (*v36* or later)
+- [Musetracker](http://kkfos.aspekt.fi/) (*v15* or later)
   - Currently required -- will likely be made optional at some point.
 
 Only Windows is supported as a host platform at this time. The build system itself doesn't depend on Windows, but the engine heavily depends on the Lua support of *NDX*, and *NDX* is currently only available for Windows.
