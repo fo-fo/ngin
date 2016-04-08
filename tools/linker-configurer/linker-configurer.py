@@ -17,6 +17,9 @@ symbols
 
     __ngin_prgSize: type = export, value = {prgSize};
     __ngin_chrSize: type = export, value = {chrSize};
+
+    __ngin_defaultIrq: type = import;
+    __ngin_irq: type = weak, value = __ngin_defaultIrq;
 }}
 
 memory

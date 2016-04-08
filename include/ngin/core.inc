@@ -11,6 +11,10 @@ NGIN_CORE_INC_INCLUDED = 1
     .export __ngin_start := entrySymbol
 .endmacro
 
+.macro ngin_irqHandler irqSymbol
+    .export __ngin_irq := irqSymbol
+.endmacro
+
 .macro __ngin_requireParameter ident, identString
     .if .blank( {ident} )
         .error .sprintf( "parameter '%s' is required", identString )

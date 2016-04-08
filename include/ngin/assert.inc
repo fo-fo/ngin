@@ -14,4 +14,8 @@ NGIN_ASSERT_INC_INCLUDED = 1
     .endif
 .endmacro
 
+.macro ngin_unreachable
+    ngin_assert "false", "unreachable code reached"
+.endmacro
+
 .endif

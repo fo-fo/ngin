@@ -13,19 +13,46 @@
     ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #32*30+64
 
+    ; Ack APU frame IRQ and disable further IRQs.
+    lda #%0100_0000
+    sta $4017
+
+    ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
     loop:
-        ngin_Ppu_pollVBlank
+        ngin_Nmi_waitVBlank
+
+        ; Set up IRQ.
+        ; \todo Mapper specific initialization code to make sure the IRQ
+        ;       counter is disabled on program entry.
+        kIrqCount = 341*(21+120)/3
+
+        lda #.lobyte( kIrqCount )
+        ldx #$E ; IRQ Counter Low
+        stx $8000
+        sta $A000
+
+        lda #.hibyte( kIrqCount )
+        ldx #$F ; IRQ Counter High
+        stx $8000
+        sta $A000
+
+        lda #%1000_0001 ; Enable IRQ generation and counting.
+        ldx #$D ; IRQ Control
+        stx $8000
+        sta $A000
+        cli
 
         ; Enable rendering.
         lda #0
         sta ppu::scroll
         sta ppu::scroll
+        lda #( ppu::ctrl::kGenerateVblankNmi )
         sta ppu::ctrl
         ngin_mov8 ppu::mask, #( ppu::mask::kShowBackground     | \
                                 ppu::mask::kShowBackgroundLeft )
 
         ; Switch to next CHR bank.
-        
+
         lda #0 ; CHR Bank 0 ($0000)
         sta $8000 ; Command Register
 
@@ -66,4 +93,29 @@ ngin_entryPoint start
     sta $A000 ; Parameter Register
 
     jmp bankedCode
+.endproc
+
+ngin_irqHandler irq
+.proc irq
+    pha
+    txa
+    pha
+
+    ; Set grayscale and some emphasis to indicate the IRQ.
+    ngin_mov8 ppu::mask, #( ppu::mask::kShowBackground     | \
+                            ppu::mask::kShowBackgroundLeft | \
+                            ppu::mask::kGrayscale | \
+                            ppu::mask::kEmphasizeBlue )
+
+    ; Ack and disable IRQ and counting.
+    lda #0
+    ldx #$D ; IRQ Control
+    stx $8000
+    sta $A000
+
+    pla
+    tax
+    pla
+
+    rti
 .endproc

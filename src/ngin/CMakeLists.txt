@@ -37,6 +37,7 @@ add_library( ngin STATIC
     assert.s
     sound/muse/muse.s
     sound/ngin-muse.s
+    irq.s
 )
 
 # \note "CACHE INTERNAL" variables are basically global variables. This is
