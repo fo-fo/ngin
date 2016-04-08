@@ -38,6 +38,8 @@ add_library( ngin STATIC
     sound/muse/muse.s
     sound/ngin-muse.s
     irq.s
+    mapper/nrom.s
+    mapper/fme-7.s
 )
 
 # \note "CACHE INTERNAL" variables are basically global variables. This is

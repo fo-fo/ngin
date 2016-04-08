@@ -2,6 +2,8 @@
 
 .assert .defined( NGIN_MAPPER_FME_7 ), error, "FME-7 define not set"
 
+ngin_bss chrBank: .byte 0
+
 ; -------------------------------------------------------------------------
 
 .segment "CODE_3" ; Just a random bank.
@@ -9,38 +11,23 @@
 .proc bankedCode
     ngin_Debug_uploadDebugPalette
 
+    cli ; Enable IRQs.
+
     ; Clear nametable.
     ngin_Ppu_setAddress #ppu::nametable0
     ngin_fillPort #ppu::data, #0, #32*30+64
-
-    ; Ack APU frame IRQ and disable further IRQs.
-    lda #%0100_0000
-    sta $4017
 
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
     loop:
         ngin_Nmi_waitVBlank
 
         ; Set up IRQ.
-        ; \todo Mapper specific initialization code to make sure the IRQ
-        ;       counter is disabled on program entry.
         kIrqCount = 341*(21+120)/3
-
-        lda #.lobyte( kIrqCount )
-        ldx #$E ; IRQ Counter Low
-        stx $8000
-        sta $A000
-
-        lda #.hibyte( kIrqCount )
-        ldx #$F ; IRQ Counter High
-        stx $8000
-        sta $A000
-
-        lda #%1000_0001 ; Enable IRQ generation and counting.
-        ldx #$D ; IRQ Control
-        stx $8000
-        sta $A000
-        cli
+        ngin_Fme_7_write #ngin_Fme_7::kIrqCounterLo, #.lobyte( kIrqCount )
+        ngin_Fme_7_write #ngin_Fme_7::kIrqCounterHi, #.hibyte( kIrqCount )
+        ngin_Fme_7_write #ngin_Fme_7::kIrqControl, #( \
+            ngin_Fme_7::irq::kEnabled | \
+            ngin_Fme_7::irq::kCounterEnabled )
 
         ; Enable rendering.
         lda #0
@@ -52,15 +39,10 @@
                                 ppu::mask::kShowBackgroundLeft )
 
         ; Switch to next CHR bank.
-
-        lda #0 ; CHR Bank 0 ($0000)
-        sta $8000 ; Command Register
-
-        ngin_bss chrBank: .byte 0
+        ngin_mov8 ngin_Fme_7::command, #ngin_Fme_7::kChr0_0000
         lda chrBank
-        lsr
-        lsr
-        sta $A000 ; Parameter Register
+        ngin_lsr 2
+        sta ngin_Fme_7::parameter
 
         inc chrBank
     jmp loop
@@ -82,15 +64,9 @@
 
 ngin_entryPoint start
 .proc start
-    ; \todo Defines in Ngin for the FME-7 registers/etc.
-    lda #$9 ; PRG Bank 1 ($8000)
-    sta $8000 ; Command Register
-
-    ; \todo Macro in Ngin to make it easier to get the bank byte?
     ; \todo Embed desired location of the code (e.g. 8000 or A000) in the
     ;       bank word? (3 bits is enough.)
-    lda #.lobyte( .bank( bankedCode ) )
-    sta $A000 ; Parameter Register
+    ngin_Fme_7_write #ngin_Fme_7::kPrg1_8000, #ngin_bank bankedCode
 
     jmp bankedCode
 .endproc
@@ -108,10 +84,7 @@ ngin_irqHandler irq
                             ppu::mask::kEmphasizeBlue )
 
     ; Ack and disable IRQ and counting.
-    lda #0
-    ldx #$D ; IRQ Control
-    stx $8000
-    sta $A000
+    ngin_Fme_7_write #ngin_Fme_7::kIrqControl, #0
 
     pla
     tax

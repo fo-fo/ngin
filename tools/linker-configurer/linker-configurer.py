@@ -109,6 +109,11 @@ segments
         type   = ro,
         define = yes;
 
+    NGIN_MAPPER_INIT:
+        load   = PRG_ROM,
+        type   = ro,
+        define = yes;
+
     NGIN_RESET_CONSTRUCTORS:
         load   = PRG_ROM,
         type   = ro,

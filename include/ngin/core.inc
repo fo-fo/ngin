@@ -377,4 +377,12 @@ __ngin_kBitsPerByte = 8
     .endrepeat
 .endmacro
 
+.macro ngin_lsr count
+    .repeat count
+        lsr
+    .endrepeat
+.endmacro
+
+.define ngin_bank( symbol ) .lobyte( .bank( symbol ) )
+
 .endif

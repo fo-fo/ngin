@@ -491,9 +491,12 @@ function( ngin_addExecutable name )
         set( TOOLARGS_CHR_SIZE 8 )
     endif()
 
+    # Turn mapper name into an uppercase C-compatible string.
+    string( MAKE_C_IDENTIFIER ${TOOLARGS_MAPPER} mapperIdUpper )
+    string( TOUPPER ${mapperIdUpper} mapperIdUpper )
+
     # Make into a define for compilation (e.g. NGIN_MAPPER_NROM).
-    string( MAKE_C_IDENTIFIER "NGIN_MAPPER_${TOOLARGS_MAPPER}" mapperDefine )
-    string( TOUPPER ${mapperDefine} mapperDefine )
+    set( mapperDefine "NGIN_MAPPER_${mapperIdUpper}" )
 
     # Generate linker configuration for the current executable. Need to
     # generate per-executable because parameters like PRG/CHR size might
@@ -541,6 +544,7 @@ function( ngin_addExecutable name )
             #       static library which would be otherwise stripped.
             LINK_FLAGS "-t none -C ${linkerConfig} \
 --force-import __ngin_forceImport \
+--force-import __ngin_initMapper_${mapperIdUpper} \
 -Wl --dbgfile,${currentBinaryDirRelative}/${name}.nes.dbg \
 -m ${currentBinaryDirRelative}/${name}-map.txt"
     )

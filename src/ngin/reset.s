@@ -20,6 +20,10 @@ kPageSize = 256
     sta ppu::ctrl
     sta ppu::mask
 
+    ; Acknowledge APU frame IRQ and disable further IRQs.
+    lda #%0100_0000
+    sta $4017
+
     ; Initialize stack pointer.
     ldx #$FF
     txs
@@ -48,6 +52,9 @@ kPageSize = 256
     ; Finally, clear the pointer hibyte.
     sta 1
 
+    ; Fall through to NGIN_MAPPER_INIT segment. Commented out so that a
+    ; warning is given if it's not defined by the mapper file.
+    ; .segment "NGIN_MAPPER_INIT"
     ; -------------------------------------------------------------------------
     ; Fall through to NGIN_RESET_CONSTRUCTORS segment.
     ; Make sure the segment exists.

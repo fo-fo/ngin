@@ -29,4 +29,10 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/assert.inc"
 .include "ngin/ngin-muse.inc"
 
+.if .defined( NGIN_MAPPER_NROM )
+    .include "ngin/mapper/nrom.inc"
+.elseif .defined( NGIN_MAPPER_FME_7 )
+    .include "ngin/mapper/fme-7.inc"
+.endif
+
 .endif
