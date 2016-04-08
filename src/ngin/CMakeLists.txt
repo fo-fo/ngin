@@ -1,8 +1,10 @@
 add_library( ngin STATIC
-    linker-config-dummy.s
+    # These files are not compiled into the library, and are instead
+    # compiled separately for each project.
+    # linker-config-dummy.s
+    # ines-header.s
     reset.s
     vectors.s
-    ines-header.s
     ppu.s
     shadow-oam.s
     sprite-renderer.s
@@ -46,17 +48,10 @@ set( __ngin_compileFlags
 --asm-include-dir ${PROJECT_SOURCE_DIR}/include --cpu 6502x"
      CACHE INTERNAL "__ngin_compileFlags"
 )
-set( __ngin_linkerConfig "linker/nrom.cfg"
-     CACHE INTERNAL "__ngin_linkerConfig" )
 set( __ngin_sourceDir ${CMAKE_CURRENT_SOURCE_DIR}
      CACHE INTERNAL "__ngin_sourceDir" )
 
 set_target_properties( ngin
     PROPERTIES
         COMPILE_FLAGS "${__ngin_compileFlags}"
-)
-
-set_source_files_properties( linker-config-dummy.s
-    PROPERTIES
-        OBJECT_DEPENDS ${__ngin_sourceDir}/${__ngin_linkerConfig}
 )

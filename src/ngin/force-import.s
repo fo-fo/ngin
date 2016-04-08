@@ -4,7 +4,6 @@
 
 .export __ngin_forceImport : absolute = 1
 
-.forceimport __ngin_inesHeaderForceImport
 .forceimport __ngin_vectorsForceImport
 .forceimport __ngin_BuildLog_forceImport
 .forceimport __ngin_forceSegmentForceImport
