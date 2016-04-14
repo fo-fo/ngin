@@ -2,13 +2,8 @@
 
 .segment "RODATA"
 
-.proc palette
-    .incbin "data/startropics.pal"
-.endproc
-
-.proc nametable
-    .incbin "data/startropics.nam"
-.endproc
+ngin_scoped palette,   .incbin "data/startropics.pal"
+ngin_scoped nametable, .incbin "data/startropics.nam"
 
 ; -----------------------------------------------------------------------------
 

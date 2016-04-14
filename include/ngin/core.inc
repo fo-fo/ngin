@@ -385,4 +385,10 @@ __ngin_kBitsPerByte = 8
 
 .define ngin_bank( symbol ) .lobyte( .bank( symbol ) )
 
+.macro ngin_scoped symbol, body
+    .proc symbol
+        body
+    .endproc
+.endmacro
+
 .endif
