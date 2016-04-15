@@ -469,6 +469,105 @@ endfunction()
 
 # -----------------------------------------------------------------------------
 
+function( ngin_mspAssetLibrary target )
+    cmake_parse_arguments(
+        TOOLARGS
+        ""                              # Options
+        "OUTFILE"                       # One-value arguments
+        ""                              # Multi-value arguments
+        ${ARGN}
+    )
+
+    # Take note of the variables. They will be applied in
+    # ngin_endMspAssetLibrary. Currently there are no available settings.
+
+    set( __ngin_mspAsset_extraArgs "" )
+
+    # Export to parent scope.
+    set( __ngin_mspAsset_extraArgs ${__ngin_mspAsset_extraArgs} PARENT_SCOPE )
+    set( __ngin_mspAsset_target ${target} PARENT_SCOPE )
+    set( __ngin_mspAsset_outfile ${TOOLARGS_OUTFILE} PARENT_SCOPE )
+    set( __ngin_mspAsset_msps    "" PARENT_SCOPE )
+    set( __ngin_mspAsset_depends "" PARENT_SCOPE )
+    set( __ngin_mspAsset_args    "" PARENT_SCOPE )
+endfunction()
+
+function( ngin_mspAsset )
+    cmake_parse_arguments(
+        TOOLARGS
+        ""                              # Options
+        ""                              # One-value arguments
+        "MSP;SYMBOL_PREFIX;DEPENDS"     # Multi-value arguments
+        ${ARGN}
+    )
+
+    # If empty, figure out a symbol based on the file name.
+    if ( "${TOOLARGS_SYMBOL_PREFIX}" STREQUAL "" )
+        # Remove the extension.
+        get_filename_component( TOOLARGS_SYMBOL_PREFIX ${TOOLARGS_MSP} NAME_WE )
+
+        # Turn it into a C-compatible identifier.
+        string( MAKE_C_IDENTIFIER ${TOOLARGS_SYMBOL_PREFIX} TOOLARGS_SYMBOL_PREFIX )
+    endif()
+
+    list( APPEND __ngin_mspAsset_msps ${TOOLARGS_MSP} )
+    list( APPEND __ngin_mspAsset_depends ${TOOLARGS_DEPENDS} )
+
+    list( APPEND __ngin_mspAsset_args
+        -s ${TOOLARGS_SYMBOL_PREFIX}
+        -i ${TOOLARGS_MSP}
+    )
+
+    # Export to parent scope.
+    set( __ngin_mspAsset_msps ${__ngin_mspAsset_msps} PARENT_SCOPE )
+    set( __ngin_mspAsset_depends ${__ngin_mspAsset_depends} PARENT_SCOPE )
+    set( __ngin_mspAsset_args ${__ngin_mspAsset_args} PARENT_SCOPE )
+endfunction()
+
+function( ngin_endMspAssetLibrary )
+    set( mspImporter
+        ${__ngin_toolsRoot}/msp-importer/msp-importer.py
+    )
+
+    add_custom_command(
+        OUTPUT
+            ${__ngin_mspAsset_outfile}.s
+            ${__ngin_mspAsset_outfile}.inc
+        COMMAND
+            ${__ngin_python} ${mspImporter}
+            ${__ngin_mspAsset_args}
+            -o ${CMAKE_CURRENT_BINARY_DIR}/${__ngin_mspAsset_outfile}
+            ${__ngin_mspAsset_extraArgs}
+        DEPENDS
+            ${mspImporter}
+            # \todo May need to expand to full path to avoid UB?
+            ${__ngin_mspAsset_msps}
+            ${__ngin_mspAsset_depends}
+        WORKING_DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT
+            "msp-importer.py: Importing ${__ngin_mspAsset_msps}"
+        VERBATIM
+    )
+
+    add_library( ${__ngin_mspAsset_target}
+        ${__ngin_mspAsset_outfile}.s
+    )
+
+    file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR} )
+
+    set_target_properties( ${__ngin_mspAsset_target}
+        PROPERTIES
+            COMPILE_FLAGS "\
+${__ngin_compileFlags} \
+--asm-include-dir ${currentBinaryDirRelative} \
+--bin-include-dir ${currentBinaryDirRelative}"
+    )
+endfunction()
+
+# -----------------------------------------------------------------------------
+
 function( ngin_addExecutable name )
     cmake_parse_arguments(
         TOOLARGS
