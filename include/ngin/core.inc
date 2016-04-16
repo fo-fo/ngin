@@ -309,25 +309,30 @@ __ngin_strideSpecifier = 0
     .local sign
     sign .set 1
     .repeat .strlen( number ), i
-        .if .strat( number, i ) = '.'
+        .if .strat( number, i ) = ngin_Ascii::kDot
             .if foundDecimalPoint
                 .error "multiple decimal points found"
             .endif
             foundDecimalPoint .set 1
-        .elseif .strat( number, i ) = '-' .or .strat( number, i ) = '+'
+        .elseif .strat( number, i ) = ngin_Ascii::kMinus .or \
+                .strat( number, i ) = ngin_Ascii::kPlus
             .if i <> 0
                 .error "sign can only appear in the beginning"
             .endif
-            sign .set -1*( .strat( number, i ) = '-' )
-        .else
+            sign .set -1*( .strat( number, i ) = ngin_Ascii::kMinus )
+        .elseif .strat( number, i ) >= ngin_Ascii::kZero .and \
+                .strat( number, i ) <= ngin_Ascii::kNine
             ; Check for overflow in case of too many digits.
             .if numberInt >= ( ( 1 << 31 ) - 1 ) / 10
                 .error "can't fit digits in an integer, use less digits"
             .endif
-            numberInt .set 10*numberInt + .strat( number, i ) - '0'
+            numberInt .set 10*numberInt + .strat( number, i ) \
+                           - ngin_Ascii::kZero
             .if foundDecimalPoint
                 fractMultiplier .set 10*fractMultiplier
             .endif
+        .else
+            .error "invalid character encountered in fixed point string"
         .endif
     .endrepeat
     ; \todo Warn if result not exact?

@@ -7,6 +7,10 @@ NGIN_ASCII_INC_INCLUDED = 1
     kSpace  = 32
     kQuote  = 34
     kZero   = 48
+    kNine   = kZero+9
+    kPlus   = 43
+    kMinus  = 45
+    kDot    = 46
 .endenum
 
 .endif
