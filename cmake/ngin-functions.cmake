@@ -56,6 +56,8 @@ function( ngin_addMapAssets target )
         ${TOOLARGS_OUTFILE}.s
     )
 
+    target_link_libraries( ${target} ngin )
+
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
 
@@ -203,6 +205,8 @@ function( ngin_endSpriteAssetLibrary )
         ${__ngin_spriteAsset_outfile}.s
     )
 
+    target_link_libraries( ${__ngin_spriteAsset_target} ngin )
+
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
 
@@ -294,6 +298,8 @@ function( ngin_endPaletteAssetLibrary )
     add_library( ${__ngin_paletteAsset_target}
         ${__ngin_paletteAsset_outfile}.s
     )
+
+    target_link_libraries( ${__ngin_paletteAsset_target} ngin )
 
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
@@ -421,6 +427,8 @@ function( ngin_endMuseSoundAssetLibrary )
     add_library( ${__ngin_museSoundAsset_target}
         ${__ngin_museSoundAsset_outfile}.s
     )
+
+    target_link_libraries( ${__ngin_museSoundAsset_target} ngin )
 
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
@@ -553,6 +561,8 @@ function( ngin_endMspAssetLibrary )
     add_library( ${__ngin_mspAsset_target}
         ${__ngin_mspAsset_outfile}.s
     )
+
+    target_link_libraries( ${__ngin_mspAsset_target} ngin )
 
     file( RELATIVE_PATH currentBinaryDirRelative ${CMAKE_BINARY_DIR}
         ${CMAKE_CURRENT_BINARY_DIR} )
