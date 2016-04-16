@@ -20,8 +20,8 @@
 kBoundingBoxWidth   = 20
 kBoundingBoxHeight  = 20
 
-; 8.8 fixed point acceleration (256 = 1 pixel/frame)
-kGravity            = 32
+; 8.8 fixed point acceleration
+ngin_fixedPointQ8 kGravity, "0.125"
 
 ; Maximum number of collisions before the object is destroyed
 kMaxCollisions      = 64

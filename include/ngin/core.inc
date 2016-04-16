@@ -295,6 +295,57 @@ __ngin_strideSpecifier = 0
 ; This macro can be used to define an 8.8 fixed point value (16-bit result)
 .define ngin_immFixedPoint8_8 ( int, frac ) ( (int) << 8 | (frac) )
 
+; This macro can be used to parse a fixed point number from a string, such
+; as "1.2345" or "-0.75". Note that the number of supported digits is
+; limited. Result is rounded to nearest if it cannot be represented
+; accurately.
+.macro ngin_fixedPoint targetSymbol, number, fractBits
+    .local numberInt
+    numberInt .set 0
+    .local foundDecimalPoint
+    foundDecimalPoint .set 0
+    .local fractMultiplier
+    fractMultiplier .set 1
+    .local sign
+    sign .set 1
+    .repeat .strlen( number ), i
+        .if .strat( number, i ) = '.'
+            .if foundDecimalPoint
+                .error "multiple decimal points found"
+            .endif
+            foundDecimalPoint .set 1
+        .elseif .strat( number, i ) = '-' .or .strat( number, i ) = '+'
+            .if i <> 0
+                .error "sign can only appear in the beginning"
+            .endif
+            sign .set -1*( .strat( number, i ) = '-' )
+        .else
+            ; Check for overflow in case of too many digits.
+            .if numberInt >= ( ( 1 << 31 ) - 1 ) / 10
+                .error "can't fit digits in an integer, use less digits"
+            .endif
+            numberInt .set 10*numberInt + .strat( number, i ) - '0'
+            .if foundDecimalPoint
+                fractMultiplier .set 10*fractMultiplier
+            .endif
+        .endif
+    .endrepeat
+    ; \todo Warn if result not exact?
+    ; \todo Other rounding options?
+    ; \todo Is there a better way to check for overflow?
+    .if numberInt * ( 1 << fractBits ) / ( 1 << fractBits ) <> numberInt
+        .error "overflow in multiplication, use less digits"
+    .endif
+    ; \todo Break down the calculations so that more digits can be handled
+    ;       without overflow.
+    targetSymbol = ( numberInt * ( 1 << fractBits ) + fractMultiplier/2 ) \
+        / fractMultiplier * sign
+.endmacro
+
+.macro ngin_fixedPointQ8 targetSymbol, number
+    ngin_fixedPoint {targetSymbol}, {number}, 8
+.endmacro
+
 .macro ngin_segmentData segment, data
     .pushseg
     .segment segment

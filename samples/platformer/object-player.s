@@ -8,9 +8,9 @@
 ; All are inclusive:
 kBoundingBox = ngin_immBoundingBox8 -6, -30, 6, 0 ; LTRB
 
-; 8.8 fixed point
-kHorizontalMoveVelocity = 256+128
-kJumpVelocity           = 1020
+; 8.8 fixed point (pixels/frame)
+ngin_fixedPointQ8 kHorizontalMoveVelocity, "1.5"
+ngin_fixedPointQ8 kJumpVelocity, "3.985"
 
 kAllowJumpInAir         = ngin_Bool::kFalse
 

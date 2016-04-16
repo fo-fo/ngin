@@ -1,8 +1,8 @@
 .if .not .defined( NGIN_SAMPLE_PLATFORMER_COMMON_INC_INCLUDED )
 NGIN_SAMPLE_PLATFORMER_COMMON_INC_INCLUDED = 1
 
-; 8.8 fixed point acceleration (256 = 1 pixel/frame)
-kGravity = 32
+; 8.8 fixed point acceleration (pixels/frame^2)
+ngin_fixedPointQ8 kGravity, "0.125"
 
 ; Generalized routine for moving the object horizontally/vertically.
 ; This is based on the Y movement, but can also be used for X movement.
