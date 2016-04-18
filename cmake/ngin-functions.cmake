@@ -16,15 +16,24 @@ set( __ngin_toolsRoot ${__ngin_rootDir}/tools
 function( ngin_addMapAssets target )
     cmake_parse_arguments(
         TOOLARGS
-        ""                              # Options
-        "OUTFILE"                       # One-value arguments
-        "MAPS;SYMBOLS;DEPENDS"          # Multi-value arguments
+        ""                                  # Options
+        "OUTFILE;SEGMENT_GRANULARITY"       # One-value arguments
+        "MAPS;SYMBOLS;DEPENDS;SEGMENTS"     # Multi-value arguments
         ${ARGN}
     )
 
     set( tiledMapImporter
         ${__ngin_toolsRoot}/tiled-map-importer/tiled-map-importer.py
     )
+
+    set( extraArgs "" )
+    if ( TOOLARGS_SEGMENT_GRANULARITY )
+        list( APPEND extraArgs -r ${TOOLARGS_SEGMENT_GRANULARITY} )
+    endif()
+    if ( TOOLARGS_SEGMENTS )
+        string( REPLACE ";" "," segmentsComma "${TOOLARGS_SEGMENTS}" )
+        list( APPEND extraArgs -g ${segmentsComma} )
+    endif()
 
     # \todo Check that TOOLARGS_OUTFILE is not empty, and that length of
     #       TOOLARGS_MAPS is equal to length of TOOLARGS_SYMBOLS.
@@ -40,6 +49,7 @@ function( ngin_addMapAssets target )
             -i ${TOOLARGS_MAPS}
             -s ${TOOLARGS_SYMBOLS}
             -o ${CMAKE_CURRENT_BINARY_DIR}/${TOOLARGS_OUTFILE}
+            ${extraArgs}
         DEPENDS
             ${tiledMapImporter}
             # \todo May need to expand to full path to avoid UB?
@@ -79,9 +89,9 @@ endfunction()
 function( ngin_spriteAssetLibrary target )
     cmake_parse_arguments(
         TOOLARGS
-        "8X16"                          # Options
-        "OUTFILE;XGRID;YGRID"           # One-value arguments
-        ""                              # Multi-value arguments
+        "8X16"                                      # Options
+        "OUTFILE;XGRID;YGRID;SEGMENT_GRANULARITY"   # One-value arguments
+        "SEGMENTS"                                  # Multi-value arguments
         ${ARGN}
     )
 
@@ -97,6 +107,13 @@ function( ngin_spriteAssetLibrary target )
     endif()
     if ( TOOLARGS_YGRID )
         list( APPEND __ngin_spriteAsset_extraArgs -y ${TOOLARGS_YGRID} )
+    endif()
+    if ( TOOLARGS_SEGMENT_GRANULARITY )
+        list( APPEND __ngin_spriteAsset_extraArgs -r ${TOOLARGS_SEGMENT_GRANULARITY} )
+    endif()
+    if ( TOOLARGS_SEGMENTS )
+        string( REPLACE ";" "," segmentsComma "${TOOLARGS_SEGMENTS}" )
+        list( APPEND __ngin_spriteAsset_extraArgs -g ${segmentsComma} )
     endif()
 
     # Export to parent scope.

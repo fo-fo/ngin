@@ -6,7 +6,7 @@ ngin_bss chrBank: .byte 0
 
 ; -------------------------------------------------------------------------
 
-.segment "CODE_3" ; Just a random bank.
+.segment "CODE_3_8000" ; Just a random bank.
 
 .proc bankedCode
     ngin_Debug_uploadDebugPalette
@@ -52,7 +52,7 @@ ngin_bss chrBank: .byte 0
 
 ; Put random crap in CHR banks.
 .repeat 64, i
-    .segment .sprintf( "CHR_ROM_%d", i )
+    .segment .sprintf( "GRAPHICS_%d_0000", i )
     .repeat 16
         .byte i
     .endrepeat

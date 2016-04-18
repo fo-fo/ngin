@@ -38,5 +38,5 @@ ngin_entryPoint start
     rts
 .endproc
 
-.segment "CHR_ROM"
+.segment "GRAPHICS"
     .incbin "data/sprites.chr"

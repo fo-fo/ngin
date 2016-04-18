@@ -106,7 +106,7 @@ ngin_entryPoint start
 
 ; -----------------------------------------------------------------------------
 
-.segment "CHR_ROM"
+.segment "GRAPHICS"
 
 .repeat 16
     .byte 0

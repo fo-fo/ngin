@@ -336,7 +336,7 @@ skip:
 
 ; -----------------------------------------------------------------------------
 
-.segment "CHR_ROM"
+.segment "GRAPHICS"
 
 objectTilesFirstIndex = .lobyte( */ppu::kBytesPer8x8Tile )
     ngin_tile "####################    " \

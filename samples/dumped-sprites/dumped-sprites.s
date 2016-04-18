@@ -57,6 +57,6 @@ ngin_entryPoint start
 
 ; -----------------------------------------------------------------------------
 
-.segment "CHR_ROM"
+.segment "GRAPHICS"
 
 .incbin "data/dump.ppumem-tiles.chr"

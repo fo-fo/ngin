@@ -52,10 +52,12 @@ memory
 
 kConfigRom = """\
     {name}:
-        start = ${start:x},
-        size  = {sizeKb}*1024,
-        type  = ro,
-        fill  = yes,
+        start  = {start},
+        size   = {sizeKb}*1024,
+        type   = ro,
+        fill   = yes,
+        define = yes,
+        file   = {file},
         {other};
 
 """
@@ -173,6 +175,17 @@ kConfigSegment = """\
 
 """
 
+kConfigSegmentLoadRun = """\
+    {name}:
+        load     = {load},
+        run      = {run},
+        type     = ro,
+        define   = yes,
+        optional = {optional},
+        {other};
+
+"""
+
 kConfigPart5 = """\
     OBJECT_CONSTRUCT_LO:
         load   = PRG_ROM,
@@ -257,19 +270,24 @@ def writeConfig( mapper, prgSize, chrSize, outPrefix ):
     staticBankSize  = None
     chrBankSize     = None
     numChrBanks     = None
+    numRunSlots     = None # Number of slots to which data can be mapped.
+    runSlotsBase    = None
+    numChrRunSlots  = None
+    chrRunSlotsBase = None
 
     if mapper == "nrom":
-        dynamicBankSize = None
         numDynamicBanks = 0
         staticBankSize  = prgSize
-        chrBankSize     = None
-        numChrBanks     = None
     elif mapper == "fme-7":
         dynamicBankSize = 8 # KB
         numDynamicBanks = prgSize // dynamicBankSize - 1
         staticBankSize  = 8 # KB
         chrBankSize     = 1 # KB
         numChrBanks     = chrSize // chrBankSize
+        numRunSlots     = 4 # $6000..DFFF, $2000 bytes each
+        runSlotsBase    = 0x6000
+        numChrRunSlots  = 8
+        chrRunSlotsBase = 0x0000
     else:
         assert False, "unrecognized mapper"
 
@@ -287,30 +305,54 @@ def writeConfig( mapper, prgSize, chrSize, outPrefix ):
         # Create memory areas for dynamic banks.
         for i in range( numDynamicBanks ):
             f.write( kConfigRom.format( name="PRG_ROM_{}".format( i ),
-                # \todo .bank specifier for the banks.
-                # \todo Multiple areas, each with different base, all going
-                #       in to the same bank (i.e. not always 0x8000) --
-                #       should be possible with load/run tricks.
-                #       http://forums.nesdev.com/viewtopic.php?p=158354#p158354
-                start=0x8000,
+                start=0,
                 sizeKb=dynamicBankSize,
+                file="%O",
                 other="bank={}".format( i )
             ) )
 
+            for j in range( numRunSlots ):
+                start = runSlotsBase + j*dynamicBankSize*1024
+                startStr = "${:X}".format( start )
+                if j != 0:
+                    prevStart = runSlotsBase + (j-1)*dynamicBankSize*1024
+                    startStr += "+(__PRG_ROM_{}_{:04X}_LAST__-${:04X})".format(
+                        i, prevStart, prevStart )
+                f.write( kConfigRom.format( name="PRG_ROM_{}_{:04X}".format( i, start ),
+                    start=startStr,
+                    sizeKb=dynamicBankSize,
+                    file='""',
+                    other="bank={}".format( i )
+                ) )
+
         f.write( kConfigRom.format( name="PRG_ROM",
-            start=0x10000 - ( staticBankSize*1024 ), sizeKb=staticBankSize,
+            start="${:X}".format( 0x10000 - ( staticBankSize*1024 ) ),
+            sizeKb=staticBankSize, file="%O",
             other="bank={}".format( numDynamicBanks )
         ) )
 
         if mapper == "nrom":
             f.write( kConfigRom.format( name="CHR_ROM", start=0,
-                sizeKb=chrSize, other="" ) )
+                sizeKb=chrSize, file="%O", other="" ) )
         elif mapper == "fme-7":
             for i in range( numChrBanks ):
                 name = "CHR_ROM_{}".format( i )
-                # \todo Start address? Should it reflect PRG-ROM address?
                 f.write( kConfigRom.format( name=name, start=0,
-                    sizeKb=chrBankSize, other="bank={}".format( i ) ) )
+                    sizeKb=chrBankSize, file="%O", other="bank={}".format( i ) ) )
+
+                for j in range( numChrRunSlots ):
+                    start = chrRunSlotsBase + j*chrBankSize*1024
+                    startStr = "${:X}".format( start )
+                    if j != 0:
+                        prevStart = chrRunSlotsBase + (j-1)*chrBankSize*1024
+                        startStr += "+(__CHR_ROM_{}_{:04X}_LAST__-${:04X})".format(
+                            i, prevStart, prevStart )
+                    f.write( kConfigRom.format( name="CHR_ROM_{}_{:04X}".format( i, start ),
+                        start=startStr,
+                        sizeKb=chrBankSize,
+                        file='""',
+                        other="bank={}".format( i )
+                    ) )
         else:
             assert False
 
@@ -318,17 +360,19 @@ def writeConfig( mapper, prgSize, chrSize, outPrefix ):
 
         # Create segments for dynamic banks.
         for i in range( numDynamicBanks ):
-            name = "CODE_{}".format( i )
-            romName = "PRG_ROM_{}".format( i )
-            # \todo Maybe the CODE segment should have align since we KNOW
-            #       (usually) that it can be aligned without waste.
-            f.write( kConfigSegment.format( name=name, romName=romName,
-                optional="yes", other="" ) )
+            for j in range( numRunSlots ):
+                start = runSlotsBase + j*dynamicBankSize*1024
+                name = "CODE_{}_{:04X}".format( i, start )
+                load = "PRG_ROM_{}".format( i )
+                run = load + "_{:04X}".format( start )
+                # \todo Maybe the CODE segment should have align since we KNOW
+                #       (usually) that it can be aligned without waste.
+                f.write( kConfigSegmentLoadRun.format( name=name,
+                    load=load, run=run, optional="yes", other="" ) )
 
-            name = "RODATA_{}".format( i )
-            romName = "PRG_ROM_{}".format( i )
-            f.write( kConfigSegment.format( name=name, romName=romName,
-                optional="yes", other="" ) )
+                name = "RODATA_{}_{:04X}".format( i, start )
+                f.write( kConfigSegmentLoadRun.format( name=name,
+                    load=load, run=run, optional="yes", other="" ) )
 
         f.write( kConfigSegment.format( name="CODE", romName="PRG_ROM",
             optional="no", other="align=32" ) )
@@ -339,13 +383,17 @@ def writeConfig( mapper, prgSize, chrSize, outPrefix ):
 
         # Create segments for CHR.
         if mapper == "nrom":
-            f.write( kConfigSegment.format( name="CHR_ROM", romName="CHR_ROM",
+            f.write( kConfigSegment.format( name="GRAPHICS", romName="CHR_ROM",
                 optional="yes", other="align=32" ) )
         elif mapper == "fme-7":
             for i in range( numChrBanks ):
-                name = "CHR_ROM_{}".format( i )
-                f.write( kConfigSegment.format( name=name, romName=name,
-                    optional="yes", other="align=32" ) )
+                for j in range( numChrRunSlots ):
+                    start = chrRunSlotsBase + j*chrBankSize*1024
+                    name = "GRAPHICS_{}_{:04X}".format( i, start )
+                    load = "CHR_ROM_{}".format( i )
+                    run = load + "_{:04X}".format( start )
+                    f.write( kConfigSegmentLoadRun.format( name=name,
+                        load=load, run=run, optional="yes", other="align=32" ) )
         else:
             assert False
 

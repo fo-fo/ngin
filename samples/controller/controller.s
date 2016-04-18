@@ -93,7 +93,7 @@ ngin_entryPoint start
 
 ; -----------------------------------------------------------------------------
 
-.segment "CHR_ROM"
+.segment "GRAPHICS"
 
 blackTile = .lobyte( */ppu::kBytesPer8x8Tile )
     ngin_tile "        " \
