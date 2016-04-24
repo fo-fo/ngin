@@ -88,12 +88,18 @@ ngin_SpriteRenderer_kAttribute = %000_001_00
 .global   __ngin_SpriteRenderer_render
 .globalzp __ngin_SpriteRenderer_render_metasprite
 .global   __ngin_SpriteRenderer_render_position
-.macro ngin_SpriteRenderer_render metasprite, position
+.global   __ngin_SpriteRenderer_render_attributeEor
+.macro ngin_SpriteRenderer_render metasprite, position, attributeEor
     __ngin_requireParameter {metasprite}, "metasprite"
     __ngin_requireParameter {position}, "position"
 
     ngin_mov16 __ngin_SpriteRenderer_render_metasprite, {metasprite}
     ngin_mov32 __ngin_SpriteRenderer_render_position, {position}
+    .if .not .blank( {attributeEor} )
+        ngin_mov8  __ngin_SpriteRenderer_render_attributeEor, {attributeEor}
+    .else
+        ngin_mov8  __ngin_SpriteRenderer_render_attributeEor, #0
+    .endif
 
     jsr __ngin_SpriteRenderer_render
 .endmacro

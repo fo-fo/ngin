@@ -15,6 +15,7 @@ __ngin_SpriteRenderer_render_metasprite:        .addr 0
 .segment "NGIN_BSS"
 
 __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
+__ngin_SpriteRenderer_render_attributeEor:      .byte 0
 
 .segment "NGIN_CODE"
 
@@ -24,8 +25,9 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
 .endproc
 
 .proc __ngin_SpriteRenderer_render
-    metasprite := __ngin_SpriteRenderer_render_metasprite
-    position   := __ngin_SpriteRenderer_render_position
+    metasprite   := __ngin_SpriteRenderer_render_metasprite
+    position     := __ngin_SpriteRenderer_render_position
+    attributeEor := __ngin_SpriteRenderer_render_attributeEor
 
     ; Load shadow OAM pointer.
     ldx ngin_ShadowOam_pointer
@@ -44,6 +46,10 @@ __ngin_SpriteRenderer_render_position:          .tag ngin_Vector2_16
         ; Terminator must be zero or this fails (need to add cmp in that case).
         .assert ngin_SpriteRenderer_kMetaspriteTerminator = 0, error
         ngin_branchIfZero endOfMetasprite
+
+        ; EOR with argument for stuff like priority/palette changes.
+        ; \todo AND mask before could be useful as well.
+        eor attributeEor
 
         ; Store the attributes. The value might go unused since we haven't
         ; clipped yet, but no harm done because we know there's space.
