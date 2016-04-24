@@ -26,4 +26,15 @@ NGIN_COLLISION_INC_INCLUDED = 1
     jsr __ngin_Collision_rectOverlap
 .endmacro
 
+.macro ngin_Collision_rectPoint rectALeftTop, rectARightBottom, pointB
+    __ngin_requireParameter {rectALeftTop},     "rectALeftTop"
+    __ngin_requireParameter {rectARightBottom}, "rectARightBottom"
+    __ngin_requireParameter {pointB},           "pointB"
+
+    ; Use the rectOverlap routine, but pass a 1x1 rect.
+    ; \todo This will waste some space passing the same argument twice,
+    ;       so might be worth creating an optimized routine for it.
+    ngin_Collision_rectOverlap {rectALeftTop}, {rectARightBottom}, {pointB}, {pointB}
+.endmacro
+
 .endif

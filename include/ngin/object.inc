@@ -212,8 +212,11 @@ ngin_Object_kInvalidId                      = 255
 .macro ngin_Object_free objectId
     __ngin_requireParameter {objectId}, "objectId"
 
+    ; If A register is passed, load to X from A.
+    .if .xmatch( {objectId}, a )
+        tax
     ; If X register is passed, no need to load.
-    .if .not .xmatch( {objectId}, x )
+    .elseif .not .xmatch( {objectId}, x )
         ldx objectId
     .endif
 
