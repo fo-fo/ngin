@@ -52,6 +52,9 @@ class NginMapData( object ):
         self.markers = []
         # Objects placed in the map. Not sorted in any way.
         self.objects = []
+        # Map boundary (for scrolling)
+        self.boundaryLeftTop = None
+        self.boundaryRightBottom = None
 
     def adjustXY( self ):
         adjustX = -0x8000 + kScreenSizeX * ( self.sizeScreens[0] // 2 )
@@ -791,6 +794,17 @@ def processMap( map_, nginCommonMapData, produceDebugImage ):
                     ( int( round( object.position[0] ) ),
                       int( round( object.position[1] ) ) )
                 ) )
+            elif object.type.lower() == "ngin_boundary":
+                # Can't have more than one boundary object.
+                assert mapData.boundaryLeftTop is None
+                assert mapData.boundaryRightBottom is None
+                # Round the position to an integer.
+                mapData.boundaryLeftTop = \
+                    ( int( round( object.position[0] ) ),
+                      int( round( object.position[1] ) ) )
+                mapData.boundaryRightBottom = \
+                    ( int( round( object.position[0] + object.size.width ) ),
+                      int( round( object.position[1] + object.size.height ) ) )
             else:
                 mapData.objects.append( object )
 
@@ -1015,6 +1029,13 @@ def writeNginData( nginCommonMapData, outPrefix, symbols, segments,
                 nginMapData.sizeScreens[ 0 ] * kScreenSizeX,
                 nginMapData.sizeScreens[ 1 ] * kScreenSizeY,
             ) )
+
+            if nginMapData.boundaryLeftTop is not None and \
+               nginMapData.boundaryRightBottom is not None:
+                boundaryLeftTop = nginMapData.mapPixelToNginWorldPoint(
+                    nginMapData.boundaryLeftTop )
+                boundaryRightBottom = nginMapData.mapPixelToNginWorldPoint(
+                    nginMapData.boundaryRightBottom )
 
             # Map header
             # \todo Should probably add a level of indirection for the metatile

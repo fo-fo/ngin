@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="15">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" backgroundcolor="#808080" nextobjectid="19">
  <tileset firstgid="1" name="Visual" tilewidth="768" tileheight="480" tilecount="1">
   <tile id="0">
    <image width="768" height="480" source="tiles/vilenes-mockup.png"/>
@@ -55,6 +55,7 @@
   <object id="12" gid="259" x="369" y="106" width="64" height="64"/>
   <object id="13" gid="259" x="567" y="477" width="64" height="64"/>
   <object id="14" gid="259" x="341" y="443" width="64" height="64"/>
+  <object id="17" name="boundary" type="ngin_Boundary" x="16" y="16" width="768" height="480" visible="0"/>
  </objectgroup>
  <layer name="Screen Grid" width="64" height="32">
   <properties>
