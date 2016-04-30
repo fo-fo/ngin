@@ -28,6 +28,7 @@ NGIN_NGIN_INC_INCLUDED = 1
 .include "ngin/sprite-animator.inc"
 .include "ngin/assert.inc"
 .include "ngin/ngin-muse.inc"
+.include "ngin/debug-draw.inc"
 
 .if .defined( NGIN_MAPPER_NROM )
     .include "ngin/mapper/nrom.inc"

@@ -16,6 +16,7 @@ ngin_entryPoint start
     ngin_mov8 ppu::ctrl, #ppu::ctrl::kGenerateVblankNmi
 
     loop:
+        ngin_DebugDraw_startFrame
         jsr update
 
         ngin_Nmi_waitVBlank
@@ -31,6 +32,8 @@ ngin_entryPoint start
                                 ppu::mask::kShowBackgroundLeft | \
                                 ppu::mask::kShowSprites        | \
                                 ppu::mask::kShowSpritesLeft )
+
+        ngin_DebugDraw_endFrame
     jmp loop
 .endproc
 

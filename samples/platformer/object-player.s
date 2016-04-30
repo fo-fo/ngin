@@ -330,6 +330,9 @@ ngin_Object_define object_Player
                    player_boundingBox + ngin_BoundingBox16::bottom
         jsr calculateBoundingBox
 
+        ngin_DebugDraw_printf "Player X: %X", { 24 : ngin_Object_this position+ngin_Vector2_16_8::x_, x }
+        ngin_DebugDraw_printf "Player Y: %X", { 24 : ngin_Object_this position+ngin_Vector2_16_8::y_, x }
+
         rts
     .endproc
 ngin_Object_endDefine

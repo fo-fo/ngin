@@ -2,6 +2,11 @@ print( "[ngin] Running reset code" )
 
 ngin = {}
 
+ngin.ui = require( "ui" )
+ngin.DebugDraw = require( "debug-draw" )
+
+---------------------------------------------------------------------------
+
 -- Convert an unsigned byte to a signed number.
 -- \todo Move utility functions to another file, require() it.
 function ngin.signed8( value )
@@ -31,3 +36,11 @@ function ngin.write16( addr, value )
     RAM[ addr+0 ] = bit32.band( value, 0xFF )
     RAM[ addr+1 ] = bit32.band( bit32.rshift( value, 8 ), 0xFF )
 end
+
+---------------------------------------------------------------------------
+
+NDX.setAfterFrameHook( function()
+    if ngin.ui.toggleDebugDraw.VALUE == "ON" then
+        return ngin.DebugDraw.render()
+    end
+end )
