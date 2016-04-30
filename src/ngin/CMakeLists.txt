@@ -38,6 +38,7 @@ add_library( ngin STATIC
     sound/muse/muse.s
     sound/ngin-muse.s
     irq.s
+    alloc.s
     mapper/nrom.s
     mapper/fme-7.s
 )

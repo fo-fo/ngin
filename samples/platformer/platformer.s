@@ -94,11 +94,10 @@ ngin_entryPoint start
 
     ldx player_id
 
-    ; \todo Use temporaries.
-    ngin_bss cameraToPlayer:    .tag ngin_FixedPoint16_8
+    ngin_alloc cameraToPlayer, 0, .sizeof( ngin_FixedPoint16_8 )
     ; Camera movement amount
-    ngin_bss movementX:         .tag ngin_FixedPoint8_8
-    ngin_bss movementY:         .tag ngin_FixedPoint8_8
+    ngin_alloc movementX, , .sizeof( ngin_FixedPoint8_8 )
+    ngin_alloc movementY, , .sizeof( ngin_FixedPoint8_8 )
 
     ; Macro to take care of camera movement in horizontal/vertical direction.
     ; "component" has to be x_ or y_.
@@ -153,6 +152,8 @@ ngin_entryPoint start
     ngin_Camera_move movementX, movementY
 
     .undefine playerThis
+
+    ngin_free cameraToPlayer, movementX, movementY
 
     rts
 .endproc

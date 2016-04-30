@@ -46,8 +46,7 @@ ngin_Object_define object_Ball
     .endproc
 
     .proc onRender
-        ; \todo Use a temporary
-        ngin_bss spritePosition: .tag ngin_Vector2_16
+        ngin_alloc spritePosition, 0, .sizeof( ngin_Vector2_16 )
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \
                                             spritePosition
 
@@ -74,6 +73,8 @@ ngin_Object_define object_Ball
               ngin_SpriteAnimator_State::metasprite, x }, \
               spritePosition
 
+        ngin_free spritePosition
+
         ldx ngin_Object_current
 
         ngin_SpriteAnimator_update { ngin_Object_this animationState, x }
@@ -97,6 +98,8 @@ ngin_Object_define object_Ball
         ;       operating on the freed object, as long as onUpdate doesn't
         ;       try to allocate a new object.
         ngin_log debug, "deactivating object_Ball"
+
+        ngin_free spritePosition
 
         ; Reset the spawn bit so that it can be respawned.
         ngin_ObjectSpawner_resetSpawn { ngin_Object_this spawnIndex, x }
@@ -139,9 +142,8 @@ ngin_Object_define object_Ball
                     #0
     .endmacro
 
-    ; \todo Use a temporary.
-    ngin_bss yBeforeMovementLo: .byte 0
     .macro beforeMovement
+        ngin_alloc yBeforeMovementLo, 0, .byte
         ; Save old position. Even though the integer part is 16-bit, it's
         ; enough to save the lower 8 bits since we're only interested in the
         ; difference (which will be calculated later, and should always fit in
@@ -161,6 +163,7 @@ ngin_Object_define object_Ball
         sec
         sbc yBeforeMovementLo
         sta ngin_Object_this deltaY, x
+        ngin_free yBeforeMovementLo
     .endmacro
 
     .proc moveVertical

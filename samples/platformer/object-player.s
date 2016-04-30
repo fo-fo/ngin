@@ -93,8 +93,7 @@ ngin_Object_define object_Player
     .endproc
 
     .proc onRender
-        ; \todo Use a temporary
-        ngin_bss spritePosition: .tag ngin_Vector2_16
+        ngin_alloc spritePosition, 0, .sizeof( ngin_Vector2_16 )
         ngin_Camera_worldToSpritePosition { ngin_Object_this position, x }, \
                                             spritePosition
 
@@ -104,6 +103,8 @@ ngin_Object_define object_Player
             { ngin_Object_this animationState + \
               ngin_SpriteAnimator_State::metasprite, x }, \
               spritePosition
+
+        ngin_free spritePosition
 
         ldx ngin_Object_current
 
@@ -172,7 +173,7 @@ ngin_Object_define object_Player
     .proc handleControls
         ; \todo Read controllers in a centralized place once per frame?
         ngin_Controller_read1
-        ngin_bss controller: .byte 0
+        ngin_alloc controller, 0, .byte
         sta controller
 
         ; Default to 0.
@@ -233,12 +234,14 @@ ngin_Object_define object_Player
                        #Player_State::kAttack
         notB:
 
+        ngin_free controller
+
         rts
     .endproc
 
     .proc reloadAnimation
-        ngin_bss newAnimation:    .byte 0
-        ngin_bss newAnimationPtr: .word 0
+        ngin_alloc newAnimation,    0, .byte
+        ngin_alloc newAnimationPtr,  , .word
 
         ldx ngin_Object_current
 
@@ -269,6 +272,8 @@ ngin_Object_define object_Player
             ngin_SpriteAnimator_initialize \
                 { ngin_Object_this animationState, x }, newAnimationPtr
         didntChange:
+
+        ngin_free newAnimation, newAnimationPtr
 
         rts
     .endproc
