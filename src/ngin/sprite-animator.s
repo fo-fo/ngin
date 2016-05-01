@@ -1,22 +1,13 @@
 .include "ngin/sprite-animator.inc"
 .include "ngin/sprite-renderer.inc"
 .include "ngin/branch.inc"
-
-.segment "NGIN_ZEROPAGE" : zeropage
-
-__ngin_SpriteAnimator_update_state:   .tag ngin_SpriteAnimator_State
-
-__ngin_SpriteAnimator_callEventCallback_metasprite = \
-    __ngin_SpriteAnimator_update_state + ngin_SpriteAnimator_State::metasprite
-
-; \todo Use a temporary
-__ngin_SpriteAnimator_initialize_ptr: .word 0
-__ngin_SpriteAnimator_callback_ptr = __ngin_SpriteAnimator_initialize_ptr
+.include "ngin/alloc.inc"
 
 .segment "NGIN_CODE"
 
 .proc __ngin_SpriteAnimator_update
-    state := __ngin_SpriteAnimator_update_state
+    __ngin_alloc state, 0, .sizeof( ngin_SpriteAnimator_State )
+    ::__ngin_SpriteAnimator_update_state := state
 
     ; -------------------------------------------------------------------------
     ; \note This function has to preserve X and Y. See the macro.
@@ -28,6 +19,7 @@ __ngin_SpriteAnimator_callback_ptr = __ngin_SpriteAnimator_initialize_ptr
     ;       elapse (\note DEC doesn't work in all addressing modes)
     dec state + ngin_SpriteAnimator_State::delayLeft
     ngin_branchIfZero nextFrame
+        __ngin_free state
         rts
     nextFrame:
 
@@ -54,6 +46,8 @@ __ngin_SpriteAnimator_callback_ptr = __ngin_SpriteAnimator_initialize_ptr
     lda ( state + ngin_SpriteAnimator_State::metasprite ), y
     sta state + ngin_SpriteAnimator_State::delayLeft
 
+    ngin_mov16 __ngin_SpriteAnimator_callEventCallback_metasprite, \
+               state + ngin_SpriteAnimator_State::metasprite
     jsr __ngin_SpriteAnimator_callEventCallback
 
     ; Restore X and Y.
@@ -62,24 +56,28 @@ __ngin_SpriteAnimator_callback_ptr = __ngin_SpriteAnimator_initialize_ptr
     pla
     tay
 
+    __ngin_free state
+
     rts
 .endproc
 
 .proc __ngin_SpriteAnimator_callEventCallback
-    metasprite := __ngin_SpriteAnimator_callEventCallback_metasprite
-    ; Must be the same as the metasprite member in update_state, because
-    ; this is also called from __ngin_SpriteAnimator_update.
-    .assert metasprite = __ngin_SpriteAnimator_update_state + \
-            ngin_SpriteAnimator_State::metasprite, error
+    ; Need a non-zero base because this can be called from
+    ; Camera_initializeView, which also needs some temporary variables.
+    __ngin_alloc metasprite, 9, .word
+    ::__ngin_SpriteAnimator_callEventCallback_metasprite := metasprite
+    __ngin_alloc callbackPtr, , .word
 
     ; Read callback from the metasprite and call it.
     ldy #ngin_SpriteRenderer_Header::eventCallback
     lda ( metasprite ), y
-    sta __ngin_SpriteAnimator_callback_ptr + 0
+    sta callbackPtr + 0
     iny
     lda ( metasprite ), y
-    sta __ngin_SpriteAnimator_callback_ptr + 1
+    sta callbackPtr + 1
+
+    __ngin_free metasprite, callbackPtr
 
     ; JSR+RTS
-    jmp ( __ngin_SpriteAnimator_callback_ptr )
+    jmp ( callbackPtr )
 .endproc

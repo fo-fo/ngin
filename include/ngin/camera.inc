@@ -8,8 +8,8 @@ NGIN_CAMERA_INC_INCLUDED = 1
 ; Type: ngin_Vector2_16_8
 .global ngin_Camera_position
 
-.global __ngin_Camera_initializeView
-.global __ngin_Camera_initializeView_position
+.global   __ngin_Camera_initializeView
+.globalzp __ngin_Camera_initializeView_position
 .macro ngin_Camera_initializeView position
     __ngin_requireParameter {position}, "position"
 
@@ -18,9 +18,9 @@ NGIN_CAMERA_INC_INCLUDED = 1
     jsr __ngin_Camera_initializeView
 .endmacro
 
-.global __ngin_Camera_move
-.global __ngin_Camera_move_amountX
-.global __ngin_Camera_move_amountY
+.global   __ngin_Camera_move
+.globalzp __ngin_Camera_move_amountX
+.globalzp __ngin_Camera_move_amountY
 .macro ngin_Camera_move amountX, amountY
     __ngin_requireParameter {amountX}, "amountX"
     __ngin_requireParameter {amountY}, "amountY"

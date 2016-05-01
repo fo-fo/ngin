@@ -126,6 +126,9 @@ segments
         type   = ro,
         define = yes;
 
+    # \\todo Probably none of these segments should be optional so that
+    #        their sizes could be shown in build log. Can be forced to exist
+    #        by having an empty .segment block.
     NGIN_RODATA:
         load     = PRG_ROM,
         type     = ro,
@@ -135,7 +138,8 @@ segments
     NGIN_ZEROPAGE:
         load     = ZEROPAGE,
         type     = zp,
-        optional = yes;
+        optional = yes,
+        define   = yes;
 
     NGIN_STACK:
         load     = STACK,

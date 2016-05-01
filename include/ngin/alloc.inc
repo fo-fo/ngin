@@ -4,6 +4,11 @@ NGIN_ALLOC_INC_INCLUDED = 1
 .include "ngin/core.inc"
 .include "ngin/lua/lua.inc"
 
+; Space reserved for user variables.
+ngin_kAllocReserveUserSize = 20
+; Space reserved for internal (Ngin) variables.
+ngin_kAllocReserveInternalSize = 20
+
 .globalzp __ngin_alloc_reserve
 .macro ngin_alloc symbol, offset, size
     .if .blank( {size} )
@@ -62,5 +67,17 @@ NGIN_ALLOC_INC_INCLUDED = 1
         ngin_free {s2}, {s3}, {s4}, {s5}, {s6}, {s7}, {s8}
     .endif
 .endmacro
+
+.macro __ngin_alloc symbol, offset, size
+    .if .blank( {offset} )
+        ; Use offset+size from previous invocation as new offset.
+        ; \note No need to add user base here, already in running offset.
+        ngin_alloc {symbol}, ::__ngin_alloc_runningOffset, {size}
+        .exitmac
+    .endif
+    ngin_alloc {symbol}, { (offset)+::ngin_kAllocReserveUserSize }, {size}
+.endmacro
+
+.define __ngin_free ngin_free
 
 .endif

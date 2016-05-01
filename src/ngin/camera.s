@@ -6,14 +6,9 @@
 .include "ngin/ppu-buffer.inc"
 .include "ngin/object-spawner.inc"
 .include "ngin/map-data.inc"
+.include "ngin/alloc.inc"
 
 .segment "NGIN_BSS"
-
-__ngin_Camera_initializeView_position:  .tag ngin_Vector2_16
-
-; 8.8 fixed point
-__ngin_Camera_move_amountX:             .tag ngin_FixedPoint8_8
-__ngin_Camera_move_amountY:             .tag ngin_FixedPoint8_8
 
 ; Camera position in world space
 ngin_Camera_position:                   .tag ngin_Vector2_16_8
@@ -29,12 +24,15 @@ ngin_Camera_position:                   .tag ngin_Vector2_16_8
     kScreenWidth        = 256
     kScrollPerUpload    = 8
 
+    ; Arguments:
+    __ngin_alloc position, 0, .sizeof( ngin_Vector2_16 )
+    ::__ngin_Camera_initializeView_position := position
+    ; Locals:
+    __ngin_alloc tmpPosition, , .sizeof( ngin_Vector2_16 )
+    __ngin_alloc scrollCounter, , .byte
+
     ; \note Camera_move cannot be used for initialization, because the width
     ;       of the spawn view and the map scroller view may differ.
-
-    ; \todo Use a temporary.
-    __ngin_bss position: .tag ngin_Vector2_16
-    __ngin_bss scrollCounter: .byte 0
 
     ; Initialize the object spawner position to kScreenWidth+kSlackX. Then
     ; scroll the spawner left kScreenWidth+2*kSlackX pixels, which will align
@@ -42,14 +40,14 @@ ngin_Camera_position:                   .tag ngin_Vector2_16_8
     ; \todo Put result directly to parameter area of ObjectSpawner_setPosition.
     ; Scroll in 8 pixel increments, although it's not strictly necessary
     ; for object spawner.
-    ngin_add16 position + ngin_Vector2_16::x_, \
-               __ngin_Camera_initializeView_position + ngin_Vector2_16::x_, \
+    ngin_add16 tmpPosition + ngin_Vector2_16::x_, \
+               position + ngin_Vector2_16::x_, \
                #ngin_signed16 kScreenWidth + ngin_ObjectSpawner_kViewSlackX
-    ngin_add16 position + ngin_Vector2_16::y_, \
-               __ngin_Camera_initializeView_position + ngin_Vector2_16::y_, \
+    ngin_add16 tmpPosition + ngin_Vector2_16::y_, \
+               position + ngin_Vector2_16::y_, \
                #ngin_signed16 -ngin_ObjectSpawner_kViewSlackY
 
-    ngin_ObjectSpawner_setPosition position
+    ngin_ObjectSpawner_setPosition tmpPosition
 
     kSpawnerScrollAmountTotal = kScreenWidth + 2*ngin_ObjectSpawner_kViewSlackX
     .assert kSpawnerScrollAmountTotal .mod kScrollPerUpload = 0, error
@@ -65,13 +63,13 @@ ngin_Camera_position:                   .tag ngin_Vector2_16_8
     ; will get adjusted to the correct value.
     ; Note that "position" was already modified for the object spawner before,
     ; so need to take that into account.
-    ngin_add16 position + ngin_Vector2_16::x_, \
+    ngin_add16 tmpPosition + ngin_Vector2_16::x_, \
                #ngin_signed16 -ngin_ObjectSpawner_kViewSlackX
-    ngin_add16 position + ngin_Vector2_16::y_, \
+    ngin_add16 tmpPosition + ngin_Vector2_16::y_, \
                #ngin_signed16 ngin_ObjectSpawner_kViewSlackY
 
     ; Set the map scroll position based on the adjusted position.
-    ngin_MapScroller_setPosition position
+    ngin_MapScroller_setPosition tmpPosition
 
     ; Scroll the view in by scrolling 256 pixels to the left.
     lda #kScreenWidth / kScrollPerUpload
@@ -85,28 +83,22 @@ ngin_Camera_position:                   .tag ngin_Vector2_16_8
         dec scrollCounter
     ngin_branchIfNotZero mapLoop
 
-    ; Set ngin_Camera_position from __ngin_Camera_initializeView_position.
+    ; Set ngin_Camera_position from "position".
     ; The first one has 16-bit, the latter one 24-bit components.
 
     ngin_mov16 ngin_Camera_position+ngin_Vector2_16_8::intX, \
-               __ngin_Camera_initializeView_position+ngin_Vector2_16::x_
+               position+ngin_Vector2_16::x_
     ngin_mov16 ngin_Camera_position+ngin_Vector2_16_8::intY, \
-               __ngin_Camera_initializeView_position+ngin_Vector2_16::y_
+               position+ngin_Vector2_16::y_
 
     ; Set the fractional part of ngin_Camera_position.
     ngin_mov8 ngin_Camera_position+ngin_Vector2_16_8::fracX, #0
     ngin_mov8 ngin_Camera_position+ngin_Vector2_16_8::fracY, #0
 
+    __ngin_free position, tmpPosition, scrollCounter
+
     rts
 .endproc
-
-; \todo Use temporaries.
-__ngin_bss leftEdge:            .tag ngin_FixedPoint16_8
-__ngin_bss rightEdge:           .tag ngin_FixedPoint16_8
-__ngin_bss newCameraPosition:   .tag ngin_FixedPoint16_8
-__ngin_bss newCameraPositionHi: .tag ngin_FixedPoint16_8
-__ngin_bss oldCameraPositionHi: .tag ngin_FixedPoint16_8
-__ngin_bss scrollAmount:        .byte 0
 
 .macro __ngin_Camera_move_clampToIndirectBoundary boundary, lobyte, branch
     ; This is equivalent to ngin_cmp24, but it doesn't support indirect
@@ -136,9 +128,18 @@ __ngin_bss scrollAmount:        .byte 0
 .macro __ngin_Camera_move_template fracX, moveAmountX, x_, mapScrollHorizontal, \
         objectSpawnerScrollHorizontal
 
+    .scope
+
     ; \todo Some redundant calculations going on here.
     ; \todo Only need to calculate max if moving right, only need the min
     ;       if moving left.
+
+    __ngin_alloc leftEdge, 4, .sizeof( ngin_FixedPoint16_8 )
+    __ngin_alloc rightEdge, , .sizeof( ngin_FixedPoint16_8 )
+    __ngin_alloc newCameraPosition, , .sizeof( ngin_FixedPoint16_8 )
+    __ngin_alloc newCameraPositionHi, , .sizeof( ngin_FixedPoint16_8 )
+    __ngin_alloc oldCameraPositionHi, , .sizeof( ngin_FixedPoint16_8 )
+    __ngin_alloc scrollAmount, , .byte
 
     ; Calculate the minimum and maximum values for camera position based on
     ; the current camera position and the maximum amount of pixels that the
@@ -233,16 +234,30 @@ __ngin_bss scrollAmount:        .byte 0
 
     ngin_mov24 ngin_Camera_position + ngin_Vector2_16_8::x_, newCameraPosition
 
+    __ngin_free leftEdge, rightEdge, newCameraPosition, \
+        newCameraPositionHi, oldCameraPositionHi
+
     mapScrollHorizontal scrollAmount
     objectSpawnerScrollHorizontal scrollAmount
+
+    __ngin_free scrollAmount
+
+    .endscope
 .endmacro
 
 .proc __ngin_Camera_move
-    __ngin_Camera_move_template fracX, __ngin_Camera_move_amountX, x_, \
+    __ngin_alloc amountX, 0, .sizeof( ngin_FixedPoint8_8 )
+    __ngin_alloc amountY, , .sizeof( ngin_FixedPoint8_8 )
+    ::__ngin_Camera_move_amountX := amountX
+    ::__ngin_Camera_move_amountY := amountY
+
+    __ngin_Camera_move_template fracX, amountX, x_, \
         ngin_MapScroller_scrollHorizontal, ngin_ObjectSpawner_scrollHorizontal
 
-    __ngin_Camera_move_template fracY, __ngin_Camera_move_amountY, y_, \
+    __ngin_Camera_move_template fracY, amountY, y_, \
         ngin_MapScroller_scrollVertical, ngin_ObjectSpawner_scrollVertical
+
+    __ngin_free amountX, amountY
 
     rts
 .endproc

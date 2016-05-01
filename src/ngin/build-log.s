@@ -2,7 +2,14 @@
 
 .export __ngin_BuildLog_forceImport : absolute = 1
 
-.macro printSegmentSize segment
+.macro printSegmentSize segment, segmentType
+    ; Make sure the segment exists.
+    .if .blank( {segmentType} )
+        ngin_pushSeg segment
+    .else
+        ngin_pushSeg segment : segmentType
+    .endif
+    ngin_popSeg
     .define __sizeIdentifier .ident( .sprintf( "__%s_SIZE__", segment ) )
     .import __sizeIdentifier
     __ngin_BuildLog_string .sprintf( "  %25s", segment )
@@ -29,6 +36,7 @@
     printSegmentSize "NGIN_MUSE_CODE"
     printSegmentSize "NGIN_RODATA"
     printSegmentSize "NGIN_BSS"
+    printSegmentSize "NGIN_ZEROPAGE", zeropage
     __ngin_BuildLog_newLine
 
     __ngin_BuildLog_string "User Segments:"

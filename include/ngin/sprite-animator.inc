@@ -2,6 +2,7 @@
 NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
+.include "ngin/alloc.inc"
 
 .struct ngin_SpriteAnimator_State
     ; Delay left in the current animation frame
@@ -13,7 +14,6 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
 
 ; \note metasprite_ is used as the name to avoid conflicts with the
 ;       struct member in ngin_SpriteAnimator_State.
-.globalzp __ngin_SpriteAnimator_initialize_ptr
 .global   __ngin_SpriteAnimator_callEventCallback
 .globalzp __ngin_SpriteAnimator_callEventCallback_metasprite
 .macro ngin_SpriteAnimator_initialize state, metasprite_
@@ -36,9 +36,11 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
         ; "metasprite_" is a pointer to a metasprite. Need to do an indirect
         ; fetch to get the delay. Because metasprite_ may not be in zeropage,
         ; need to use a temporary variable.
-        ngin_mov16 __ngin_SpriteAnimator_initialize_ptr, {metasprite_}
+        __ngin_alloc ptr, 0, .word
+        ngin_mov16 ptr, {metasprite_}
         ldy #ngin_SpriteRenderer_Header::delay
-        lda ( __ngin_SpriteAnimator_initialize_ptr ), y
+        lda ( ptr ), y
+        __ngin_free ptr
         sta ngin_SpriteAnimator_State::delayLeft * \
                 __ngin_SpriteAnimator_strideState + state
     .endif
