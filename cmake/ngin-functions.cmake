@@ -129,7 +129,7 @@ function( ngin_spriteAsset )
     cmake_parse_arguments(
         TOOLARGS
         "HFLIP;VFLIP;HVFLIP"            # Options
-        "DELAY"                         # One-value arguments
+        "DELAY;PALETTE_ADD"             # One-value arguments
         "IMAGE;SYMBOL;DEPENDS"          # Multi-value arguments
         ${ARGN}
     )
@@ -160,6 +160,10 @@ function( ngin_spriteAsset )
 
     if ( TOOLARGS_DELAY )
         list( APPEND __ngin_spriteAsset_args "--delay" ${TOOLARGS_DELAY} )
+    endif()
+
+    if ( TOOLARGS_PALETTE_ADD )
+        list( APPEND __ngin_spriteAsset_args "--paletteadd" ${TOOLARGS_PALETTE_ADD} )
     endif()
 
     list( APPEND __ngin_spriteAsset_args

@@ -86,6 +86,8 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
     def importImage( infile, gridSize, hardwareSpriteSize ):
         pilImage = Image.open( infile.file )
 
+        paletteAdd = infile.keyValueOptions.get( "paletteadd", 0 )
+
         # If grid size (width/height) hasn't been specified, use the image size.
         # Either of the width/height can be omitted.
         if gridSize[0] is None:
@@ -138,13 +140,15 @@ def importSprites( infiles, gridSize, hardwareSpriteSize ):
             #       It also affects tile uniqueness optimization.
             for y in xrange( pilImageLayer.size[ 1 ] ):
                 for x in xrange( pilImageLayer.size[ 0 ] ):
-                    pixelLayer = ( pixels[ x, y ] & 0b1100 ) >> 2
+                    pixel = ( pixels[ x, y ] + paletteAdd ) % 16
+                    pixelLayer = ( pixel & 0b1100 ) >> 2
                     if pixelLayer != layer:
                         # Clear to transparent if layer doesn't match.
-                        pixels[ x, y ] = 0
+                        pixel = 0
                     else:
                         # Clear the palette set index if layer does match.
-                        pixels[ x, y ] &= 0b11
+                        pixel &= 0b11
+                    pixels[ x, y ] = pixel
 
             # Crop the image vertically only. Each 8/16 rows will get individually
             # cropped horizontally later on.
@@ -452,6 +456,10 @@ def main():
                             help="specify frame delay",
                             type=lambda x: KeyValueOption( "delay", x ),
                             metavar="DELAY" )
+    argParser.add_argument( "--paletteadd", dest="infiles", action="append",
+                            help="add a value to palette indices",
+                            type=lambda x: KeyValueOption( "paletteadd", int( x ) ),
+                            metavar="ADD" )
     argParser.add_argument( "--onframe", dest="infiles", action="append",
                             help="specify a frame event callback, format: frame,symbol",
                             type=FrameEventOption.fromString,
