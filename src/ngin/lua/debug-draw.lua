@@ -26,7 +26,8 @@ end
 
 local function finishDrawing()
     local str = table.concat( debugStrings, "\n" )
-
+    -- GetTextBox doesn't seem to like empty strings (?)
+    if str == "" then return end
     local x = 8
     local y = 222
     drawCanvas:SetForeground( cd.EncodeAlpha( cd.GREEN, 64 ) )
