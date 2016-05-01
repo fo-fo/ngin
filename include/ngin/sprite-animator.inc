@@ -36,11 +36,13 @@ NGIN_SPRITE_ANIMATOR_INC_INCLUDED = 1
         ; "metasprite_" is a pointer to a metasprite. Need to do an indirect
         ; fetch to get the delay. Because metasprite_ may not be in zeropage,
         ; need to use a temporary variable.
-        __ngin_alloc ptr, 0, .word
-        ngin_mov16 ptr, {metasprite_}
-        ldy #ngin_SpriteRenderer_Header::delay
-        lda ( ptr ), y
-        __ngin_free ptr
+        .scope
+            __ngin_alloc ptr, 0, .word
+            ngin_mov16 ptr, {metasprite_}
+            ldy #ngin_SpriteRenderer_Header::delay
+            lda ( ptr ), y
+            __ngin_free ptr
+        .endscope
         sta ngin_SpriteAnimator_State::delayLeft * \
                 __ngin_SpriteAnimator_strideState + state
     .endif
