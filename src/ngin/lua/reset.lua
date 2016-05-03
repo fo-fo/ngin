@@ -1,6 +1,14 @@
-print( "[ngin] Running reset code" )
-
 ngin = {}
+
+-- If the symbol DEBUG is defined anywhere in the project, assume debug
+-- mode.
+-- \todo Maybe NGIN_DEBUG or something would be better to avoid accidents
+--       in user code.
+ngin.DEBUG = SYM.DEBUG ~= nil
+
+print( string.format( "[ngin] Running reset code (mode: %s)",
+    ngin.DEBUG and "Debug" or "Release" )
+)
 
 ngin.ui = require( "ui" )
 ngin.DebugDraw = require( "debug-draw" )
@@ -40,7 +48,9 @@ end
 ---------------------------------------------------------------------------
 
 NDX.setAfterFrameHook( function()
-    if ngin.ui.toggleDebugDraw.VALUE == "ON" then
-        return ngin.DebugDraw.render()
+    if ngin.DEBUG then
+        if ngin.ui.toggleDebugDraw.VALUE == "ON" then
+            return ngin.DebugDraw.render()
+        end
     end
 end )

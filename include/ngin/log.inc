@@ -8,7 +8,7 @@ NGIN_LOG_INC_INCLUDED = 1
 .define __ngin_log_quotedString( str ) \
     .sprintf( "%c%s%c", ngin_Ascii::kQuote, str, ngin_Ascii::kQuote )
 
-.macro __ngin_log_parameter parameter
+.macro __ngin_log_parameter parameter, forceSize
     .if .blank( {parameter} )
         .exitmac
     .endif
@@ -28,11 +28,16 @@ NGIN_LOG_INC_INCLUDED = 1
         .if .match( .left( 1, {parameter} ), # )
             .local parameterStripped
             parameterStripped = .right( .tcount( {parameter} ) - 1, {parameter} )
-            __ngin_decimalInteger {parameterStripped}
+            .byte "0x"
+            __ngin_hexInteger {parameterStripped}
         .else
             ; Default the parameter size to one byte.
             .local parameterSize
             parameterSize .set 1
+
+            .if .not .blank( {forceSize} )
+                parameterSize .set forceSize
+            .endif
 
             __ngin_getOperandStride {parameter}, \
                 __ngin_log_parameter_stride
@@ -82,8 +87,8 @@ NGIN_LOG_INC_INCLUDED = 1
 
             ; Loop over and read all of the bytes that we need.
             .repeat parameterSize, i
-                .byte "        bit32.lshift( NDX.readMemory( "
-                __ngin_decimalInteger {__ngin_log_parameter_relStripped}
+                .byte "        bit32.lshift( NDX.readMemory( 0x"
+                __ngin_hexInteger {__ngin_log_parameter_relStripped}
                 .byte .sprintf( " + %d*%d", i, __ngin_log_parameter_stride )
                 .if xRelative
                     .byte " + REG.X"
@@ -114,6 +119,10 @@ NGIN_LOG_INC_INCLUDED = 1
 .macro ngin_log severity, message, p1, p2, p3, p4, p5, p6, p7, p8
     __ngin_requireParameter {severity}, "severity"
     __ngin_requireParameter {message}, "message"
+
+    .if .not .defined( DEBUG )
+        .exitmac
+    .endif
 
     ; \todo Log into our own window(?)
 

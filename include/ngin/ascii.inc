@@ -11,6 +11,7 @@ NGIN_ASCII_INC_INCLUDED = 1
     kPlus   = 43
     kMinus  = 45
     kDot    = 46
+    kA      = 65
 .endenum
 
 .endif

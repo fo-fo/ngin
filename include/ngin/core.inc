@@ -415,6 +415,9 @@ __ngin_kBitsPerByte = 8
     ; \note .charmap isn't a problem here, because string/character literals
     ;       are not used.
 
+    ; \todo This doesn't seem to work properly for signed numbers (try
+    ;       e.g. $FFFFFFFF).
+
     .repeat 9, i
         ; Output the corresponding digit, or a space if the digit and all the
         ; more significant digits are zeroes. Unless we're outputting the least
@@ -424,6 +427,28 @@ __ngin_kBitsPerByte = 8
             (value/divider) .mod 10 + ngin_Ascii::kZero, \
             ngin_Ascii::kSpace )
         divider .set divider/10
+    .endrepeat
+.endmacro
+
+.macro __ngin_hexInteger integer
+    .local shift
+    shift .set 28
+    .local value
+    value = integer
+
+    ; \note .charmap isn't a problem here, because string/character literals
+    ;       are not used.
+
+    .repeat 8, i
+        ; Output the digit, padding with zeros at the left side.
+        .byte .lobyte( __ngin_choice \
+            ( (value>>shift) & $F ) <> 0 .or shift = 0, \
+            ( __ngin_choice \
+                ( (value>>shift) & $F ) < 10, \
+                ( (value>>shift) & $F ) .mod 10 + ngin_Ascii::kZero, \
+                ( ( (value>>shift) & $F ) - 10 ) + ngin_Ascii::kA ), \
+            ngin_Ascii::kZero )
+        shift .set shift-4
     .endrepeat
 .endmacro
 
@@ -445,6 +470,12 @@ __ngin_kBitsPerByte = 8
     .proc symbol
         body
     .endproc
+.endmacro
+
+.macro ngin_repeat times, body
+    .repeat times
+        body
+    .endrepeat
 .endmacro
 
 .endif

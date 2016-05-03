@@ -16,6 +16,8 @@ local dialog = iup.dialog
     gap="5"
 }
 
-dialog:show()
+if ngin.DEBUG then
+    dialog:show()
+end
 
 return ui
