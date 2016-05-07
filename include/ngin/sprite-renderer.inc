@@ -2,6 +2,7 @@
 NGIN_SPRITE_RENDERER_INC_INCLUDED = 1
 
 .include "ngin/core.inc"
+.include "ngin/config.generated.inc"
 
 ; The metasprite header is used to allow animations to be specified.
 ; If the SpriteAnimator module is not used, these fields can be left empty.
@@ -35,9 +36,11 @@ ngin_SpriteRenderer_kOriginY = $8000
 ; the screen (compared to the background), when used as the position parameter
 ; of SpriteRenderer_render.
 ; Note that sprites cannot be rendered on the topmost scanline.
-ngin_SpriteRenderer_kTopLeftX = ngin_SpriteRenderer_kOriginX - \
+ngin_SpriteRenderer_kTopLeftX = ngin_SpriteRenderer_kOriginX + \
+                                ngin_cfg_SpriteRenderer_offsetX - \
                                 ngin_SpriteRenderer_kAdjustX
-ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY - \
+ngin_SpriteRenderer_kTopLeftY = ngin_SpriteRenderer_kOriginY + \
+                                ngin_cfg_SpriteRenderer_offsetY - \
                                 ngin_SpriteRenderer_kAdjustY - 1
 
 ; This bitmask must be ORed in to the attributes of each hardware sprite defined

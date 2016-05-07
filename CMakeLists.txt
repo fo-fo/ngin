@@ -44,10 +44,16 @@ function( __ngin_setDefault variable value )
 endfunction()
 
 # Defaults that should work for every mirroring setting (see map-data.lua).
-__ngin_setDefault( ngin_cfg_MapData_viewWidth          256-8 )
-__ngin_setDefault( ngin_cfg_MapData_viewHeight         240-8 )
-__ngin_setDefault( ngin_cfg_MapData_attrViewWidth      256-16 )
-__ngin_setDefault( ngin_cfg_MapData_attrViewHeight     240-16 )
+__ngin_setDefault( ngin_cfg_MapData_viewWidth           256-8 )
+__ngin_setDefault( ngin_cfg_MapData_viewHeight          240-8 )
+__ngin_setDefault( ngin_cfg_MapData_attrViewWidth       256-16 )
+__ngin_setDefault( ngin_cfg_MapData_attrViewHeight      240-16 )
+
+# Sprites are offset by the amount specified here when rendering. Note that
+# the offset is applied to the metasprite definition, so the setting will
+# affect the coordinate range available for the metasprite.
+__ngin_setDefault( ngin_cfg_SpriteRenderer_offsetX      0 )
+__ngin_setDefault( ngin_cfg_SpriteRenderer_offsetY      0 )
 
 configure_file( include/ngin/config.in.inc include/ngin/config.generated.inc )
 configure_file( src/ngin/config.in.s src/ngin/config.generated.s )
