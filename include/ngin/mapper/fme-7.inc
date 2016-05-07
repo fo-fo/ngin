@@ -34,6 +34,13 @@ NGIN_MAPPER_FME_7_INC_INCLUDED = 1
         kEnabled        = %1
         kCounterEnabled = %1000_0000
     .endenum
+
+    .enum mirroring
+        kVertical       = %00
+        kHorizontal     = %01
+        kOneScreenA     = %10
+        kOneScreenB     = %11
+    .endenum
 .endscope
 
 ; \note "param" can't be "a", because the first load overwrites its value.
