@@ -18,12 +18,10 @@ local MapData = {}
 --       sizes can also differ.
 -- Note: Using values other than "one screen mirroring" here requires manual
 --       changes to attributeCache handling.
-local kViewWidth, kViewHeight = 256-8, 240-8 -- One screen mirroring (generic)
-local kAttrViewWidth, kAttrViewHeight = 256-16, 240-16 -- One screen mirroring (generic)
-MapData.kViewWidth      = kViewWidth
-MapData.kViewHeight     = kViewHeight
-MapData.kAttrViewWidth  = kAttrViewWidth
-MapData.kAttrViewHeight = kAttrViewHeight
+MapData.kViewWidth      = ngin_cfg_MapData_viewWidth
+MapData.kViewHeight     = ngin_cfg_MapData_viewHeight
+MapData.kAttrViewWidth  = ngin_cfg_MapData_attrViewWidth
+MapData.kAttrViewHeight = ngin_cfg_MapData_attrViewHeight
 
 local kTile8Width, kTile8Height = 8, 8
 local kTile16Width, kTile16Height = 16, 16

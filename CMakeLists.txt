@@ -34,6 +34,27 @@ set( __ngin_rootDir ${CMAKE_CURRENT_SOURCE_DIR} )
 include( cmake/ngin-find-tools.cmake )
 include( cmake/ngin-functions.cmake )
 
+# -------------------------------------------------------------------------
+# Configuration:
+
+function( __ngin_setDefault variable value )
+    if ( NOT ${variable} )
+        set( ${variable} ${value} PARENT_SCOPE )
+    endif()
+endfunction()
+
+# Defaults that should work for every mirroring setting (see map-data.lua).
+__ngin_setDefault( ngin_cfg_MapData_viewWidth          256-8 )
+__ngin_setDefault( ngin_cfg_MapData_viewHeight         240-8 )
+__ngin_setDefault( ngin_cfg_MapData_attrViewWidth      256-16 )
+__ngin_setDefault( ngin_cfg_MapData_attrViewHeight     240-16 )
+
+configure_file( include/ngin/config.in.inc include/ngin/config.generated.inc )
+configure_file( src/ngin/config.in.s src/ngin/config.generated.s )
+configure_file( src/ngin/config.in.lua src/ngin/config.generated.lua )
+
+# -------------------------------------------------------------------------
+
 add_subdirectory( src/ngin )
 
 # Only build samples if we're not being built as a subproject.

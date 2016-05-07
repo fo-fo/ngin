@@ -1050,13 +1050,11 @@ def writeNginData( nginCommonMapData, outPrefix, symbols, segments,
         ; boundaryLeft
         .word ${:04X}
         ; boundaryRight
-        ; \\todo Use view width from configuration
-        .word ${:04X} - (256-16) - 1 ; Inclusive
+        .word ${:04X} - ngin_cfg_MapData_viewWidth - 1 ; Inclusive
         ; boundaryTop
         .word ${:04X}
         ; boundaryBottom
-        ; \\todo Use view height from configuration
-        .word ${:04X} - (240-16) - 1 ; Inclusive
+        .word ${:04X} - ngin_cfg_MapData_viewHeight - 1 ; Inclusive
         ; numObjects
         .byte {}
         ; ngin_MapData_Pointers
