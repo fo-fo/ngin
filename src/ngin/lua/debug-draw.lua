@@ -81,7 +81,8 @@ end
 local function adjustXy( x, y )
     -- Compensate for left border for X. Flip the Y axis.
     local _, canvasHeight = drawCanvas:GetSize()
-    return x + 16, ( canvasHeight - 1 ) - y
+    return x + 16 + ngin_cfg_DebugDraw_offsetX,
+           ( canvasHeight - 1 ) - y + ngin_cfg_DebugDraw_offsetY
 end
 
 function DebugDraw.crossXy( x, y, color )

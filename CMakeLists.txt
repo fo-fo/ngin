@@ -55,6 +55,9 @@ __ngin_setDefault( ngin_cfg_MapData_attrViewHeight      240-16 )
 __ngin_setDefault( ngin_cfg_SpriteRenderer_offsetX      0 )
 __ngin_setDefault( ngin_cfg_SpriteRenderer_offsetY      0 )
 
+__ngin_setDefault( ngin_cfg_DebugDraw_offsetX      0 )
+__ngin_setDefault( ngin_cfg_DebugDraw_offsetY      0 )
+
 configure_file( include/ngin/config.in.inc include/ngin/config.generated.inc )
 configure_file( src/ngin/config.in.s src/ngin/config.generated.s )
 configure_file( src/ngin/config.in.lua src/ngin/config.generated.lua )
