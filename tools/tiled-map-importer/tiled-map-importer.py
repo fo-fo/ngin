@@ -38,6 +38,8 @@ kMt32SizeX, kMt32SizeY = 32, 32
 kMt16SizeX, kMt16SizeY = 16, 16
 kTile8SizeX, kTile8SizeY = 8, 8
 
+kMaxUniqueMt32 = 256
+
 class Size( object ):
     def __init__( self, width, height ):
         self.width = width
@@ -338,15 +340,18 @@ def parseTmx( infile ):
         for event, elem in iterator:
             if event == "end" and elem.tag == "data":
                 # \todo Support other encodings and compression modes.
-                if not ( elem.attrib[ "encoding" ] == "base64" and \
-                         elem.attrib[ "compression" ] == "zlib" ):
+                if elem.attrib[ "encoding" ] == "base64" and \
+                   elem.attrib[ "compression" ] == "zlib":
+                    decoded = base64.b64decode( elem.text )
+                    decompressed = zlib.decompress( decoded )
+                    # Unpack N/4 32-bit little-endian unsigned integers
+                    unpacked = struct.unpack( "<{}I".format(
+                        len( decompressed ) / 4 ), decompressed )
+                elif elem.attrib[ "encoding" ] == "csv":
+                    assert elem.attrib.get( "compression" ) is None
+                    unpacked = map( int, elem.text.split( "," ) )
+                else:
                     raise Exception( "unsupported encoding/compression" )
-
-                decoded = base64.b64decode( elem.text )
-                decompressed = zlib.decompress( decoded )
-                # Unpack N/4 32-bit little-endian unsigned integers
-                unpacked = struct.unpack( "<{}I".format(
-                    len( decompressed ) / 4 ), decompressed )
 
                 # \todo Verify that size of "unpacked" matches the layer
                 #       size.
@@ -1154,8 +1159,12 @@ def main():
     print "Number of 8x8 tiles: {}".format( len( nginCommonMapData.uniqueTiles ) )
     print "Number of maps: {}".format( len( nginCommonMapData.maps ) )
 
-    # \todo Check whether the resulting MT amounts etc are within set limits.
+    # \todo Check whether all the resulting MT amounts etc are within set limits.
     #       Also check object amounts for each map.
+    # \todo Make the error messages more user friendly (custom class,
+    #       wrap main in exception handler)
+    if len( nginCommonMapData.uniqueMt32 ) > kMaxUniqueMt32:
+        raise Exception( "ERROR: Too many 32x32 metatiles, limit={}".format( kMaxUniqueMt32 ) )
 
     segments = args.segments.split( "," )
     writeNginData( nginCommonMapData, args.outprefix, args.symbol,
