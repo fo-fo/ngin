@@ -16,9 +16,9 @@ set( __ngin_toolsRoot ${__ngin_rootDir}/tools
 function( ngin_addMapAssets target )
     cmake_parse_arguments(
         TOOLARGS
-        ""                                  # Options
-        "OUTFILE;SEGMENT_GRANULARITY"       # One-value arguments
-        "MAPS;SYMBOLS;DEPENDS;SEGMENTS"     # Multi-value arguments
+        ""                                          # Options
+        "OUTFILE;SEGMENT_GRANULARITY;DATA_SEGMENT"  # One-value arguments
+        "MAPS;SYMBOLS;DEPENDS;SEGMENTS"             # Multi-value arguments
         ${ARGN}
     )
 
@@ -33,6 +33,9 @@ function( ngin_addMapAssets target )
     if ( TOOLARGS_SEGMENTS )
         string( REPLACE ";" "," segmentsComma "${TOOLARGS_SEGMENTS}" )
         list( APPEND extraArgs -g ${segmentsComma} )
+    endif()
+    if ( TOOLARGS_DATA_SEGMENT )
+        list( APPEND extraArgs -d ${TOOLARGS_DATA_SEGMENT} )
     endif()
 
     # \todo Check that TOOLARGS_OUTFILE is not empty, and that length of

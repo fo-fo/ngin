@@ -42,17 +42,21 @@ local pointersStructMembers = {
     _16x16MetatileBottomLeft    = 6,
     _16x16MetatileBottomRight   = 7,
     _16x16MetatileAttributes0   = 8,
-    _32x32MetatileTopLeft       = 9,
-    _32x32MetatileTopRight      = 10,
-    _32x32MetatileBottomLeft    = 11,
-    _32x32MetatileBottomRight   = 12,
-    objectsXLo                  = 13,
-    objectsXHi                  = 14,
-    objectsYLo                  = 15,
-    objectsYHi                  = 16,
-    objectsType                 = 17,
-    objectsXToYIndex            = 18,
-    objectsYSortedIndex         = 19
+    _32x32Metatile0TopLeft      = 9,
+    _32x32Metatile0TopRight     = 10,
+    _32x32Metatile0BottomLeft   = 11,
+    _32x32Metatile0BottomRight  = 12,
+    _32x32Metatile1TopLeft      = 13,
+    _32x32Metatile1TopRight     = 14,
+    _32x32Metatile1BottomLeft   = 15,
+    _32x32Metatile1BottomRight  = 16,
+    objectsXLo                  = 17,
+    objectsXHi                  = 18,
+    objectsYLo                  = 19,
+    objectsYHi                  = 20,
+    objectsType                 = 21,
+    objectsXToYIndex            = 22,
+    objectsYSortedIndex         = 23
 }
 
 local ngin_MapData_header   = SYM.ngin_MapData_header[ 1 ]
@@ -110,12 +114,6 @@ function MapData.readMetatile16( x, y )
     local screenPointersLo = readPointer( "screenPointersLo" )
     local screenPointersHi = readPointer( "screenPointersHi" )
 
-    -- Get address of 32x32px metatile pointers.
-    local _32x32MetatileTopLeft     = readPointer( "_32x32MetatileTopLeft" )
-    local _32x32MetatileTopRight    = readPointer( "_32x32MetatileTopRight" )
-    local _32x32MetatileBottomLeft  = readPointer( "_32x32MetatileBottomLeft" )
-    local _32x32MetatileBottomRight = readPointer( "_32x32MetatileBottomRight" )
-
     -- Index the screen row pointers list with the Y coordinate.
     local screenRowPointerLo = NDX.readMemory( screenRowPointersLo + screenY )
     local screenRowPointerHi = NDX.readMemory( screenRowPointersHi + screenY )
@@ -131,11 +129,30 @@ function MapData.readMetatile16( x, y )
     local screenPointer = bit32.bor( bit32.lshift( screenPointerHi, 8 ),
                                      screenPointerLo )
 
-    -- Read the 32x32px metatile.
+    -- Read the 32x32px metatile (lobyte).
     local index = tile32Y * 8 + tile32X
     local metatile32 = NDX.readMemory( screenPointer + index )
+    -- The MSB (of 9-bit metatile index) is bitpacked at the end of the
+    -- screen array so that each byte represents a row.
+    local msb = bit32.band( bit32.rshift(
+        NDX.readMemory( screenPointer + 8*8 + tile32Y ), 7 - tile32X ), 1 )
 
     -- Read the 16x16px metatile index from the 32x32px metatile.
+    -- MSB selects the metatile set.
+    local _32x32MetatileTopLeft, _32x32MetatileTopRight,
+          _32x32MetatileBottomLeft, _32x32MetatileBottomRight
+    if msb == 0 then
+        _32x32MetatileTopLeft     = readPointer( "_32x32Metatile0TopLeft" )
+        _32x32MetatileTopRight    = readPointer( "_32x32Metatile0TopRight" )
+        _32x32MetatileBottomLeft  = readPointer( "_32x32Metatile0BottomLeft" )
+        _32x32MetatileBottomRight = readPointer( "_32x32Metatile0BottomRight" )
+    else
+        _32x32MetatileTopLeft     = readPointer( "_32x32Metatile1TopLeft" )
+        _32x32MetatileTopRight    = readPointer( "_32x32Metatile1TopRight" )
+        _32x32MetatileBottomLeft  = readPointer( "_32x32Metatile1BottomLeft" )
+        _32x32MetatileBottomRight = readPointer( "_32x32Metatile1BottomRight" )
+    end
+
     local addr = nil
     if tile32X_2 == 0 and tile32Y_2 == 0 then
         addr = _32x32MetatileTopLeft

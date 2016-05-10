@@ -28,10 +28,14 @@ NGIN_MAP_DATA_INC_INCLUDED = 1
     _16x16MetatileBottomLeft    .addr
     _16x16MetatileBottomRight   .addr
     _16x16MetatileAttributes0   .addr
-    _32x32MetatileTopLeft       .addr
-    _32x32MetatileTopRight      .addr
-    _32x32MetatileBottomLeft    .addr
-    _32x32MetatileBottomRight   .addr
+    _32x32Metatile0TopLeft      .addr
+    _32x32Metatile0TopRight     .addr
+    _32x32Metatile0BottomLeft   .addr
+    _32x32Metatile0BottomRight  .addr
+    _32x32Metatile1TopLeft      .addr
+    _32x32Metatile1TopRight     .addr
+    _32x32Metatile1BottomLeft   .addr
+    _32x32Metatile1BottomRight  .addr
     objectsXLo                  .addr
     objectsXHi                  .addr
     objectsYLo                  .addr

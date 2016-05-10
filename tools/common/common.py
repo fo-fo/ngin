@@ -37,3 +37,4 @@ def writeByteArray( f, indentText, list, bytesPerLine=8 ):
         if i != 0:
             f.write( " " * len( indentText ) )
         f.write( ".byte " + listToString( sliced ) + "\n" )
+    if numLines == 0: f.write( "\n" )
