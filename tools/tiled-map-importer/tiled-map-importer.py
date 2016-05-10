@@ -278,7 +278,7 @@ class TilesetImage( object ):
         fullPath = os.path.join( baseDir, self.source )
         self.pilImage = Image.open( fullPath )
         # Image must be paletted.
-        assert self.pilImage.mode == "P"
+        assert self.pilImage.mode == "P", "image '{}' has to be paletted".format( fullPath )
         # Get the color index that is used for transparency.
         self.transparencyKey = self.pilImage.info.get( "transparency" )
 
